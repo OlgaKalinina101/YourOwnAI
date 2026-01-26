@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">YourOwnAI</string>
+    
+    <!-- Auth Screen -->
+    <string name="auth_welcome_title">Welcome to YourOwnAI</string>
+    <string name="auth_welcome_subtitle">Your AI. Your Rules. No Limits.</string>
+    <string name="auth_welcome_message">Before we start, let\'s customize your experience. All settings can be changed later.</string>
+    <string name="auth_continue">Continue</string>
+    
+    <!-- Settings -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_typography">Typography</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_colors">Colors</string>
+    <string name="settings_colors_dynamic">Dynamic</string>
+    <string name="settings_colors_neutral">Neutral</string>
+    <string name="settings_font">Font</string>
+    <string name="settings_font_roboto">Roboto</string>
+    <string name="settings_font_system">System</string>
+    <string name="settings_text_size">Text Size</string>
+    
+    <!-- Privacy -->
+    <string name="privacy_note">All settings are stored locally on your device. No data is sent to any server.</string>
+</resources>

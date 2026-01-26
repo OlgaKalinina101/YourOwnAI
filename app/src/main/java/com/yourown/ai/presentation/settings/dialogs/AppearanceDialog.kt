@@ -1,0 +1,322 @@
+package com.yourown.ai.presentation.settings.dialogs
+
+import android.os.Build
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.yourown.ai.presentation.onboarding.OnboardingViewModel
+import com.yourown.ai.presentation.theme.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppearanceDialog(
+    onDismiss: () -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Header
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 3.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Appearance",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Customize your experience",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, "Close")
+                        }
+                    }
+                }
+                
+                // Content
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Theme Settings Section
+                    SettingsSection(title = "Theme") {
+                        // Theme Mode
+                        SettingItem(
+                            title = "Mode",
+                            description = "Choose your preferred theme"
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ThemeMode.entries.forEach { mode ->
+                                    FilterChip(
+                                        selected = uiState.themeMode == mode,
+                                        onClick = { viewModel.setThemeMode(mode) },
+                                        label = {
+                                            Text(
+                                                text = when (mode) {
+                                                    ThemeMode.LIGHT -> "Light"
+                                                    ThemeMode.DARK -> "Dark"
+                                                    ThemeMode.SYSTEM -> "System"
+                                                }
+                                            )
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = when (mode) {
+                                                    ThemeMode.LIGHT -> Icons.Default.LightMode
+                                                    ThemeMode.DARK -> Icons.Default.DarkMode
+                                                    ThemeMode.SYSTEM -> Icons.Default.BrightnessAuto
+                                                },
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        
+                        // Color Style
+                        SettingItem(
+                            title = "Colors",
+                            description = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                "Dynamic colors adapt to your wallpaper (Android 12+)"
+                            } else {
+                                "Choose your color preference"
+                            }
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    FilterChip(
+                                        selected = uiState.colorStyle == ColorStyle.DYNAMIC,
+                                        onClick = { viewModel.setColorStyle(ColorStyle.DYNAMIC) },
+                                        label = { Text("Dynamic") },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Palette,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                }
+                                FilterChip(
+                                    selected = uiState.colorStyle == ColorStyle.NEUTRAL,
+                                    onClick = { viewModel.setColorStyle(ColorStyle.NEUTRAL) },
+                                    label = { Text("Neutral") },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Circle,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Typography Settings Section
+                    SettingsSection(title = "Typography") {
+                        // Font Style
+                        SettingItem(
+                            title = "Font",
+                            description = "Choose your preferred font style"
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilterChip(
+                                    selected = uiState.fontStyle == FontStyle.ROBOTO,
+                                    onClick = { viewModel.setFontStyle(FontStyle.ROBOTO) },
+                                    label = { Text("Roboto") }
+                                )
+                                FilterChip(
+                                    selected = uiState.fontStyle == FontStyle.SYSTEM,
+                                    onClick = { viewModel.setFontStyle(FontStyle.SYSTEM) },
+                                    label = { Text("System") }
+                                )
+                            }
+                        }
+                        
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        
+                        // Font Scale
+                        SettingItem(
+                            title = "Text Size",
+                            description = "Adjust text size for better readability"
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    FontScale.entries.forEach { scale ->
+                                        FilterChip(
+                                            selected = uiState.fontScale == scale,
+                                            onClick = { viewModel.setFontScale(scale) },
+                                            label = {
+                                                Text(
+                                                    text = when (scale) {
+                                                        FontScale.SMALL -> "S"
+                                                        FontScale.DEFAULT -> "M"
+                                                        FontScale.MEDIUM -> "L"
+                                                        FontScale.LARGE -> "XL"
+                                                        FontScale.EXTRA_LARGE -> "XXL"
+                                                    },
+                                                    style = MaterialTheme.typography.labelMedium
+                                                )
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                                
+                                // Preview text
+                                Text(
+                                    text = "Preview: The quick brown fox jumps over the lazy dog",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = MaterialTheme.typography.bodyMedium.fontSize * uiState.fontScale.scale
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Save Button
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 3.dp
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Save",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SettingItem(
+    title: String,
+    description: String,
+    content: @Composable () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        content()
+    }
+}
