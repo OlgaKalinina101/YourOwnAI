@@ -15,7 +15,36 @@ YourOwnAI is a privacy-first Android application that gives you complete control
 
 ## 📸 Screenshots
 
-> Coming soon: Chat interface, Settings, Local models, Onboarding
+<div align="center">
+
+### 💬 Chat Interface
+<table>
+  <tr>
+    <td><img src="examples/chat1.jpg" width="200"/></td>
+    <td><img src="examples/chat2.jpg" width="200"/></td>
+    <td><img src="examples/chat3.jpg" width="200"/></td>
+    <td><img src="examples/chat4.jpg" width="200"/></td>
+  </tr>
+</table>
+
+### 🤖 AI Models & Settings
+<table>
+  <tr>
+    <td><img src="examples/models1.jpg" width="200"/></td>
+    <td><img src="examples/models2.jpg" width="200"/></td>
+    <td><img src="examples/local_models.jpg" width="200"/></td>
+  </tr>
+</table>
+
+### ✨ Onboarding & Customization
+<table>
+  <tr>
+    <td><img src="examples/onboarding.gif" width="300"/></td>
+    <td><img src="examples/settings.gif" width="300"/></td>
+  </tr>
+</table>
+
+</div>
 
 ---
 
