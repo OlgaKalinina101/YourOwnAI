@@ -253,19 +253,6 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **Security:** Certificate Pinning, Network Security Config, API key encryption
 - **Build:** Gradle 8.11+ with R8/ProGuard obfuscation
 
-## 🚀 Getting Started
-
-### Quick Start (5 minutes)
-
-1. **Download** the latest APK from [Releases](https://github.com/yourusername/YourOwnAI/releases)
-2. **Install** on your Android 8.0+ device
-3. **Complete onboarding** - choose your theme and colors
-4. **Add API key**:
-   - Get free Deepseek API key: https://platform.deepseek.com/
-   - Or OpenAI: https://platform.openai.com/api-keys
-   - Or x.ai Grok: https://console.x.ai/
-5. **Start chatting** - select a model and go!
-
 ### For Developers
 
 #### Prerequisites
