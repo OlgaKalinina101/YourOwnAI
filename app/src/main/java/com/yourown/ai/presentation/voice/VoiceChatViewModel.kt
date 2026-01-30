@@ -53,7 +53,8 @@ class VoiceChatViewModel @Inject constructor(
     private val apiKeyRepository: ApiKeyRepository,
     private val voiceClient: XAIVoiceClient,
     private val systemPromptRepository: com.yourown.ai.data.repository.SystemPromptRepository,
-    private val aiConfigRepository: com.yourown.ai.data.repository.AIConfigRepository
+    private val aiConfigRepository: com.yourown.ai.data.repository.AIConfigRepository,
+    private val voiceMessagePreferences: com.yourown.ai.data.local.preferences.VoiceMessagePreferences
 ) : ViewModel() {
     
     companion object {
@@ -84,6 +85,18 @@ class VoiceChatViewModel @Inject constructor(
         initializeDefaultPrompts()
         // Observe user context
         observeUserContext()
+        // Load previous messages
+        loadPreviousMessages()
+    }
+    
+    private fun loadPreviousMessages() {
+        viewModelScope.launch {
+            val savedMessages = voiceMessagePreferences.loadMessages()
+            if (savedMessages.isNotEmpty()) {
+                Log.d(TAG, "Loaded ${savedMessages.size} previous voice messages")
+                _uiState.update { it.copy(messages = savedMessages) }
+            }
+        }
     }
     
     private fun initializeDefaultPrompts() {
@@ -251,7 +264,7 @@ class VoiceChatViewModel @Inject constructor(
             
             is XAIVoiceClient.VoiceEvent.TranscriptReceived -> {
                 if (event.isFinal) {
-                    // User transcript (final) - only in-memory, not saved to DB
+                    // User transcript (final) - saved to local preferences for history
                     val message = VoiceMessage(
                         id = System.currentTimeMillis().toString(),
                         role = MessageRole.USER,
@@ -263,9 +276,11 @@ class VoiceChatViewModel @Inject constructor(
                             transcript = ""
                         ) 
                     }
+                    // Save messages to preferences
+                    saveMessages()
                     Log.d(TAG, "Added user message: ${event.text}")
                 } else {
-                    // AI transcript (final) - only in-memory, not saved to DB
+                    // AI transcript (final) - saved to local preferences for history
                     // Build request logs
                     val requestLogs = buildVoiceRequestLogs()
                     
@@ -278,6 +293,8 @@ class VoiceChatViewModel @Inject constructor(
                     _uiState.update { 
                         it.copy(messages = it.messages + message) 
                     }
+                    // Save messages to preferences
+                    saveMessages()
                     Log.d(TAG, "Added AI message: ${event.text}")
                 }
             }
@@ -573,6 +590,19 @@ class VoiceChatViewModel @Inject constructor(
      */
     fun clearMessages() {
         _uiState.update { it.copy(messages = emptyList()) }
+        // Clear from preferences too
+        viewModelScope.launch {
+            voiceMessagePreferences.clearMessages()
+            Log.d(TAG, "Voice chat history cleared")
+        }
+    }
+    
+    private fun saveMessages() {
+        viewModelScope.launch {
+            val messages = _uiState.value.messages
+            voiceMessagePreferences.saveMessages(messages)
+            Log.d(TAG, "Saved ${messages.size} voice messages to preferences")
+        }
     }
     
     /**

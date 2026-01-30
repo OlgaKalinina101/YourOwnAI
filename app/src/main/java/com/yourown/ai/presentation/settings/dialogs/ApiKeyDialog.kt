@@ -122,7 +122,7 @@ private fun getApiKeyUrl(provider: AIProvider): String {
     return when (provider) {
         AIProvider.DEEPSEEK -> "platform.deepseek.com"
         AIProvider.OPENAI -> "platform.openai.com"
-        AIProvider.ANTHROPIC -> "console.anthropic.com"
+        AIProvider.OPENROUTER -> "openrouter.ai"
         AIProvider.XAI -> "x.ai"
         AIProvider.CUSTOM -> "your provider"
     }

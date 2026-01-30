@@ -72,7 +72,7 @@
 ### Medium Term (Next Month)
 1. Long-term memory system
 2. Voice chat (STT/TTS)
-3. Anthropic Claude integration
+3. OpenRouter integration (200+ models)
 4. Export/backup conversations
 
 ## 📊 Code Statistics

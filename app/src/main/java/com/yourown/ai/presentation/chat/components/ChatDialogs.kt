@@ -10,9 +10,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
@@ -510,6 +513,7 @@ fun ExportChatDialog(
     chatText: String,
     onDismiss: () -> Unit,
     onShare: () -> Unit,
+    onSaveToFile: () -> Unit = {},
     onFilterChanged: (Boolean) -> Unit = {}
 ) {
     val clipboardManager = LocalClipboardManager.current
@@ -638,38 +642,88 @@ fun ExportChatDialog(
                     )
                 }
                 
-                // Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(chatText))
-                            showCopiedSnackbar = true
-                        },
-                        modifier = Modifier.weight(1f)
+                // Warning for large chats
+                if (chatText.length > 15000) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        shape = MaterialTheme.shapes.small
                     ) {
-                        Icon(
-                            Icons.Default.ContentCopy,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Copy")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                text = "Large chat (${chatText.length} chars). Use 'Save to File' for import.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                }
+                
+                // Buttons
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(chatText))
+                                showCopiedSnackbar = true
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Copy")
+                        }
+                        
+                        Button(
+                            onClick = onShare,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Share")
+                        }
                     }
                     
+                    // Save to File button (for large chats)
                     Button(
-                        onClick = onShare,
-                        modifier = Modifier.weight(1f)
+                        onClick = onSaveToFile,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                     ) {
                         Icon(
-                            Icons.Default.Share,
+                            Icons.Default.Save,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Share")
+                        Text("Save to File (.txt)")
                     }
                 }
             }
@@ -1000,6 +1054,286 @@ fun ErrorDialog(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Cancel & Copy")
+            }
+        }
+    )
+}
+
+/**
+ * Dialog for importing chat from text
+ */
+@Composable
+fun ImportChatDialog(
+    onDismiss: () -> Unit,
+    onImport: (String) -> Unit,
+    onLoadFromFile: () -> Unit = {},
+    errorMessage: String? = null
+) {
+    var chatText by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.CloudUpload,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text("Import Chat")
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Paste exported chat text below:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                OutlinedTextField(
+                    value = chatText,
+                    onValueChange = { chatText = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp),
+                    placeholder = { Text("# Chat Export: ...") },
+                    maxLines = Int.MAX_VALUE, // No limit on lines
+                    singleLine = false,
+                    isError = errorMessage != null,
+                    supportingText = {
+                        Text(
+                            text = "${chatText.length} characters, ${chatText.lines().size} lines",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                )
+                
+                if (errorMessage != null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+                
+                // Warning about clipboard limit
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Text(
+                                text = "Clipboard limit: 20,000 characters",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                        Text(
+                            text = "For large chats, use 'Load from File' button below",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+                }
+                
+                // Load from file button
+                OutlinedButton(
+                    onClick = onLoadFromFile,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Default.FolderOpen,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Load from File (.txt)")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (chatText.isNotBlank()) {
+                        onImport(chatText)
+                    }
+                },
+                enabled = chatText.isNotBlank()
+            ) {
+                Icon(
+                    Icons.Default.CloudUpload,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Import")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+/**
+ * Dialog for selecting source chat to inherit context from
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SourceChatSelectionDialog(
+    conversations: List<com.yourown.ai.domain.model.Conversation>,
+    selectedSourceChatId: String?,
+    onSourceChatSelected: (String?) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    // Filter out archived conversations and sort by most recent
+    val availableChats = remember(conversations) {
+        conversations
+            .filter { !it.isArchived }
+            .sortedByDescending { it.updatedAt }
+    }
+    
+    // Find selected conversation title
+    val selectedChatTitle = remember(selectedSourceChatId, availableChats) {
+        if (selectedSourceChatId == null) {
+            "None (start fresh)"
+        } else {
+            availableChats.find { it.id == selectedSourceChatId }?.title ?: "None (start fresh)"
+        }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Inherit Context From Chat") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Select a chat to inherit message history from. " +
+                           "The last ${10} message pairs will be loaded into context.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                // Dropdown for source chat selection
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedChatTitle,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Source Chat") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        // Option: None (start fresh)
+                        DropdownMenuItem(
+                            text = { 
+                                Column {
+                                    Text(
+                                        "None (start fresh)",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        "No inherited context",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onSourceChatSelected(null)
+                                expanded = false
+                            },
+                            leadingIcon = {
+                                if (selectedSourceChatId == null) {
+                                    Icon(Icons.Default.Check, contentDescription = null)
+                                }
+                            }
+                        )
+                        
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        
+                        // Available chats
+                        availableChats.forEach { chat ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(
+                                            chat.title,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            "${chat.model} • ${chat.messages.size} messages",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    onSourceChatSelected(chat.id)
+                                    expanded = false
+                                },
+                                leadingIcon = {
+                                    if (selectedSourceChatId == chat.id) {
+                                        Icon(Icons.Default.Check, contentDescription = null)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Create Chat")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
             }
         }
     )

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Include database files -->
+        <include domain="database" path="yourown_ai_database" />
+        <include domain="database" path="yourown_ai_database-shm" />
+        <include domain="database" path="yourown_ai_database-wal" />
+        
+        <!-- Include only specific shared preferences (excludes api_keys by not including it) -->
+        <include domain="sharedpref" path="settings_prefs.xml" />
+    </cloud-backup>
+    
+    <device-transfer>
+        <!-- Include database files -->
+        <include domain="database" path="yourown_ai_database" />
+        <include domain="database" path="yourown_ai_database-shm" />
+        <include domain="database" path="yourown_ai_database-wal" />
+        
+        <!-- Include only specific shared preferences (excludes api_keys by not including it) -->
+        <include domain="sharedpref" path="settings_prefs.xml" />
+    </device-transfer>
+</data-extraction-rules>

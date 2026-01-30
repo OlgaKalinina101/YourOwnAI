@@ -12,6 +12,7 @@ import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.domain.model.Conversation
 import com.yourown.ai.domain.model.DeepseekModel
 import com.yourown.ai.domain.model.OpenAIModel
+import com.yourown.ai.domain.model.OpenRouterModel
 import com.yourown.ai.domain.model.XAIModel
 import com.yourown.ai.domain.model.DownloadStatus
 import com.yourown.ai.domain.model.LocalModel
@@ -47,18 +48,23 @@ data class ChatUiState(
     val isSearchMode: Boolean = false,
     val showSystemPromptDialog: Boolean = false,
     val showExportDialog: Boolean = false,
+    val showImportDialog: Boolean = false,
     val showErrorDialog: Boolean = false,
     val errorDetails: ErrorDetails? = null,
     val showModelLoadErrorDialog: Boolean = false,
     val modelLoadErrorMessage: String? = null,
     val selectedMessageLogs: String? = null,
     val exportedChatText: String? = null,
+    val importErrorMessage: String? = null,
+    val importedConversationId: String? = null, // ID of imported chat to open
     val searchQuery: String = "",
     val currentSearchIndex: Int = 0,
     val searchMatchCount: Int = 0,
     val inputText: String = "",
     val replyToMessage: Message? = null, // Swiped message for reply
-    val isInitialConversationsLoad: Boolean = true
+    val isInitialConversationsLoad: Boolean = true,
+    val showSourceChatDialog: Boolean = false, // Dialog for selecting source chat for context inheritance
+    val selectedSourceChatId: String? = null   // ID of chat to inherit context from
 )
 
 /**
@@ -246,7 +252,12 @@ class ChatViewModel @Inject constructor(
             }
         }
         
-        // TODO: Add Anthropic
+        // Add OpenRouter models if API key is set
+        if (apiKeyRepository.hasApiKey(com.yourown.ai.domain.model.AIProvider.OPENROUTER)) {
+            OpenRouterModel.entries.forEach { model ->
+                models.add(model.toModelProvider())
+            }
+        }
         
         _uiState.update { it.copy(availableModels = models) }
     }
@@ -268,30 +279,40 @@ class ChatViewModel @Inject constructor(
     
     // Conversation Management
     
-    suspend fun createNewConversation(): String {
+    /**
+     * Show dialog for selecting source chat (for context inheritance)
+     */
+    fun showSourceChatDialog() {
+        _uiState.update { it.copy(showSourceChatDialog = true, selectedSourceChatId = null) }
+    }
+    
+    /**
+     * Hide source chat selection dialog
+     */
+    fun hideSourceChatDialog() {
+        _uiState.update { it.copy(showSourceChatDialog = false, selectedSourceChatId = null) }
+    }
+    
+    /**
+     * Select source chat for context inheritance
+     */
+    fun selectSourceChat(chatId: String?) {
+        _uiState.update { it.copy(selectedSourceChatId = chatId) }
+    }
+    
+    /**
+     * Create new conversation, optionally inheriting context from source chat
+     */
+    suspend fun createNewConversation(sourceConversationId: String? = null): String {
         val count = _uiState.value.conversations.size + 1
         val title = "Chat $count"
         
-        val modelName = when (val model = _uiState.value.selectedModel) {
-            is ModelProvider.Local -> model.model.modelName
-            is ModelProvider.API -> model.modelId
-            null -> "unknown"
-        }
+        // NEW CHAT - no model selected yet (user must choose)
+        val modelName = "No model selected"
+        val provider = "unknown"
         
-        val provider = when (val model = _uiState.value.selectedModel) {
-            is ModelProvider.Local -> "local"
-            is ModelProvider.API -> model.provider.displayName
-            null -> "unknown"
-        }
-        
-        // Get default system prompt based on model type
-        val isLocalModel = _uiState.value.selectedModel is ModelProvider.Local
-        val defaultPrompt = if (isLocalModel) {
-            systemPromptRepository.getDefaultLocalPrompt()
-        } else {
-            systemPromptRepository.getDefaultApiPrompt()
-        }
-        
+        // Get default API system prompt (will be updated when user selects model)
+        val defaultPrompt = systemPromptRepository.getDefaultApiPrompt()
         val systemPromptContent = defaultPrompt?.content ?: _uiState.value.aiConfig.systemPrompt
         val systemPromptId = defaultPrompt?.id
         
@@ -300,10 +321,16 @@ class ChatViewModel @Inject constructor(
             systemPrompt = systemPromptContent,
             model = modelName,
             provider = provider,
-            systemPromptId = systemPromptId
+            systemPromptId = systemPromptId,
+            sourceConversationId = sourceConversationId
         )
         
         selectConversation(id)
+        
+        // IMPORTANT: Reset selectedModel to null for new chat
+        // User MUST select model manually
+        _uiState.update { it.copy(selectedModel = null) }
+        
         closeDrawer()
         return id
     }
@@ -322,18 +349,27 @@ class ChatViewModel @Inject constructor(
                         ) 
                     }
                     
-                    // Restore model from conversation
+                    // ALWAYS restore model from conversation (each chat has its own model)
                     conversation?.let { conv ->
-                        val restoredModel = restoreModelFromConversation(conv.model, conv.provider)
-                        if (restoredModel != null) {
-                            _uiState.update { it.copy(selectedModel = restoredModel) }
-                            // Load local model if needed
-                            if (restoredModel is ModelProvider.Local) {
-                                loadModelInBackground(restoredModel.model)
+                        // Only restore if model was selected (not "No model selected")
+                        if (conv.model != "No model selected" && conv.provider != "unknown") {
+                            val restoredModel = restoreModelFromConversation(conv.model, conv.provider)
+                            if (restoredModel != null) {
+                                _uiState.update { it.copy(selectedModel = restoredModel) }
+                                // Load local model if needed
+                                if (restoredModel is ModelProvider.Local) {
+                                    loadModelInBackground(restoredModel.model)
+                                }
+                            } else {
+                                // Model not found - reset to null (user must select)
+                                _uiState.update { it.copy(selectedModel = null) }
+                            }
+                        } else {
+                            // New chat without model - reset to null
+                            _uiState.update { it.copy(selectedModel = null) }
                         }
                     }
                 }
-            }
         }
     }
     
@@ -352,6 +388,10 @@ class ChatViewModel @Inject constructor(
             "OpenAI" -> {
                 // Find OpenAI model
                 OpenAIModel.entries.find { it.modelId == modelName }?.toModelProvider()
+            }
+            "OpenRouter" -> {
+                // Find OpenRouter model
+                OpenRouterModel.entries.find { it.modelId == modelName }?.toModelProvider()
             }
             "x.ai (Grok)" -> {
                 // Find x.ai model
@@ -527,8 +567,16 @@ class ChatViewModel @Inject constructor(
                 // Prepare AI config from settings
                 val config = _uiState.value.aiConfig
                 
-                // Get conversation history
-                val allMessages = _uiState.value.messages + userMessage
+                // Get conversation history with context inheritance support
+                val currentMessages = _uiState.value.messages + userMessage
+                val sourceConvId = _uiState.value.currentConversation?.sourceConversationId
+                
+                // Build message history with context inheritance
+                val allMessages = buildMessageHistoryWithInheritance(
+                    currentMessages = currentMessages,
+                    sourceConversationId = sourceConvId,
+                    messageHistoryLimit = config.messageHistoryLimit
+                )
                 
                 // Get user context from state
                 val userContextContent = _uiState.value.userContext.content
@@ -562,7 +610,7 @@ class ChatViewModel @Inject constructor(
                                         createdAt = System.currentTimeMillis()
                                     )
                                 ),
-                                systemPrompt = "You are a focus point analyzer. Return only valid JSON.",
+                                systemPrompt = "Ты - аналитик смысла.",
                                 userContext = null,
                                 config = config.copy(temperature = 0.3f) // Lower temperature for structured output
                             ).collect { chunk ->
@@ -1325,6 +1373,224 @@ class ChatViewModel @Inject constructor(
         }
     }
     
+    // Import chat functionality
+    fun showImportDialog() {
+        _uiState.update { it.copy(showImportDialog = true, importErrorMessage = null) }
+    }
+    
+    fun hideImportDialog() {
+        _uiState.update { 
+            it.copy(
+                showImportDialog = false, 
+                importErrorMessage = null,
+                importedConversationId = null
+            ) 
+        }
+    }
+    
+    fun clearImportedConversationId() {
+        _uiState.update { it.copy(importedConversationId = null) }
+    }
+    
+    fun importChat(chatText: String): String? {
+        try {
+            val lines = chatText.lines()
+            
+            // Parse title (first line starting with "# Chat Export:")
+            val titleLine = lines.firstOrNull { it.startsWith("# Chat Export:") }
+            val title = titleLine?.removePrefix("# Chat Export:")?.trim() ?: "Imported Chat"
+            
+            // Parse model and provider
+            val modelLine = lines.firstOrNull { it.startsWith("**Model:**") }
+            var provider: ModelProvider = OpenAIModel.GPT_4O.toModelProvider()
+            var modelName = "gpt-4o"
+            
+            if (modelLine != null) {
+                val modelPart = modelLine.removePrefix("**Model:**").trim()
+                // Format: "model-name (provider)"
+                val regex = """(.+?)\s*\((.+?)\)""".toRegex()
+                val match = regex.find(modelPart)
+                if (match != null) {
+                    modelName = match.groupValues[1].trim()
+                    val providerName = match.groupValues[2].trim()
+                    
+                    // Try to match provider
+                    provider = when {
+                        providerName.contains("OpenAI", ignoreCase = true) -> {
+                            // Try to find matching OpenAI model, fallback to GPT_4O
+                            OpenAIModel.entries.find { it.modelId == modelName || it.displayName == modelName }
+                                ?.toModelProvider() ?: OpenAIModel.GPT_4O.toModelProvider()
+                        }
+                        providerName.contains("Deepseek", ignoreCase = true) -> {
+                            // Try to find matching Deepseek model, fallback to DEEPSEEK_CHAT
+                            DeepseekModel.entries.find { it.modelId == modelName || it.displayName == modelName }
+                                ?.toModelProvider() ?: DeepseekModel.DEEPSEEK_CHAT.toModelProvider()
+                        }
+                        providerName.contains("OpenRouter", ignoreCase = true) -> {
+                            // Try to find matching OpenRouter model, fallback to CLAUDE_SONNET_4_5
+                            OpenRouterModel.entries.find { it.modelId == modelName || it.displayName == modelName }
+                                ?.toModelProvider() ?: OpenRouterModel.CLAUDE_SONNET_4_5.toModelProvider()
+                        }
+                        providerName.contains("xAI", ignoreCase = true) || providerName.contains("Grok", ignoreCase = true) -> {
+                            // Try to find matching xAI model, fallback to GROK_4_1_FAST_REASONING
+                            XAIModel.entries.find { it.modelId == modelName || it.displayName == modelName }
+                                ?.toModelProvider() ?: XAIModel.GROK_4_1_FAST_REASONING.toModelProvider()
+                        }
+                        else -> OpenAIModel.GPT_4O.toModelProvider()
+                    }
+                }
+            }
+            
+            // Parse messages
+            val messages = mutableListOf<Message>()
+            var currentRole: MessageRole? = null
+            var currentContent = StringBuilder()
+            var currentTimestamp = System.currentTimeMillis()
+            var isLiked = false
+            
+            for (line in lines) {
+                when {
+                    line.startsWith("## 👤 User") -> {
+                        // Save previous message
+                        if (currentRole != null && currentContent.isNotEmpty()) {
+                            messages.add(
+                                Message(
+                                    id = UUID.randomUUID().toString(),
+                                    conversationId = "", // Will be set later
+                                    role = currentRole,
+                                    content = currentContent.toString().trim(),
+                                    createdAt = currentTimestamp,
+                                    isLiked = isLiked
+                                )
+                            )
+                        }
+                        currentRole = MessageRole.USER
+                        currentContent = StringBuilder()
+                        isLiked = line.contains("❤️")
+                    }
+                    line.startsWith("## 🤖 Assistant") -> {
+                        // Save previous message
+                        if (currentRole != null && currentContent.isNotEmpty()) {
+                            messages.add(
+                                Message(
+                                    id = UUID.randomUUID().toString(),
+                                    conversationId = "", // Will be set later
+                                    role = currentRole,
+                                    content = currentContent.toString().trim(),
+                                    createdAt = currentTimestamp,
+                                    isLiked = isLiked
+                                )
+                            )
+                        }
+                        currentRole = MessageRole.ASSISTANT
+                        currentContent = StringBuilder()
+                        isLiked = line.contains("❤️")
+                    }
+                    line.startsWith("## ⚙️ System") -> {
+                        // Save previous message
+                        if (currentRole != null && currentContent.isNotEmpty()) {
+                            messages.add(
+                                Message(
+                                    id = UUID.randomUUID().toString(),
+                                    conversationId = "", // Will be set later
+                                    role = currentRole,
+                                    content = currentContent.toString().trim(),
+                                    createdAt = currentTimestamp,
+                                    isLiked = isLiked
+                                )
+                            )
+                        }
+                        currentRole = MessageRole.SYSTEM
+                        currentContent = StringBuilder()
+                        isLiked = line.contains("❤️")
+                    }
+                    line.startsWith("*") && line.endsWith("*") -> {
+                        // Timestamp line - ignore
+                    }
+                    line == "---" || line.isBlank() -> {
+                        // Separator or blank - ignore
+                    }
+                    else -> {
+                        // Content line
+                        if (currentRole != null) {
+                            if (currentContent.isNotEmpty()) {
+                                currentContent.append("\n")
+                            }
+                            currentContent.append(line)
+                        }
+                    }
+                }
+            }
+            
+            // Save last message
+            if (currentRole != null && currentContent.isNotEmpty()) {
+                messages.add(
+                    Message(
+                        id = UUID.randomUUID().toString(),
+                        conversationId = "", // Will be set later
+                        role = currentRole,
+                        content = currentContent.toString().trim(),
+                        createdAt = currentTimestamp,
+                        isLiked = isLiked
+                    )
+                )
+            }
+            
+            if (messages.isEmpty()) {
+                _uiState.update { it.copy(importErrorMessage = "No messages found in the imported text") }
+                return null
+            }
+            
+            // Create new conversation
+            viewModelScope.launch {
+                // Get provider name correctly
+                val providerName = when (provider) {
+                    is ModelProvider.Local -> "local"
+                    is ModelProvider.API -> {
+                        when (provider.provider) {
+                            com.yourown.ai.domain.model.AIProvider.OPENAI -> "OpenAI"
+                            com.yourown.ai.domain.model.AIProvider.DEEPSEEK -> "Deepseek"
+                            com.yourown.ai.domain.model.AIProvider.OPENROUTER -> "OpenRouter"
+                            com.yourown.ai.domain.model.AIProvider.XAI -> "x.ai (Grok)"
+                            com.yourown.ai.domain.model.AIProvider.CUSTOM -> "Custom"
+                        }
+                    }
+                }
+                
+                // Create conversation and get ID
+                val conversationId = conversationRepository.createConversation(
+                    title = title,
+                    systemPrompt = "", // Imported chats use default system prompt
+                    model = modelName,
+                    provider = providerName,
+                    systemPromptId = null
+                )
+                
+                // Insert messages with correct conversation ID
+                messages.forEach { message ->
+                    messageRepository.addMessage(message.copy(conversationId = conversationId))
+                }
+                
+                Log.d("ChatViewModel", "Imported chat: $conversationId, ${messages.size} messages")
+                
+                // Set imported conversation ID for navigation and hide dialog
+                _uiState.update { 
+                    it.copy(
+                        showImportDialog = false,
+                        importErrorMessage = null,
+                        importedConversationId = conversationId
+                    )
+                }
+            }
+            
+            return title
+        } catch (e: Exception) {
+            Log.e("ChatViewModel", "Error importing chat", e)
+            _uiState.update { it.copy(importErrorMessage = "Error parsing chat: ${e.message}") }
+            return null
+        }
+    }
+    
     /**
      * Extract memory from user message and save it
      */
@@ -1354,7 +1620,7 @@ class ChatViewModel @Inject constructor(
                 )
                 
                 // Use simple system prompt for memory extraction
-                val systemPrompt = "Ты - анализатор памяти. Извлекай ключевую информацию из сообщений пользователя."
+                val systemPrompt = "Ты - аналитик смысла."
                 
                 // Call AI to extract memory
                 val responseBuilder = StringBuilder()
@@ -1388,6 +1654,94 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error extracting memory", e)
             }
+        }
+    }
+    
+    /**
+     * Build message history with context inheritance support
+     * 
+     * If conversation has sourceConversationId:
+     * - Get last N pairs from source conversation
+     * - Current messages gradually replace inherited messages as new messages are added
+     * - Total pairs = messageHistoryLimit (e.g., 10 pairs = 20 messages)
+     * 
+     * @param currentMessages Messages from current conversation
+     * @param sourceConversationId ID of conversation to inherit context from
+     * @param messageHistoryLimit Total number of message pairs to include
+     * @return Combined message list (inherited + current), limited by messageHistoryLimit
+     */
+    private suspend fun buildMessageHistoryWithInheritance(
+        currentMessages: List<Message>,
+        sourceConversationId: String?,
+        messageHistoryLimit: Int
+    ): List<Message> {
+        // If no source conversation, use current messages only
+        if (sourceConversationId == null) {
+            return currentMessages
+        }
+        
+        try {
+            // Count current message pairs
+            val currentPairs = mutableListOf<Pair<Message, Message>>()
+            var i = 0
+            while (i < currentMessages.size - 1) {
+                val current = currentMessages[i]
+                val next = currentMessages[i + 1]
+                
+                if (current.role.toStringValue() == "user" && next.role.toStringValue() == "assistant") {
+                    currentPairs.add(Pair(current, next))
+                    i += 2
+                } else {
+                    i += 1
+                }
+            }
+            
+            // Handle last unpaired user message
+            val lastUnpairedUser = if (currentMessages.isNotEmpty() && 
+                                      currentMessages.last().role.toStringValue() == "user" &&
+                                      (currentPairs.isEmpty() || currentPairs.last().first.id != currentMessages.last().id)) {
+                currentMessages.last()
+            } else null
+            
+            val currentPairCount = currentPairs.size
+            Log.d("ChatViewModel", "Context inheritance: current has $currentPairCount pairs, limit is $messageHistoryLimit")
+            
+            // Calculate how many pairs to get from source
+            val neededFromSource = (messageHistoryLimit - currentPairCount).coerceAtLeast(0)
+            
+            if (neededFromSource == 0) {
+                // Current conversation has enough pairs, use only last N pairs from current
+                val messagesToUse = currentPairs.takeLast(messageHistoryLimit)
+                    .flatMap { listOf(it.first, it.second) }
+                return if (lastUnpairedUser != null) {
+                    messagesToUse + lastUnpairedUser
+                } else {
+                    messagesToUse
+                }
+            }
+            
+            // Get inherited pairs from source conversation
+            val inheritedMessages = messageRepository.getLastMessagePairs(
+                conversationId = sourceConversationId,
+                pairLimit = neededFromSource
+            )
+            
+            Log.d("ChatViewModel", "Got ${inheritedMessages.size} inherited messages from source (${inheritedMessages.size / 2} pairs)")
+            
+            // Combine: inherited messages + current messages
+            val combined = inheritedMessages + currentPairs.flatMap { listOf(it.first, it.second) }
+            
+            // Add unpaired user message if exists
+            return if (lastUnpairedUser != null) {
+                combined + lastUnpairedUser
+            } else {
+                combined
+            }
+            
+        } catch (e: Exception) {
+            Log.e("ChatViewModel", "Error building message history with inheritance", e)
+            // Fallback to current messages only
+            return currentMessages
         }
     }
     

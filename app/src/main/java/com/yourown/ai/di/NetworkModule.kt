@@ -3,6 +3,7 @@ package com.yourown.ai.di
 import com.google.gson.Gson
 import com.yourown.ai.data.remote.deepseek.DeepseekClient
 import com.yourown.ai.data.remote.openai.OpenAIClient
+import com.yourown.ai.data.remote.openrouter.OpenRouterClient
 import com.yourown.ai.data.remote.xai.XAIClient
 import com.yourown.ai.data.remote.xai.XAIVoiceClient
 import com.yourown.ai.data.repository.LocalModelRepository
@@ -113,5 +114,14 @@ object NetworkModule {
         gson: Gson
     ): XAIVoiceClient {
         return XAIVoiceClient(okHttpClient, gson)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideOpenRouterClient(
+        @ApiClient okHttpClient: OkHttpClient,
+        gson: Gson
+    ): OpenRouterClient {
+        return OpenRouterClient(okHttpClient, gson)
     }
 }

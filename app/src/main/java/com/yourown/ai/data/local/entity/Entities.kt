@@ -13,7 +13,8 @@ import androidx.room.PrimaryKey
     indices = [
         Index(value = ["createdAt"]),
         Index(value = ["updatedAt"]),
-        Index(value = ["systemPromptId"])
+        Index(value = ["systemPromptId"]),
+        Index(value = ["sourceConversationId"])
     ]
 )
 data class ConversationEntity(
@@ -31,6 +32,8 @@ data class ConversationEntity(
     
     val isPinned: Boolean = false,        // Закреплена ли беседа
     val isArchived: Boolean = false,      // Архивирована ли
+    
+    val sourceConversationId: String? = null,  // ID чата, из которого подтянута история для контекста
 )
 
 /**

@@ -110,4 +110,38 @@ class MessageRepository @Inject constructor(
     suspend fun getTotalTokens(conversationId: String): Int {
         return messageDao.getTotalTokensByConversation(conversationId) ?: 0
     }
+    
+    /**
+     * Get last N message pairs (user-assistant) from a conversation
+     * Used for context inheritance when forking a conversation
+     * 
+     * @param conversationId ID of the conversation to get messages from
+     * @param pairLimit Number of pairs to retrieve (each pair = user + assistant message)
+     * @return List of messages (user-assistant pairs), sorted chronologically
+     */
+    suspend fun getLastMessagePairs(conversationId: String, pairLimit: Int): List<Message> {
+        // Get all messages for this conversation, sorted by creation time
+        val allMessages = messageDao.getMessagesByConversationSync(conversationId)
+            .map { it.toDomain() }
+            .sortedBy { it.createdAt }
+        
+        // Extract pairs (user followed by assistant)
+        val pairs = mutableListOf<Pair<Message, Message>>()
+        var i = 0
+        while (i < allMessages.size - 1) {
+            val current = allMessages[i]
+            val next = allMessages[i + 1]
+            
+            // Check if this is a user-assistant pair
+            if (current.role.toStringValue() == "user" && next.role.toStringValue() == "assistant") {
+                pairs.add(Pair(current, next))
+                i += 2  // Skip both messages
+            } else {
+                i += 1  // Move to next message
+            }
+        }
+        
+        // Take last N pairs and flatten to list
+        return pairs.takeLast(pairLimit).flatMap { listOf(it.first, it.second) }
+    }
 }

@@ -69,7 +69,7 @@ enum class OpenAIModel(
     
     // GPT-4o Series
     GPT_4O(
-        modelId = "gpt-4o-2024-05-13",
+        modelId = "gpt-4o-2024-08-06",
         displayName = "GPT-4o",
         description = "Fast, intelligent, flexible"
     );
@@ -135,6 +135,100 @@ enum class XAIModel(
     fun toModelProvider(): ModelProvider.API {
         return ModelProvider.API(
             provider = AIProvider.XAI,
+            modelId = modelId,
+            displayName = displayName
+        )
+    }
+}
+
+/**
+ * Available OpenRouter models
+ */
+enum class OpenRouterModel(
+    val modelId: String,
+    val displayName: String,
+    val description: String
+) {
+    // Claude 4.5 Series
+    CLAUDE_SONNET_4_5(
+        modelId = "anthropic/claude-sonnet-4.5",
+        displayName = "Claude Sonnet 4.5",
+        description = "Balanced performance and speed"
+    ),
+    CLAUDE_OPUS_4_5(
+        modelId = "anthropic/claude-opus-4.5",
+        displayName = "Claude Opus 4.5",
+        description = "Most capable, best for complex tasks"
+    ),
+    CLAUDE_HAIKU_4_5(
+        modelId = "anthropic/claude-haiku-4.5",
+        displayName = "Claude Haiku 4.5",
+        description = "Fast and efficient"
+    ),
+    
+    // Claude 4 & 3.x Series
+    CLAUDE_SONNET_4(
+        modelId = "anthropic/claude-sonnet-4",
+        displayName = "Claude Sonnet 4",
+        description = "Stable Claude 4 with vision support"
+    ),
+    CLAUDE_3_7_SONNET(
+        modelId = "anthropic/claude-3.7-sonnet",
+        displayName = "Claude 3.7 Sonnet",
+        description = "Enhanced 3.5 with better reasoning"
+    ),
+    CLAUDE_3_5_HAIKU(
+        modelId = "anthropic/claude-3.5-haiku",
+        displayName = "Claude 3.5 Haiku",
+        description = "Fast, efficient with vision"
+    ),
+    
+    // Llama 4 Series
+    LLAMA_4_MAVERICK(
+        modelId = "meta-llama/llama-4-maverick",
+        displayName = "Llama 4 Maverick",
+        description = "Flagship Llama 4 model with advanced reasoning"
+    ),
+    LLAMA_4_SCOUT(
+        modelId = "meta-llama/llama-4-scout",
+        displayName = "Llama 4 Scout",
+        description = "Efficient Llama 4 variant for fast inference"
+    ),
+    
+    // Gemini 3 Series (with reasoning tokens)
+    GEMINI_3_PRO_PREVIEW(
+        modelId = "google/gemini-3-pro-preview",
+        displayName = "Gemini 3 Pro Preview",
+        description = "Advanced reasoning with thinking capabilities"
+    ),
+    GEMINI_3_FLASH_PREVIEW(
+        modelId = "google/gemini-3-flash-preview",
+        displayName = "Gemini 3 Flash Preview",
+        description = "Fast reasoning with preview features"
+    ),
+    
+    // Gemini 2.5 Series (multimodal support)
+    GEMINI_2_5_PRO(
+        modelId = "google/gemini-2.5-pro",
+        displayName = "Gemini 2.5 Pro",
+        description = "Multimodal: text, image, audio, video"
+    ),
+    GEMINI_2_5_FLASH(
+        modelId = "google/gemini-2.5-flash",
+        displayName = "Gemini 2.5 Flash",
+        description = "Fast multimodal with 1M+ context"
+    ),
+    
+    // OpenAI GPT-4o Series
+    GPT_4O_2024_05_13(
+        modelId = "openai/gpt-4o-2024-05-13",
+        displayName = "GPT-4o (2024-05-13)",
+        description = "Stable GPT-4o snapshot with vision"
+    );
+    
+    fun toModelProvider(): ModelProvider.API {
+        return ModelProvider.API(
+            provider = AIProvider.OPENROUTER,
             modelId = modelId,
             displayName = displayName
         )

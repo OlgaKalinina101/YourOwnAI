@@ -14,6 +14,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourown.ai.presentation.chat.ChatViewModel
 import com.yourown.ai.presentation.chat.components.ConversationDrawer
 import kotlinx.coroutines.launch
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 /**
  * Home screen - main entry point with getting started guide
@@ -29,6 +34,50 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Handle imported conversation - navigate to it
+    LaunchedEffect(uiState.importedConversationId) {
+        uiState.importedConversationId?.let { conversationId ->
+            scope.launch {
+                // Show success message
+                snackbarHostState.showSnackbar(
+                    message = "Chat imported successfully!",
+                    duration = SnackbarDuration.Short
+                )
+                // Close drawer
+                drawerState.close()
+                // Navigate to imported chat
+                onNavigateToChat(conversationId)
+                // Clear the imported ID
+                viewModel.clearImportedConversationId()
+            }
+        }
+    }
+    
+    // File picker for loading chat import
+    val loadFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        android.util.Log.d("HomeScreen", "File picker result: $uri")
+        uri?.let {
+            try {
+                android.util.Log.d("HomeScreen", "Reading file from: $it")
+                context.contentResolver.openInputStream(it)?.use { inputStream ->
+                    val text = BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                        reader.readText()
+                    }
+                    android.util.Log.d("HomeScreen", "File loaded: ${text.length} characters")
+                    viewModel.importChat(text)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("HomeScreen", "Error loading file", e)
+            }
+        } ?: run {
+            android.util.Log.w("HomeScreen", "File picker cancelled or returned null")
+        }
+    }
     
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -46,13 +95,16 @@ fun HomeScreen(
                     onNewConversation = {
                         scope.launch {
                             drawerState.close()
-                            val newId = viewModel.createNewConversation()
-                            onNavigateToChat(newId)
                         }
+                        viewModel.showSourceChatDialog()
                     },
                     onVoiceChatClick = {
                         scope.launch { drawerState.close() }
                         onNavigateToVoiceChat()
+                    },
+                    onImportChatClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.showImportDialog()
                     },
                     onDeleteConversation = viewModel::deleteConversation
                 )
@@ -61,6 +113,7 @@ fun HomeScreen(
         gesturesEnabled = true
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {
@@ -194,6 +247,42 @@ fun HomeScreen(
                 }
             }
         }
+    }
+    
+    // Import dialog
+    if (uiState.showImportDialog) {
+        com.yourown.ai.presentation.chat.components.ImportChatDialog(
+            onDismiss = viewModel::hideImportDialog,
+            onImport = { chatText ->
+                viewModel.importChat(chatText)
+            },
+            onLoadFromFile = {
+                android.util.Log.d("HomeScreen", "Load from file button clicked")
+                try {
+                    loadFileLauncher.launch(arrayOf("text/plain", "text/*", "*/*"))
+                    android.util.Log.d("HomeScreen", "File picker launched")
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeScreen", "Error launching file picker", e)
+                }
+            },
+            errorMessage = uiState.importErrorMessage
+        )
+    }
+    
+    if (uiState.showSourceChatDialog) {
+        com.yourown.ai.presentation.chat.components.SourceChatSelectionDialog(
+            conversations = uiState.conversations,
+            selectedSourceChatId = uiState.selectedSourceChatId,
+            onSourceChatSelected = viewModel::selectSourceChat,
+            onConfirm = {
+                scope.launch {
+                    val newId = viewModel.createNewConversation(uiState.selectedSourceChatId)
+                    viewModel.hideSourceChatDialog()
+                    onNavigateToChat(newId)
+                }
+            },
+            onDismiss = viewModel::hideSourceChatDialog
+        )
     }
 }
 

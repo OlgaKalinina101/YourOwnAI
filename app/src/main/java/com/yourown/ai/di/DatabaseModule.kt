@@ -120,6 +120,24 @@ object DatabaseModule {
         }
     }
     
+    /**
+     * Migration from version 7 to 8
+     * Add sourceConversationId column to conversations table for context inheritance
+     */
+    private val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add sourceConversationId column (ID of parent chat for context inheritance)
+            database.execSQL(
+                "ALTER TABLE conversations ADD COLUMN sourceConversationId TEXT DEFAULT NULL"
+            )
+            
+            // Create index for faster lookups
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_conversations_sourceConversationId ON conversations(sourceConversationId)"
+            )
+        }
+    }
+    
     @Provides
     @Singleton
     fun provideDatabase(
@@ -130,7 +148,7 @@ object DatabaseModule {
             YourOwnAIDatabase::class.java,
             YourOwnAIDatabase.DATABASE_NAME
         )
-            .addMigrations(MIGRATION_2_3, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_2_3, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .fallbackToDestructiveMigration() // Keep for future migrations
             .build()
     }

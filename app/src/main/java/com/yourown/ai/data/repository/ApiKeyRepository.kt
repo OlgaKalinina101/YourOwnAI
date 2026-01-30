@@ -21,7 +21,7 @@ class ApiKeyRepository @Inject constructor(
         private const val PREFS_NAME = "api_keys_secure"
         private const val KEY_DEEPSEEK = "deepseek_key"
         private const val KEY_OPENAI = "openai_key"
-        private const val KEY_ANTHROPIC = "anthropic_key"
+        private const val KEY_OPENROUTER = "openrouter_key"
         private const val KEY_XAI = "xai_key"
     }
     
@@ -49,7 +49,7 @@ class ApiKeyRepository @Inject constructor(
         
         encryptedPrefs.getString(KEY_DEEPSEEK, null)?.let { keys[AIProvider.DEEPSEEK] = it }
         encryptedPrefs.getString(KEY_OPENAI, null)?.let { keys[AIProvider.OPENAI] = it }
-        encryptedPrefs.getString(KEY_ANTHROPIC, null)?.let { keys[AIProvider.ANTHROPIC] = it }
+        encryptedPrefs.getString(KEY_OPENROUTER, null)?.let { keys[AIProvider.OPENROUTER] = it }
         encryptedPrefs.getString(KEY_XAI, null)?.let { keys[AIProvider.XAI] = it }
         
         _apiKeys.value = keys
@@ -59,7 +59,7 @@ class ApiKeyRepository @Inject constructor(
         val prefKey = when (provider) {
             AIProvider.DEEPSEEK -> KEY_DEEPSEEK
             AIProvider.OPENAI -> KEY_OPENAI
-            AIProvider.ANTHROPIC -> KEY_ANTHROPIC
+            AIProvider.OPENROUTER -> KEY_OPENROUTER
             AIProvider.XAI -> KEY_XAI
             AIProvider.CUSTOM -> return@withContext // Not supported
         }
@@ -75,7 +75,7 @@ class ApiKeyRepository @Inject constructor(
         val prefKey = when (provider) {
             AIProvider.DEEPSEEK -> KEY_DEEPSEEK
             AIProvider.OPENAI -> KEY_OPENAI
-            AIProvider.ANTHROPIC -> KEY_ANTHROPIC
+            AIProvider.OPENROUTER -> KEY_OPENROUTER
             AIProvider.XAI -> KEY_XAI
             AIProvider.CUSTOM -> return@withContext
         }

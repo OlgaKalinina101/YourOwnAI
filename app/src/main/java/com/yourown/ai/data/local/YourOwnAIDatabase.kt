@@ -31,7 +31,7 @@ import com.yourown.ai.data.local.entity.*
         SystemPromptEntity::class,
         KnowledgeDocumentEntity::class,
     ],
-    version = 7,  // Increased: added embedding column to MemoryEntity
+    version = 8,  // Increased: added sourceConversationId to ConversationEntity
     exportSchema = true
 )
 abstract class YourOwnAIDatabase : RoomDatabase() {

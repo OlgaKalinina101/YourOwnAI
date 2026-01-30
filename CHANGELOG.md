@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Context Inheritance** - fork conversations with inherited message history
+  - Dialog for selecting source chat when creating new conversation
+  - Last N message pairs from source chat loaded into context
+  - Inherited messages gradually replaced as new messages added
+- **OpenRouter integration** - 14 models: Claude (6), Llama 4 (2), Gemini (4), GPT-4o (1), OpenAI (1) - access to 200+ models
+- **Voice Chat persistent history** - last 100 messages saved locally (SharedPreferences)
+- **Improved Memory filtering** - automatically excludes non-meaningful responses ("Нет ключевой информации", etc.)
+- **Android Auto Backup** - automatic backup of chats and settings (API keys excluded for security)
+- **Import/Export Chat** - export chats to text, import from clipboard or .txt files
+- **Voice Chat** - real-time voice conversation with xAI Grok (5 voices, system prompts, user context)
 - Multiple AI provider support (Deepseek, OpenAI, x.ai Grok)
 - Local model inference with Llamatik (Qwen 2.5 1.7B, Llama 3.2 3B)
 - Model download manager with queue system

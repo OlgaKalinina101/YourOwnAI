@@ -19,6 +19,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourown.ai.presentation.chat.components.*
 import kotlinx.coroutines.launch
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +40,50 @@ fun ChatScreen(
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    
+    // File picker for saving chat export
+    val saveFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        android.util.Log.d("ChatScreen", "Save file picker result: $uri")
+        uri?.let {
+            try {
+                android.util.Log.d("ChatScreen", "Saving file to: $it")
+                context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                    val bytes = uiState.exportedChatText?.toByteArray() ?: return@use
+                    outputStream.write(bytes)
+                    android.util.Log.d("ChatScreen", "File saved: ${bytes.size} bytes")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ChatScreen", "Error saving file", e)
+            }
+        } ?: run {
+            android.util.Log.w("ChatScreen", "Save file picker cancelled or returned null")
+        }
+    }
+    
+    // File picker for loading chat import
+    val loadFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        android.util.Log.d("ChatScreen", "File picker result: $uri")
+        uri?.let {
+            try {
+                android.util.Log.d("ChatScreen", "Reading file from: $it")
+                context.contentResolver.openInputStream(it)?.use { inputStream ->
+                    val text = BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                        reader.readText()
+                    }
+                    android.util.Log.d("ChatScreen", "File loaded: ${text.length} characters")
+                    viewModel.importChat(text)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ChatScreen", "Error loading file", e)
+            }
+        } ?: run {
+            android.util.Log.w("ChatScreen", "File picker cancelled or returned null")
+        }
+    }
     
     // Check if scrolled to bottom
     val isAtBottom by remember {
@@ -322,9 +373,48 @@ fun ChatScreen(
                 }
                 context.startActivity(Intent.createChooser(shareIntent, "Поделиться чатом"))
             },
+            onSaveToFile = {
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val fileName = "chat_export_$timestamp.txt"
+                saveFileLauncher.launch(fileName)
+            },
             onFilterChanged = { filterByLikes ->
                 viewModel.exportChat(filterByLikes = filterByLikes)
             }
+        )
+    }
+    
+    if (uiState.showImportDialog) {
+        ImportChatDialog(
+            onDismiss = viewModel::hideImportDialog,
+            onImport = { chatText ->
+                viewModel.importChat(chatText)
+            },
+            onLoadFromFile = {
+                android.util.Log.d("ChatScreen", "Load from file button clicked")
+                try {
+                    loadFileLauncher.launch(arrayOf("text/plain", "text/*", "*/*"))
+                    android.util.Log.d("ChatScreen", "File picker launched")
+                } catch (e: Exception) {
+                    android.util.Log.e("ChatScreen", "Error launching file picker", e)
+                }
+            },
+            errorMessage = uiState.importErrorMessage
+        )
+    }
+    
+    if (uiState.showSourceChatDialog) {
+        SourceChatSelectionDialog(
+            conversations = uiState.conversations,
+            selectedSourceChatId = uiState.selectedSourceChatId,
+            onSourceChatSelected = viewModel::selectSourceChat,
+            onConfirm = {
+                coroutineScope.launch {
+                    viewModel.createNewConversation(uiState.selectedSourceChatId)
+                    viewModel.hideSourceChatDialog()
+                }
+            },
+            onDismiss = viewModel::hideSourceChatDialog
         )
     }
     

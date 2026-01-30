@@ -62,5 +62,6 @@ data class Conversation(
     val updatedAt: Long,
     val isPinned: Boolean = false,
     val isArchived: Boolean = false,
+    val sourceConversationId: String? = null,  // ID чата-источника для наследования контекста
     val messages: List<Message> = emptyList()
 )

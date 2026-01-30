@@ -50,9 +50,33 @@ data class MemoryEntry(
         ): MemoryEntry? {
             val trimmed = response.trim()
             
-            // Check for "no key info" response
-            if (trimmed.equals("Нет ключевой информации", ignoreCase = true) ||
-                trimmed.isEmpty()) {
+            // Check for empty response
+            if (trimmed.isEmpty()) {
+                return null
+            }
+            
+            // Normalize: lowercase + remove punctuation
+            val normalized = trimmed.lowercase()
+                .replace(Regex("[.!?,:;…—–-]"), "")
+                .trim()
+            
+            // Check for explicit "no key information" markers
+            val noInfoMarkers = listOf(
+                "нет ключевой информации",
+                "нет ключевых данных",
+                "ключевой информации нет",
+                "no key information",
+                "no key info",
+                "нет информации",
+                "недостаточно информации",
+                "не содержит ключевой информации",
+                "ключевая информация отсутствует"
+            )
+            
+            // Check if normalized response matches any marker
+            if (noInfoMarkers.any { marker -> 
+                normalized == marker || normalized.contains(marker)
+            }) {
                 return null
             }
             

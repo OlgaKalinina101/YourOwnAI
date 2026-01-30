@@ -28,6 +28,7 @@ fun ConversationDrawer(
     onConversationClick: (String) -> Unit,
     onNewConversation: () -> Unit,
     onVoiceChatClick: () -> Unit = {},
+    onImportChatClick: () -> Unit = {},
     onDeleteConversation: (String) -> Unit
 ) {
     Column(
@@ -44,11 +45,28 @@ fun ConversationDrawer(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "YourOwnAI",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "YourOwnAI",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    IconButton(
+                        onClick = onImportChatClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.CloudUpload,
+                            contentDescription = "Import Chat",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 
                 Button(
                     onClick = onNewConversation,

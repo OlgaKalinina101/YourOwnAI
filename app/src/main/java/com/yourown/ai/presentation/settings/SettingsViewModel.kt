@@ -25,7 +25,7 @@ data class SettingsUiState(
     val apiKeys: List<ApiKeyInfo> = listOf(
         ApiKeyInfo(AIProvider.DEEPSEEK),
         ApiKeyInfo(AIProvider.OPENAI),
-        ApiKeyInfo(AIProvider.ANTHROPIC),
+        ApiKeyInfo(AIProvider.OPENROUTER),
         ApiKeyInfo(AIProvider.XAI)
     ),
     val aiConfig: AIConfig = AIConfig(),
@@ -558,7 +558,7 @@ class SettingsViewModel @Inject constructor(
                     }
                 }
                 else -> {
-                    // TODO: Implement for Anthropic
+                    // TODO: Implement for OpenRouter
                 }
             }
         }

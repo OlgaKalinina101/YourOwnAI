@@ -132,6 +132,7 @@ The app should feel like a **tool**, not a product with personality. It's your s
 #### 🔐 Privacy & Control
 - **Local-first architecture** - all data stored on device with Room Database
 - **Encrypted API keys** - secured with Android Keystore System
+- **Android Auto Backup** - automatic backup of chats and settings (API keys excluded)
 - **No backend** - direct communication with AI providers
 - **No tracking** - zero analytics, telemetry, or user profiling
 - **Onboarding customization** - theme, colors, fonts, text size
@@ -157,8 +158,13 @@ The app should feel like a **tool**, not a product with personality. It's your s
   - View system prompt, messages, context (Memory, RAG, Deep Empathy, Swipe)
   - Copy logs for troubleshooting
 - **Message history** - configurable context length (1-25 messages)
+- **Context Inheritance (NEW!)** - fork conversations with inherited message history
+  - Select source chat when creating new conversation
+  - Last N message pairs automatically loaded into context
+  - Inherited messages gradually replaced as new conversation grows
 - **Conversation titles** - auto-generated or manual edit
 - **Context-aware responses** - AI uses Memory, RAG, Deep Empathy, and Swipe context (API models only)
+- **Import/Export chats** - export to text format, import from txt files or clipboard
 
 #### 🎙️ Voice Chat (NEW!)
 - **Real-time voice conversation** - talk naturally with Grok AI
@@ -167,7 +173,8 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **User context support** - voice chat uses your Context from Settings
 - **Audio visualization** - real-time waveform when speaking/listening
 - **Tap-to-talk** - simple microphone button (tap to start, tap to stop)
-- **Session-based** - messages stored in memory during session only
+- **Persistent history** - previous conversations saved locally (last 100 messages)
+- **Clear history** - delete button to start fresh
 - **Request logs** - view full voice session details (prompt, voice, context)
 - **xAI Grok Voice Agent API** - powered by grok-beta with 24kHz PCM16 audio
 
@@ -200,6 +207,7 @@ The app should feel like a **tool**, not a product with personality. It's your s
   - Real-time context injection for empathetic responses
 - **Long-term Memory** - persistent memory across conversations
   - Automatic extraction from user messages
+  - Smart filtering - excludes non-meaningful responses ("Нет ключевой информации", etc.)
   - Semantic search with embeddings (cosine similarity)
   - Configurable extraction prompt with placeholder validation
   - Age filter (0-30 days) - only retrieve older memories
@@ -248,11 +256,29 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - Root detection warnings
 - Additional ProGuard hardening
 
-#### 🌐 More Providers
-- Anthropic (Claude 3.5 Sonnet, Opus)
-- Google (Gemini Pro, Ultra)
+#### 🌐 OpenRouter (NEW!)
+**Claude:**
+- **Claude Sonnet 4.5 / 4 / 3.7** - balanced performance
+- **Claude Opus 4.5** - most capable
+- **Claude Haiku 4.5 / 3.5** - fast and efficient
+
+**Llama 4:**
+- **Llama 4 Maverick** - flagship with advanced reasoning
+- **Llama 4 Scout** - efficient variant for fast inference
+
+**Gemini:**
+- **Gemini 3 Pro / Flash Preview** - advanced reasoning
+- **Gemini 2.5 Pro / Flash** - multimodal, 1M+ context
+
+**OpenAI:**
+- **GPT-4o (2024-05-13)** - stable snapshot with vision
+
+**Total: 14 models available** | Access to 200+ models through one API
+
+#### 🔜 Coming Soon
+- More OpenRouter models (200+ available)
+- Multimodal support (images, audio, video for compatible models)
 - Groq (ultra-fast inference)
-- OpenRouter (100+ models)
 
 ## 🛠 Technology Stack
 
@@ -402,12 +428,29 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
    - Speak your message
    - Tap again to stop and send
    - AI responds with voice and text
-6. **Session-based** - messages cleared when you close Voice Chat
-7. **View request logs** - tap code icon (`</>`) on AI messages to see:
+6. **Persistent history** - your voice conversations are saved and restored when you return
+7. **Clear history** - tap trash icon (🗑️) in header to start fresh (keeps last 100 messages)
+8. **View request logs** - tap code icon (`</>`) on AI messages to see:
    - System prompt used
    - Voice selected
    - User context included
    - Session details
+
+### Import/Export Chat
+1. **Export chat**:
+   - Tap three-dot menu in chat
+   - Select "Save chat" or "Save liked messages"
+   - Share as text or copy to clipboard
+2. **Import chat**:
+   - Open drawer (☰ menu)
+   - Tap Upload button (top right corner)
+   - Paste exported chat text or load .txt file
+   - Tap Import
+3. **Format** - exports include:
+   - Chat title, model, provider
+   - All messages with roles (User, Assistant, System)
+   - Liked messages indicator (❤️)
+   - Timestamps
 
 ### Customizing AI Behavior
 1. **Settings → AI Configuration**
@@ -577,8 +620,7 @@ YourOwnAI/
 - Advanced AI settings (Deep Empathy, Memory, RAG, Swipe prompts and instructions)
 - Downloaded local models (Qwen 2.5, Llama 3.2)
 - Downloaded embedding models (all-MiniLM, mxbai-embed)
-
-**Note:** Voice Chat messages are **NOT** stored - they exist only during the session for privacy
+- **Voice Chat history** - last 100 messages saved in SharedPreferences (separate from regular chats)
 
 ### What We DON'T Collect
 - ❌ No analytics or telemetry
@@ -604,13 +646,13 @@ YourOwnAI/
 | Deepseek | Deepseek Chat, Deepseek Reasoner | Fast, cost-effective reasoning |
 | OpenAI | GPT-5, GPT-4o, GPT-4o Mini, o1/o3 | Best quality, newest models |
 | x.ai (Grok) | Grok 4.1, Grok 4, Grok 3, Grok Code + **Voice API** | Fast reasoning, code models + real-time voice |
+| **OpenRouter** (NEW!) | Claude (6), Llama 4 (2), Gemini (4), GPT-4o (1) - **14 models** | Access to 200+ models with one API key |
 | Local | Qwen 2.5 1.7B, Llama 3.2 3B | Completely offline via llama.cpp |
 
 ### Coming Soon
-- Anthropic (Claude 3.5 Sonnet, Claude 3 Opus)
-- Google (Gemini Pro, Gemini Ultra)
-- Groq (Llama 3, Mixtral)
-- OpenRouter (100+ models with one key)
+- More OpenRouter models (expand from 14 to 200+ available)
+- Multimodal support (images, audio, video for Gemini 2.5)
+- Groq (ultra-fast inference)
 
 ## 🗺 Roadmap
 
@@ -648,11 +690,14 @@ YourOwnAI/
 
 ### Phase 3: Additional Features (In Progress)
 - [x] Voice chat - real-time voice conversation with xAI Grok
+- [x] Voice chat persistent history (last 100 messages)
+- [x] OpenRouter integration - 14 models (Claude, Llama 4, Gemini, GPT-4o)
+- [x] Context Inheritance - fork conversations with inherited message history
+- [x] Improved Memory filtering - excludes non-meaningful responses
 - [ ] Usage tracking (tokens, cost)
-- [ ] Export/backup conversations
+- [ ] More OpenRouter models (expand from 14 to 200+)
+- [ ] OpenRouter multimodal support (images, audio, video)
 - [ ] PDF document support for RAG
-- [ ] Anthropic Claude integration
-- [ ] Multi-modal (image input for vision models)
 
 ### Phase 4: Polish & Security
 - [ ] Biometric authentication
@@ -754,7 +799,7 @@ A: Ensure you're on the latest version. We've added:
 A: Deep Empathy analyzes your messages for strong emotional moments and helps the AI respond with appropriate emotional intelligence. It automatically detects focus points (actions, feelings, desires) and injects them into the AI's context. Only works with API models.
 
 **Q: How does Memory work?**
-A: The AI automatically extracts key facts from your conversations and stores them. When you chat, it retrieves relevant memories (using semantic search) and includes them in context. You can view, edit, or delete memories anytime. Memory has an age filter - by default, only memories older than 2 days are retrieved.
+A: The AI automatically extracts key facts from your conversations and stores them. The system filters out non-meaningful responses (e.g., "Нет ключевой информации") to keep only actionable memories. When you chat, it retrieves relevant memories (using semantic search) and includes them in context. You can view, edit, or delete memories anytime. Memory has an age filter - by default, only memories older than 2 days are retrieved.
 
 **Q: What is RAG?**
 A: Retrieval Augmented Generation. Upload text documents (personal notes, articles, guides) and the AI will use them to provide more informed responses. Documents are chunked, embedded, and retrieved using semantic search.
@@ -778,14 +823,23 @@ A: Tap the Reply button on any message to add it to context. A preview appears a
 **Q: How does Voice Chat work?**
 A: Voice Chat uses xAI Grok Voice Agent API for real-time speech-to-text and text-to-speech. You speak → Grok transcribes → AI responds → Grok reads response aloud. Choose from 5 voices (Ara, Rex, Sal, Eve, Leo) and use your custom system prompts. Messages are session-only (not saved).
 
-**Q: Why aren't Voice Chat messages saved?**
-A: Voice conversations are ephemeral by design. Each session is fresh and private - when you close Voice Chat, everything is cleared. This prevents voice chat clutter in your conversation history and respects the transient nature of spoken conversation.
+**Q: Are Voice Chat messages saved?**
+A: Yes! Voice Chat now saves your conversation history locally (last 100 messages max). When you reopen Voice Chat, you'll see your previous messages. This is separate from regular chats - voice messages are stored in SharedPreferences, not the main database. You can clear history anytime using the trash icon.
 
 **Q: Can I use Voice Chat offline?**
 A: No. Voice Chat requires internet connection and xAI API key. It uses Grok's real-time voice API (WebSocket) for speech recognition and synthesis.
 
 **Q: Can I change voice or personality during conversation?**
 A: Yes! You can switch voices (Ara, Rex, Sal, Eve, Leo) or system prompts anytime. The session will automatically reconnect with new settings while keeping your message history in the current session.
+
+**Q: Does the app have automatic backup?**
+A: Yes! Android Auto Backup is enabled. Your chats, settings, and data are automatically backed up to Google Drive (if enabled) or during device transfer. API keys are intentionally excluded for security. Backup happens automatically every 24 hours when connected to WiFi and charging.
+
+**Q: Can I export and import chats?**
+A: Yes! Use the three-dot menu in chat to export as text. To import, open the drawer and tap the Upload button (top right). You can paste text or load .txt files. Format is preserved including model, provider, roles, and liked messages.
+
+**Q: What is Context Inheritance and how do I use it?**
+A: Context Inheritance lets you "fork" a conversation - create a new chat that inherits message history from an existing chat. When you tap "+ New Chat", a dialog appears where you can select a source chat (or choose "None" for a fresh start). If you select a source, the last N message pairs (based on your Message History Limit setting, default 10) are automatically loaded into context. As you continue the new conversation, inherited messages are gradually replaced by new ones. This is useful for continuing a topic in a new context, switching AI models while keeping history, or branching off from a specific point in a conversation.
 
 **Q: Can I contribute?**
 A: Absolutely! Fork the repo, make changes, and submit a PR. All contributions welcome.

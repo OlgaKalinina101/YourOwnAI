@@ -6,7 +6,7 @@ package com.yourown.ai.domain.model
 enum class AIProvider(val displayName: String) {
     DEEPSEEK("Deepseek"),
     OPENAI("OpenAI"),
-    ANTHROPIC("Anthropic"),
+    OPENROUTER("OpenRouter"),
     XAI("x.ai (Grok)"),
     CUSTOM("Custom Provider")
 }

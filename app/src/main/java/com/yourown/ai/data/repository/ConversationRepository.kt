@@ -55,7 +55,8 @@ class ConversationRepository @Inject constructor(
         systemPrompt: String,
         model: String,
         provider: String,
-        systemPromptId: String? = null
+        systemPromptId: String? = null,
+        sourceConversationId: String? = null
     ): String {
         val id = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
@@ -68,7 +69,8 @@ class ConversationRepository @Inject constructor(
             model = model,
             provider = provider,
             createdAt = now,
-            updatedAt = now
+            updatedAt = now,
+            sourceConversationId = sourceConversationId
         )
         
         conversationDao.insertConversation(conversation)
