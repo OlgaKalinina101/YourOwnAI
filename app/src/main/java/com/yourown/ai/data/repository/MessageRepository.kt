@@ -12,7 +12,8 @@ import javax.inject.Singleton
 
 @Singleton
 class MessageRepository @Inject constructor(
-    private val messageDao: MessageDao
+    private val messageDao: MessageDao,
+    private val conversationDao: com.yourown.ai.data.local.dao.ConversationDao
 ) {
     
     /**
@@ -30,7 +31,24 @@ class MessageRepository @Inject constructor(
         val id = message.id.ifEmpty { UUID.randomUUID().toString() }
         val messageWithId = message.copy(id = id)
         messageDao.insertMessage(messageWithId.toEntity())
+        
+        // Update conversation's updatedAt timestamp to reflect last activity
+        updateConversationTimestamp(message.conversationId)
+        
         return id
+    }
+    
+    /**
+     * Update conversation's updatedAt timestamp
+     * Called when a new message is added
+     */
+    private suspend fun updateConversationTimestamp(conversationId: String) {
+        val conversation = conversationDao.getConversationById(conversationId)
+        conversation?.let {
+            conversationDao.updateConversation(
+                it.copy(updatedAt = System.currentTimeMillis())
+            )
+        }
     }
     
     /**

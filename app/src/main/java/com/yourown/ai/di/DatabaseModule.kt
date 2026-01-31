@@ -138,6 +138,32 @@ object DatabaseModule {
         }
     }
     
+    /**
+     * Migration from version 8 to 9
+     * Add imageAttachments column to messages table for multimodal support
+     */
+    private val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add imageAttachments column (JSON array of image paths)
+            database.execSQL(
+                "ALTER TABLE messages ADD COLUMN imageAttachments TEXT DEFAULT NULL"
+            )
+        }
+    }
+    
+    /**
+     * Migration from version 9 to 10
+     * Add fileAttachments column to messages table for PDF/TXT/DOC support
+     */
+    private val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add fileAttachments column (JSON array: [{"path":"...","name":"file.pdf","type":"pdf"}])
+            database.execSQL(
+                "ALTER TABLE messages ADD COLUMN fileAttachments TEXT DEFAULT NULL"
+            )
+        }
+    }
+    
     @Provides
     @Singleton
     fun provideDatabase(
@@ -148,7 +174,7 @@ object DatabaseModule {
             YourOwnAIDatabase::class.java,
             YourOwnAIDatabase.DATABASE_NAME
         )
-            .addMigrations(MIGRATION_2_3, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+            .addMigrations(MIGRATION_2_3, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
             .fallbackToDestructiveMigration() // Keep for future migrations
             .build()
     }

@@ -83,7 +83,7 @@ fun MemoryInstructionsDialog(
         text = {
             Column {
                 Text(
-                    text = "Customize how AI should use memories",
+                    text = "Customize what AI do with memories",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -140,7 +140,7 @@ fun RAGInstructionsDialog(
         text = {
             Column {
                 Text(
-                    text = "Customize how AI should use knowledge documents",
+                    text = "Customize what AI do with knowledge documents",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

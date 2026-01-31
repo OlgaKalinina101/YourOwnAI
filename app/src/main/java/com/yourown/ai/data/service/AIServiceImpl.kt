@@ -143,19 +143,36 @@ class AIServiceImpl @Inject constructor(
         val apiKey = apiKeyRepository.getApiKey(provider.provider)
             ?: throw IllegalStateException("API key not set for ${provider.provider.displayName}")
         
-        // Build messages list
-        val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+        // Check if any messages have images or files
+        val hasImages = messages.any { !it.imageAttachments.isNullOrBlank() }
+        val hasFiles = messages.any { !it.fileAttachments.isNullOrBlank() }
         
-        // Stream response
-        openAIClient.chatCompletionStream(
-            apiKey = apiKey,
-            model = provider.modelId,
-            messages = chatMessages,
-            temperature = config.temperature,
-            topP = config.topP,
-            maxTokens = config.maxTokens
-        ).collect { chunk ->
-            emit(chunk)
+        if (hasImages || hasFiles) {
+            // Use multimodal API
+            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+            openAIClient.chatCompletionStreamMultimodal(
+                apiKey = apiKey,
+                model = provider.modelId,
+                messages = multimodalMessages,
+                temperature = config.temperature,
+                topP = config.topP,
+                maxTokens = config.maxTokens
+            ).collect { chunk ->
+                emit(chunk)
+            }
+        } else {
+            // Use simple text API
+            val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+            openAIClient.chatCompletionStream(
+                apiKey = apiKey,
+                model = provider.modelId,
+                messages = chatMessages,
+                temperature = config.temperature,
+                topP = config.topP,
+                maxTokens = config.maxTokens
+            ).collect { chunk ->
+                emit(chunk)
+            }
         }
     }
     
@@ -171,19 +188,36 @@ class AIServiceImpl @Inject constructor(
         val apiKey = apiKeyRepository.getApiKey(provider.provider)
             ?: throw IllegalStateException("API key not set for ${provider.provider.displayName}")
         
-        // Build messages list
-        val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+        // Check if any messages have images or files
+        val hasImages = messages.any { !it.imageAttachments.isNullOrBlank() }
+        val hasFiles = messages.any { !it.fileAttachments.isNullOrBlank() }
         
-        // Stream response
-        xaiClient.chatCompletionStream(
-            apiKey = apiKey,
-            model = provider.modelId,
-            messages = chatMessages,
-            temperature = config.temperature,
-            topP = config.topP,
-            maxTokens = config.maxTokens
-        ).collect { chunk ->
-            emit(chunk)
+        if (hasImages || hasFiles) {
+            // Use multimodal API (x.ai Grok supports images like OpenAI)
+            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+            xaiClient.chatCompletionStreamMultimodal(
+                apiKey = apiKey,
+                model = provider.modelId,
+                messages = multimodalMessages,
+                temperature = config.temperature,
+                topP = config.topP,
+                maxTokens = config.maxTokens
+            ).collect { chunk ->
+                emit(chunk)
+            }
+        } else {
+            // Use simple text API
+            val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+            xaiClient.chatCompletionStream(
+                apiKey = apiKey,
+                model = provider.modelId,
+                messages = chatMessages,
+                temperature = config.temperature,
+                topP = config.topP,
+                maxTokens = config.maxTokens
+            ).collect { chunk ->
+                emit(chunk)
+            }
         }
     }
     
@@ -199,19 +233,36 @@ class AIServiceImpl @Inject constructor(
         val apiKey = apiKeyRepository.getApiKey(provider.provider)
             ?: throw IllegalStateException("API key not set for ${provider.provider.displayName}")
         
-        // Build messages list for OpenRouter (uses string content for now, multimodal later)
-        val openRouterMessages = buildOpenRouterMessages(messages, systemPrompt, userContext, config)
+        // Check if any messages have images or files
+        val hasImages = messages.any { !it.imageAttachments.isNullOrBlank() }
+        val hasFiles = messages.any { !it.fileAttachments.isNullOrBlank() }
         
-        // Stream response
-        openRouterClient.chatCompletionStream(
-            apiKey = apiKey,
-            model = provider.modelId,
-            messages = openRouterMessages,
-            temperature = config.temperature,
-            topP = config.topP,
-            maxTokens = config.maxTokens
-        ).collect { chunk ->
-            emit(chunk)
+        if (hasImages || hasFiles) {
+            // Use multimodal API (OpenRouter supports OpenAI-compatible format)
+            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+            openRouterClient.chatCompletionStreamMultimodal(
+                apiKey = apiKey,
+                model = provider.modelId,
+                messages = multimodalMessages,
+                temperature = config.temperature,
+                topP = config.topP,
+                maxTokens = config.maxTokens
+            ).collect { chunk ->
+                emit(chunk)
+            }
+        } else {
+            // Use simple text API
+            val openRouterMessages = buildOpenRouterMessages(messages, systemPrompt, userContext, config)
+            openRouterClient.chatCompletionStream(
+                apiKey = apiKey,
+                model = provider.modelId,
+                messages = openRouterMessages,
+                temperature = config.temperature,
+                topP = config.topP,
+                maxTokens = config.maxTokens
+            ).collect { chunk ->
+                emit(chunk)
+            }
         }
     }
     
@@ -280,6 +331,127 @@ class AIServiceImpl @Inject constructor(
             // For now, use simple string content
             // TODO: Support multimodal content (images) in the future
             result.add(OpenRouterMessage(role = role, content = message.content))
+        }
+        
+        return result
+    }
+    
+    /**
+     * Build multimodal messages with image and file support
+     */
+    private fun buildMultimodalMessages(
+        messages: List<Message>,
+        systemPrompt: String,
+        userContext: String?,
+        config: AIConfig
+    ): List<com.yourown.ai.data.remote.openai.MultimodalChatMessage> {
+        val result = mutableListOf<com.yourown.ai.data.remote.openai.MultimodalChatMessage>()
+        
+        // Add system prompt
+        var systemContent = systemPrompt
+        if (!userContext.isNullOrBlank()) {
+            systemContent += "\n\nContext:\n$userContext"
+        }
+        result.add(
+            com.yourown.ai.data.remote.openai.MultimodalMessageBuilder.buildTextMessage(
+                role = "system",
+                text = systemContent
+            )
+        )
+        
+        // Add conversation history (limited by messageHistoryLimit)
+        val historyLimit = config.messageHistoryLimit * 2
+        val relevantMessages = messages.takeLast(historyLimit)
+        
+        for (message in relevantMessages) {
+            val role = when (message.role) {
+                MessageRole.USER -> "user"
+                MessageRole.ASSISTANT -> "assistant"
+                MessageRole.SYSTEM -> "system"
+            }
+            
+            // Check if message has images
+            val imageBase64List = if (!message.imageAttachments.isNullOrBlank()) {
+                try {
+                    // Load images from paths and encode to base64
+                    val imagePaths = com.google.gson.Gson().fromJson(
+                        message.imageAttachments,
+                        Array<String>::class.java
+                    ).toList()
+                    
+                    imagePaths.mapNotNull { path ->
+                        try {
+                            val file = java.io.File(path)
+                            if (file.exists()) {
+                                val bytes = file.readBytes()
+                                android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                            } else {
+                                null
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error loading image: $path", e)
+                            null
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing image attachments", e)
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+            
+            // Check if message has files (PDF, TXT, DOC, DOCX)
+            val fileDataList = if (!message.fileAttachments.isNullOrBlank()) {
+                try {
+                    // Parse file attachments JSON
+                    val fileAttachments = com.google.gson.Gson().fromJson(
+                        message.fileAttachments,
+                        Array<com.yourown.ai.domain.model.FileAttachment>::class.java
+                    ).toList()
+                    
+                    fileAttachments.mapNotNull { attachment ->
+                        try {
+                            val file = java.io.File(attachment.path)
+                            if (file.exists()) {
+                                val bytes = file.readBytes()
+                                val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                                Pair(base64, attachment.name)
+                            } else {
+                                null
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error loading file: ${attachment.path}", e)
+                            null
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing file attachments", e)
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+            
+            // Build message with images and/or files
+            if (imageBase64List.isNotEmpty() || fileDataList.isNotEmpty()) {
+                result.add(
+                    com.yourown.ai.data.remote.openai.MultimodalMessageBuilder.buildMultimodalMessageWithFiles(
+                        role = role,
+                        text = message.content,
+                        imageBase64List = imageBase64List,
+                        fileData = fileDataList,
+                        imageDetail = "auto"
+                    )
+                )
+            } else {
+                result.add(
+                    com.yourown.ai.data.remote.openai.MultimodalMessageBuilder.buildTextMessage(
+                        role = role,
+                        text = message.content
+                    )
+                )
+            }
         }
         
         return result

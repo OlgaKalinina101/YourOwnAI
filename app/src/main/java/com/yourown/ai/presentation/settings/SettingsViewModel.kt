@@ -2,17 +2,9 @@ package com.yourown.ai.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yourown.ai.data.remote.deepseek.DeepseekClient
-import com.yourown.ai.data.repository.LocalModelRepository
-import com.yourown.ai.data.repository.LocalEmbeddingModelRepository
-import com.yourown.ai.domain.model.AIConfig
-import com.yourown.ai.domain.model.AIProvider
-import com.yourown.ai.domain.model.ApiKeyInfo
-import com.yourown.ai.domain.model.LocalModel
-import com.yourown.ai.domain.model.LocalModelInfo
-import com.yourown.ai.domain.model.LocalEmbeddingModel
-import com.yourown.ai.domain.model.LocalEmbeddingModelInfo
-import com.yourown.ai.domain.model.UserContext
+import com.yourown.ai.data.repository.*
+import com.yourown.ai.domain.model.*
+import com.yourown.ai.presentation.settings.managers.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,24 +24,24 @@ data class SettingsUiState(
     val userContext: UserContext = UserContext(),
     val localModels: Map<LocalModel, LocalModelInfo> = emptyMap(),
     val embeddingModels: Map<LocalEmbeddingModel, LocalEmbeddingModelInfo> = emptyMap(),
-    val systemPrompts: List<com.yourown.ai.domain.model.SystemPrompt> = emptyList(),
-    val apiPrompts: List<com.yourown.ai.domain.model.SystemPrompt> = emptyList(),
-    val localPrompts: List<com.yourown.ai.domain.model.SystemPrompt> = emptyList(),
-    val knowledgeDocuments: List<com.yourown.ai.domain.model.KnowledgeDocument> = emptyList(),
-    val documentProcessingStatus: com.yourown.ai.data.repository.DocumentProcessingStatus = com.yourown.ai.data.repository.DocumentProcessingStatus.Idle,
-    val memories: List<com.yourown.ai.domain.model.MemoryEntry> = emptyList(),
+    val systemPrompts: List<SystemPrompt> = emptyList(),
+    val apiPrompts: List<SystemPrompt> = emptyList(),
+    val localPrompts: List<SystemPrompt> = emptyList(),
+    val knowledgeDocuments: List<KnowledgeDocument> = emptyList(),
+    val documentProcessingStatus: DocumentProcessingStatus = DocumentProcessingStatus.Idle,
+    val memories: List<MemoryEntry> = emptyList(),
     val showSystemPromptDialog: Boolean = false,
     val showLocalSystemPromptDialog: Boolean = false,
     val showSystemPromptsListDialog: Boolean = false,
     val showEditPromptDialog: Boolean = false,
-    val selectedPromptForEdit: com.yourown.ai.domain.model.SystemPrompt? = null,
-    val promptTypeFilter: com.yourown.ai.data.repository.PromptType? = null,
+    val selectedPromptForEdit: SystemPrompt? = null,
+    val promptTypeFilter: PromptType? = null,
     val showDocumentsListDialog: Boolean = false,
     val showEditDocumentDialog: Boolean = false,
-    val selectedDocumentForEdit: com.yourown.ai.domain.model.KnowledgeDocument? = null,
+    val selectedDocumentForEdit: KnowledgeDocument? = null,
     val showMemoriesDialog: Boolean = false,
     val showEditMemoryDialog: Boolean = false,
-    val selectedMemoryForEdit: com.yourown.ai.domain.model.MemoryEntry? = null,
+    val selectedMemoryForEdit: MemoryEntry? = null,
     val showMemoryPromptDialog: Boolean = false,
     val showDeepEmpathyPromptDialog: Boolean = false,
     val showDeepEmpathyAnalysisDialog: Boolean = false,
@@ -73,22 +65,30 @@ data class SettingsUiState(
     // Embedding recalculation
     val isRecalculatingEmbeddings: Boolean = false,
     val recalculationProgress: String? = null,
-    val recalculationProgressPercent: Float = 0f // 0.0 to 1.0
+    val recalculationProgressPercent: Float = 0f, // 0.0 to 1.0
+    // Sound & Haptics
+    val keyboardSoundVolume: Float = 0f
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val localModelRepository: LocalModelRepository,
     private val embeddingModelRepository: LocalEmbeddingModelRepository,
-    private val apiKeyRepository: com.yourown.ai.data.repository.ApiKeyRepository,
-    private val aiConfigRepository: com.yourown.ai.data.repository.AIConfigRepository,
-    private val systemPromptRepository: com.yourown.ai.data.repository.SystemPromptRepository,
-    private val knowledgeDocumentRepository: com.yourown.ai.data.repository.KnowledgeDocumentRepository,
-    private val documentEmbeddingRepository: com.yourown.ai.data.repository.DocumentEmbeddingRepository,
-    private val memoryRepository: com.yourown.ai.data.repository.MemoryRepository,
-    private val deepseekClient: DeepseekClient,
-    private val openAIClient: com.yourown.ai.data.remote.openai.OpenAIClient,
-    private val xaiClient: com.yourown.ai.data.remote.xai.XAIClient
+    private val apiKeyRepository: ApiKeyRepository,
+    private val aiConfigRepository: AIConfigRepository,
+    private val systemPromptRepository: SystemPromptRepository,
+    private val knowledgeDocumentRepository: KnowledgeDocumentRepository,
+    private val memoryRepository: MemoryRepository,
+    private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager,
+    private val keyboardSoundManager: com.yourown.ai.domain.service.KeyboardSoundManager,
+    // Managers
+    private val aiConfigManager: AIConfigManager,
+    private val systemPromptManager: SystemPromptManager,
+    private val knowledgeDocumentManager: KnowledgeDocumentManager,
+    private val memoryManager: MemoryManager,
+    private val localModelManager: LocalModelManager,
+    private val embeddingModelManager: EmbeddingModelManager,
+    private val apiKeyManager: ApiKeyManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -98,12 +98,13 @@ class SettingsViewModel @Inject constructor(
         loadSettings()
         observeLocalModels()
         observeEmbeddingModels()
-        observeApiKeys()
         observeSystemPrompts()
         observeKnowledgeDocuments()
         observeDocumentProcessing()
         observeMemories()
+        observeApiKeys()
         initializeDefaultPrompts()
+        observeSoundSettings()
     }
     
     private fun initializeDefaultPrompts() {
@@ -115,12 +116,12 @@ class SettingsViewModel @Inject constructor(
     private fun observeSystemPrompts() {
         viewModelScope.launch {
             systemPromptRepository.getAllPrompts().collect { prompts ->
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         systemPrompts = prompts,
-                        apiPrompts = prompts.filter { p -> p.type == com.yourown.ai.data.repository.PromptType.API },
-                        localPrompts = prompts.filter { p -> p.type == com.yourown.ai.data.repository.PromptType.LOCAL }
-                    ) 
+                        apiPrompts = prompts.filter { p -> p.type.value == "api" },
+                        localPrompts = prompts.filter { p -> p.type.value == "local" }
+                    )
                 }
             }
         }
@@ -128,13 +129,12 @@ class SettingsViewModel @Inject constructor(
     
     private fun loadSettings() {
         viewModelScope.launch {
-            // Load AI config
             aiConfigRepository.aiConfig.collect { config ->
                 _uiState.update { it.copy(aiConfig = config) }
             }
         }
+        
         viewModelScope.launch {
-            // Load user context
             aiConfigRepository.userContext.collect { context ->
                 _uiState.update { it.copy(userContext = context) }
             }
@@ -146,15 +146,12 @@ class SettingsViewModel @Inject constructor(
             apiKeyRepository.apiKeys.collect { keys ->
                 _uiState.update { state ->
                     state.copy(
-                        apiKeys = AIProvider.entries
-                            .filter { it != AIProvider.CUSTOM }
-                            .map { provider ->
-                                ApiKeyInfo(
-                                    provider = provider,
-                                    isSet = keys.containsKey(provider),
-                                    displayKey = apiKeyRepository.getDisplayKey(provider)
-                                )
-                            }
+                        apiKeys = AIProvider.entries.map { provider ->
+                            ApiKeyInfo(
+                                provider = provider,
+                                isSet = keys.containsKey(provider)
+                            )
+                        }
                     )
                 }
             }
@@ -177,7 +174,244 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    // System Prompt
+    private fun observeKnowledgeDocuments() {
+        viewModelScope.launch {
+            knowledgeDocumentRepository.getAllDocuments().collect { documents ->
+                _uiState.update { it.copy(knowledgeDocuments = documents) }
+            }
+        }
+    }
+    
+    private fun observeDocumentProcessing() {
+        viewModelScope.launch {
+            knowledgeDocumentRepository.getProcessingStatus().collect { status ->
+                _uiState.update { it.copy(documentProcessingStatus = status) }
+            }
+        }
+    }
+    
+    private fun observeMemories() {
+        viewModelScope.launch {
+            memoryRepository.getAllMemories().collect { memories ->
+                _uiState.update { it.copy(memories = memories) }
+            }
+        }
+    }
+    
+    // ===== AI Config Methods =====
+    
+    fun updateTemperature(value: Float) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateTemperature(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateTopP(value: Float) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateTopP(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun toggleDeepEmpathy() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.toggleDeepEmpathy(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun toggleMemory() {
+        viewModelScope.launch {
+            if (!_uiState.value.aiConfig.memoryEnabled && !canEnableEmbeddingFeature()) {
+                _uiState.update { it.copy(showEmbeddingRequiredDialog = true) }
+                return@launch
+            }
+            val updated = aiConfigManager.toggleMemory(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun toggleRAG() {
+        viewModelScope.launch {
+            if (!_uiState.value.aiConfig.ragEnabled && !canEnableEmbeddingFeature()) {
+                _uiState.update { it.copy(showEmbeddingRequiredDialog = true) }
+                return@launch
+            }
+            val updated = aiConfigManager.toggleRAG(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMessageHistoryLimit(limit: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMessageHistoryLimit(_uiState.value.aiConfig, limit)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMaxTokens(tokens: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMaxTokens(_uiState.value.aiConfig, tokens)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateRAGChunkSize(value: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateRAGChunkSize(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateRAGChunkOverlap(value: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateRAGChunkOverlap(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMemoryLimit(value: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMemoryLimit(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMemoryMinAgeDays(value: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMemoryMinAgeDays(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateRAGChunkLimit(value: Int) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateRAGChunkLimit(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateContextInstructions(instructions: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateContextInstructions(_uiState.value.aiConfig, instructions)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetContextInstructions() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetContextInstructions(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateSwipeMessagePrompt(prompt: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateSwipeMessagePrompt(_uiState.value.aiConfig, prompt)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetSwipeMessagePrompt() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetSwipeMessagePrompt(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMemoryTitle(title: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMemoryTitle(_uiState.value.aiConfig, title)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMemoryInstructions(instructions: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMemoryInstructions(_uiState.value.aiConfig, instructions)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetMemoryInstructions() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetMemoryInstructions(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateRAGTitle(title: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateRAGTitle(_uiState.value.aiConfig, title)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateRAGInstructions(instructions: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateRAGInstructions(_uiState.value.aiConfig, instructions)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetRAGInstructions() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetRAGInstructions(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateMemoryExtractionPrompt(prompt: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateMemoryExtractionPrompt(_uiState.value.aiConfig, prompt)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetMemoryExtractionPrompt() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetMemoryExtractionPrompt(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateDeepEmpathyPrompt(prompt: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateDeepEmpathyPrompt(_uiState.value.aiConfig, prompt)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetDeepEmpathyPrompt() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetDeepEmpathyPrompt(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateDeepEmpathyAnalysisPrompt(prompt: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateDeepEmpathyAnalysisPrompt(_uiState.value.aiConfig, prompt)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun resetDeepEmpathyAnalysisPrompt() {
+        viewModelScope.launch {
+            val updated = aiConfigManager.resetDeepEmpathyAnalysisPrompt(_uiState.value.aiConfig)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateContext(context: String) {
+        viewModelScope.launch {
+            aiConfigManager.updateContext(_uiState.value.aiConfig, context)
+        }
+    }
+    
+    // ===== Dialog State Methods =====
+    
     fun showSystemPromptDialog() {
         _uiState.update { it.copy(showSystemPromptDialog = true) }
     }
@@ -189,11 +423,10 @@ class SettingsViewModel @Inject constructor(
     fun updateSystemPrompt(prompt: String) {
         viewModelScope.launch {
             aiConfigRepository.updateSystemPrompt(prompt)
-            _uiState.update { it.copy(showSystemPromptDialog = false) }
+            hideSystemPromptDialog()
         }
     }
     
-    // Local System Prompt
     fun showLocalSystemPromptDialog() {
         _uiState.update { it.copy(showLocalSystemPromptDialog = true) }
     }
@@ -205,11 +438,10 @@ class SettingsViewModel @Inject constructor(
     fun updateLocalSystemPrompt(prompt: String) {
         viewModelScope.launch {
             aiConfigRepository.updateLocalSystemPrompt(prompt)
-            _uiState.update { it.copy(showLocalSystemPromptDialog = false) }
+            hideLocalSystemPromptDialog()
         }
     }
     
-    // Context
     fun showContextDialog() {
         _uiState.update { it.copy(showContextDialog = true) }
     }
@@ -218,106 +450,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showContextDialog = false) }
     }
     
-    fun updateContext(context: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateUserContext(context)
-            _uiState.update { it.copy(showContextDialog = false) }
-        }
-    }
-    
-    // AI Config
-    fun updateTemperature(value: Float) {
-        viewModelScope.launch {
-            aiConfigRepository.updateTemperature(value)
-        }
-    }
-    
-    fun updateTopP(value: Float) {
-        viewModelScope.launch {
-            aiConfigRepository.updateTopP(value)
-        }
-    }
-    
-    fun toggleDeepEmpathy() {
-        viewModelScope.launch {
-            val newValue = !_uiState.value.aiConfig.deepEmpathy
-            aiConfigRepository.setDeepEmpathy(newValue)
-        }
-    }
-    
-    fun toggleMemory() {
-        viewModelScope.launch {
-            val newValue = !_uiState.value.aiConfig.memoryEnabled
-            
-            // Check if turning ON and validate requirements
-            if (newValue && !canEnableEmbeddingFeature()) {
-                _uiState.update { it.copy(showEmbeddingRequiredDialog = true) }
-                return@launch
-            }
-            
-            aiConfigRepository.setMemoryEnabled(newValue)
-            // Dialog will only open if no embedding model is available (handled by validation above)
-        }
-    }
-    
-    fun toggleRAG() {
-        viewModelScope.launch {
-            val newValue = !_uiState.value.aiConfig.ragEnabled
-            
-            // Check if turning ON and validate requirements
-            if (newValue && !canEnableEmbeddingFeature()) {
-                _uiState.update { it.copy(showEmbeddingRequiredDialog = true) }
-                return@launch
-            }
-            
-            aiConfigRepository.setRAGEnabled(newValue)
-            // Dialog will only open if no embedding model is available (handled by validation above)
-        }
-    }
-    
-    fun updateMessageHistoryLimit(limit: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMessageHistoryLimit(limit)
-        }
-    }
-    
-    fun updateMaxTokens(tokens: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMaxTokens(tokens)
-        }
-    }
-    
-    fun updateRAGChunkSize(value: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateRAGChunkSize(value)
-        }
-    }
-    
-    fun updateRAGChunkOverlap(value: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateRAGChunkOverlap(value)
-        }
-    }
-    
-    fun updateMemoryLimit(value: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMemoryLimit(value)
-        }
-    }
-    
-    fun updateMemoryMinAgeDays(value: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMemoryMinAgeDays(value)
-        }
-    }
-    
-    fun updateRAGChunkLimit(value: Int) {
-        viewModelScope.launch {
-            aiConfigRepository.updateRAGChunkLimit(value)
-        }
-    }
-    
-    // Advanced Settings Toggle
     fun toggleAdvancedContextSettings() {
         _uiState.update { it.copy(showAdvancedContextSettings = !it.showAdvancedContextSettings) }
     }
@@ -330,7 +462,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showAdvancedRAGSettings = !it.showAdvancedRAGSettings) }
     }
     
-    // Context Instructions
     fun showContextInstructionsDialog() {
         _uiState.update { it.copy(showContextInstructionsDialog = true) }
     }
@@ -339,20 +470,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showContextInstructionsDialog = false) }
     }
     
-    fun updateContextInstructions(instructions: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateContextInstructions(instructions)
-            hideContextInstructionsDialog()
-        }
-    }
-    
-    fun resetContextInstructions() {
-        viewModelScope.launch {
-            aiConfigRepository.resetContextInstructions()
-        }
-    }
-    
-    // Swipe Message Prompt
     fun showSwipeMessagePromptDialog() {
         _uiState.update { it.copy(showSwipeMessagePromptDialog = true) }
     }
@@ -361,27 +478,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showSwipeMessagePromptDialog = false) }
     }
     
-    fun updateSwipeMessagePrompt(prompt: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateSwipeMessagePrompt(prompt)
-            hideSwipeMessagePromptDialog()
-        }
-    }
-    
-    fun resetSwipeMessagePrompt() {
-        viewModelScope.launch {
-            aiConfigRepository.resetSwipeMessagePrompt()
-        }
-    }
-    
-    // Memory Title
-    fun updateMemoryTitle(title: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMemoryTitle(title)
-        }
-    }
-    
-    // Memory Instructions
     fun showMemoryInstructionsDialog() {
         _uiState.update { it.copy(showMemoryInstructionsDialog = true) }
     }
@@ -390,27 +486,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showMemoryInstructionsDialog = false) }
     }
     
-    fun updateMemoryInstructions(instructions: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMemoryInstructions(instructions)
-            hideMemoryInstructionsDialog()
-        }
-    }
-    
-    fun resetMemoryInstructions() {
-        viewModelScope.launch {
-            aiConfigRepository.resetMemoryInstructions()
-        }
-    }
-    
-    // RAG Title
-    fun updateRAGTitle(title: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateRAGTitle(title)
-        }
-    }
-    
-    // RAG Instructions
     fun showRAGInstructionsDialog() {
         _uiState.update { it.copy(showRAGInstructionsDialog = true) }
     }
@@ -419,20 +494,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showRAGInstructionsDialog = false) }
     }
     
-    fun updateRAGInstructions(instructions: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateRAGInstructions(instructions)
-            hideRAGInstructionsDialog()
-        }
-    }
-    
-    fun resetRAGInstructions() {
-        viewModelScope.launch {
-            aiConfigRepository.resetRAGInstructions()
-        }
-    }
-    
-    // Local Models
     fun showLocalModelsDialog() {
         _uiState.update { it.copy(showLocalModelsDialog = true) }
     }
@@ -441,25 +502,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showLocalModelsDialog = false) }
     }
     
-    fun downloadModel(model: LocalModel) {
-        viewModelScope.launch {
-            localModelRepository.downloadModel(model)
-        }
-    }
-    
-    fun deleteModel(model: LocalModel) {
-        viewModelScope.launch {
-            localModelRepository.deleteModel(model)
-        }
-    }
-    
-    fun forceDeleteAllModels() {
-        viewModelScope.launch {
-            localModelRepository.forceDeleteAll()
-        }
-    }
-    
-    // Embedding Models
     fun showEmbeddingModelsDialog() {
         _uiState.update { it.copy(showEmbeddingModelsDialog = true) }
     }
@@ -467,7 +509,6 @@ class SettingsViewModel @Inject constructor(
     fun hideEmbeddingModelsDialog() {
         viewModelScope.launch {
             // Check if Memory or RAG are enabled but no embedding model downloaded
-            // If so, turn them off
             val hasEmbeddingModel = canEnableEmbeddingFeature()
             val config = _uiState.value.aiConfig
             
@@ -484,19 +525,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun downloadEmbeddingModel(model: LocalEmbeddingModel) {
-        viewModelScope.launch {
-            embeddingModelRepository.downloadModel(model)
-        }
-    }
-    
-    fun deleteEmbeddingModel(model: LocalEmbeddingModel) {
-        viewModelScope.launch {
-            embeddingModelRepository.deleteModel(model)
-        }
-    }
-    
-    // API Keys
     fun showApiKeyDialog(provider: AIProvider) {
         _uiState.update {
             it.copy(
@@ -515,56 +543,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun saveApiKey(provider: AIProvider, key: String) {
-        viewModelScope.launch {
-            apiKeyRepository.saveApiKey(provider, key)
-            hideApiKeyDialog()
-        }
-    }
-    
-    fun deleteApiKey(provider: AIProvider) {
-        viewModelScope.launch {
-            apiKeyRepository.deleteApiKey(provider)
-        }
-    }
-    
-    fun testApiKey(provider: AIProvider) {
-        viewModelScope.launch {
-            val apiKey = apiKeyRepository.getApiKey(provider) ?: return@launch
-            
-            when (provider) {
-                AIProvider.DEEPSEEK -> {
-                    val result = deepseekClient.listModels(apiKey)
-                    result.onSuccess { models ->
-                        android.util.Log.i("SettingsViewModel", "Deepseek models: $models")
-                    }.onFailure { error ->
-                        android.util.Log.e("SettingsViewModel", "Failed to fetch Deepseek models: ${error.message}")
-                    }
-                }
-                AIProvider.OPENAI -> {
-                    val result = openAIClient.listModels(apiKey)
-                    result.onSuccess { models ->
-                        android.util.Log.i("SettingsViewModel", "OpenAI models: $models")
-                    }.onFailure { error ->
-                        android.util.Log.e("SettingsViewModel", "Failed to fetch OpenAI models: ${error.message}")
-                    }
-                }
-                AIProvider.XAI -> {
-                    val result = xaiClient.listModels(apiKey)
-                    result.onSuccess { models ->
-                        android.util.Log.i("SettingsViewModel", "x.ai models: $models")
-                    }.onFailure { error ->
-                        android.util.Log.e("SettingsViewModel", "Failed to fetch x.ai models: ${error.message}")
-                    }
-                }
-                else -> {
-                    // TODO: Implement for OpenRouter
-                }
-            }
-        }
-    }
-    
-    // Appearance
     fun showAppearanceDialog() {
         _uiState.update { it.copy(showAppearanceDialog = true) }
     }
@@ -573,8 +551,7 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showAppearanceDialog = false) }
     }
     
-    // System Prompts Management
-    fun showSystemPromptsListDialog(type: com.yourown.ai.data.repository.PromptType) {
+    fun showSystemPromptsListDialog(type: PromptType) {
         _uiState.update { 
             it.copy(
                 showSystemPromptsListDialog = true,
@@ -592,7 +569,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun showEditPromptDialog(prompt: com.yourown.ai.domain.model.SystemPrompt? = null) {
+    fun showEditPromptDialog(prompt: SystemPrompt? = null) {
         _uiState.update { 
             it.copy(
                 showEditPromptDialog = true,
@@ -610,86 +587,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun createNewPrompt(type: com.yourown.ai.data.repository.PromptType) {
-        viewModelScope.launch {
-            val count = when (type) {
-                com.yourown.ai.data.repository.PromptType.API -> _uiState.value.apiPrompts.size + 1
-                com.yourown.ai.data.repository.PromptType.LOCAL -> _uiState.value.localPrompts.size + 1
-            }
-            
-            val defaultContent = when (type) {
-                com.yourown.ai.data.repository.PromptType.API -> "Ты — цифровой партнёр, большая языковая модель. В ходе разговора ты подстраиваешься под тон и предпочтения пользователя. Постарайся соответствовать его настроению, тону и в целом манере говорить. Твоя цель — чтобы разговор ощущался естественным. Ты ведёшь искренний диалог, отвечая на предоставленную информацию и проявляя неподдельное любопытство. Задавай очень простой, односложный уточняющий вопрос, когда это естественно. Не задавай больше одного уточняющего вопроса, если только пользователь специально об этом не попросит."
-                com.yourown.ai.data.repository.PromptType.LOCAL -> "Ты — цифровой партнёр. Ты отвечаешь на языке пользователя. Ответь на последнее сообщение. Не пиши весь диалог, нужен только один ответ."
-            }
-            
-            systemPromptRepository.createPrompt(
-                name = "${if (type == com.yourown.ai.data.repository.PromptType.API) "API" else "Local"} System $count",
-                content = defaultContent,
-                type = type,
-                isDefault = false
-            )
-        }
-    }
-    
-    fun savePrompt(
-        id: String?,
-        name: String,
-        content: String,
-        type: com.yourown.ai.data.repository.PromptType,
-        isDefault: Boolean
-    ) {
-        viewModelScope.launch {
-            if (id == null) {
-                // Create new
-                systemPromptRepository.createPrompt(
-                    name = name,
-                    content = content,
-                    type = type,
-                    isDefault = isDefault
-                )
-            } else {
-                // Update existing
-                systemPromptRepository.updatePrompt(
-                    id = id,
-                    name = name,
-                    content = content,
-                    isDefault = isDefault
-                )
-            }
-            hideEditPromptDialog()
-        }
-    }
-    
-    fun deletePrompt(id: String) {
-        viewModelScope.launch {
-            systemPromptRepository.deletePrompt(id)
-        }
-    }
-    
-    fun setPromptAsDefault(id: String) {
-        viewModelScope.launch {
-            systemPromptRepository.setAsDefault(id)
-        }
-    }
-    
-    // Knowledge Documents methods
-    
-    private fun observeKnowledgeDocuments() {
-        viewModelScope.launch {
-            knowledgeDocumentRepository.getAllDocuments().collect { documents ->
-                _uiState.update { it.copy(knowledgeDocuments = documents) }
-            }
-        }
-    }
-    
-    private fun observeDocumentProcessing() {
-        viewModelScope.launch {
-            knowledgeDocumentRepository.getProcessingStatus().collect { status ->
-                _uiState.update { it.copy(documentProcessingStatus = status) }
-            }
-        }
-    }
-    
     fun showDocumentsListDialog() {
         _uiState.update { it.copy(showDocumentsListDialog = true) }
     }
@@ -698,12 +595,12 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showDocumentsListDialog = false) }
     }
     
-    fun showEditDocumentDialog(document: com.yourown.ai.domain.model.KnowledgeDocument? = null) {
+    fun showEditDocumentDialog(document: KnowledgeDocument? = null) {
         _uiState.update { 
             it.copy(
                 showEditDocumentDialog = true,
                 selectedDocumentForEdit = document
-            )
+            ) 
         }
     }
     
@@ -712,86 +609,7 @@ class SettingsViewModel @Inject constructor(
             it.copy(
                 showEditDocumentDialog = false,
                 selectedDocumentForEdit = null
-            )
-        }
-    }
-    
-    fun createNewDocument() {
-        val count = _uiState.value.knowledgeDocuments.size + 1
-        showEditDocumentDialog(
-            com.yourown.ai.domain.model.KnowledgeDocument(
-                id = "",
-                name = "Doc $count",
-                content = "",
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-                sizeBytes = 0
-            )
-        )
-    }
-    
-    fun saveDocument(id: String, name: String, content: String) {
-        viewModelScope.launch {
-            try {
-                // Close edit dialog first
-                hideEditDocumentDialog()
-                
-                // Keep documents list dialog open to show progress
-                if (!_uiState.value.showDocumentsListDialog) {
-                    _uiState.update { it.copy(showDocumentsListDialog = true) }
-                }
-                
-                if (id.isEmpty()) {
-                    // Create new - will automatically process for RAG
-                    val result = knowledgeDocumentRepository.createDocument(
-                        name = name,
-                        content = content
-                    )
-                    if (result.isFailure) {
-                        android.util.Log.e("SettingsViewModel", "Failed to create document", result.exceptionOrNull())
-                    }
-                } else {
-                    // Update existing - will reprocess for RAG if enabled
-                    val document = com.yourown.ai.domain.model.KnowledgeDocument(
-                        id = id,
-                        name = name,
-                        content = content,
-                        createdAt = _uiState.value.knowledgeDocuments.find { it.id == id }?.createdAt ?: System.currentTimeMillis(),
-                        updatedAt = System.currentTimeMillis(),
-                        sizeBytes = content.toByteArray().size
-                    )
-                    val result = knowledgeDocumentRepository.updateDocument(document)
-                    if (result.isFailure) {
-                        android.util.Log.e("SettingsViewModel", "Failed to update document", result.exceptionOrNull())
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("SettingsViewModel", "Error saving document", e)
-            }
-        }
-    }
-    
-    fun deleteDocument(id: String) {
-        viewModelScope.launch {
-            try {
-                // Will automatically delete chunks
-                val result = knowledgeDocumentRepository.deleteDocument(id)
-                if (result.isFailure) {
-                    android.util.Log.e("SettingsViewModel", "Failed to delete document", result.exceptionOrNull())
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("SettingsViewModel", "Error deleting document", e)
-            }
-        }
-    }
-    
-    // Memory Management
-    
-    private fun observeMemories() {
-        viewModelScope.launch {
-            memoryRepository.getAllMemories().collect { memories ->
-                _uiState.update { it.copy(memories = memories) }
-            }
+            ) 
         }
     }
     
@@ -809,7 +627,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun showEditMemoryDialog(memory: com.yourown.ai.domain.model.MemoryEntry) {
+    fun showEditMemoryDialog(memory: MemoryEntry) {
         _uiState.update { 
             it.copy(
                 showEditMemoryDialog = true,
@@ -827,27 +645,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun saveMemory(fact: String) {
-        viewModelScope.launch {
-            val memory = _uiState.value.selectedMemoryForEdit
-            if (memory != null) {
-                // Update existing memory
-                val updated = memory.copy(fact = fact)
-                memoryRepository.updateMemory(updated)
-            }
-            hideEditMemoryDialog()
-        }
-    }
-    
-    fun deleteMemory(id: String) {
-        viewModelScope.launch {
-            val memory = _uiState.value.memories.find { it.id == id }
-            if (memory != null) {
-                memoryRepository.deleteMemory(memory)
-            }
-        }
-    }
-    
     fun showMemoryPromptDialog() {
         _uiState.update { it.copy(showMemoryPromptDialog = true) }
     }
@@ -856,38 +653,12 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showMemoryPromptDialog = false) }
     }
     
-    fun updateMemoryExtractionPrompt(prompt: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateMemoryExtractionPrompt(prompt)
-            hideMemoryPromptDialog()
-        }
-    }
-    
-    fun resetMemoryExtractionPrompt() {
-        viewModelScope.launch {
-            aiConfigRepository.resetMemoryExtractionPrompt()
-        }
-    }
-    
     fun showDeepEmpathyPromptDialog() {
         _uiState.update { it.copy(showDeepEmpathyPromptDialog = true) }
     }
     
     fun hideDeepEmpathyPromptDialog() {
         _uiState.update { it.copy(showDeepEmpathyPromptDialog = false) }
-    }
-    
-    fun updateDeepEmpathyPrompt(prompt: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateDeepEmpathyPrompt(prompt)
-            hideDeepEmpathyPromptDialog()
-        }
-    }
-    
-    fun resetDeepEmpathyPrompt() {
-        viewModelScope.launch {
-            aiConfigRepository.resetDeepEmpathyPrompt()
-        }
     }
     
     fun toggleAdvancedDeepEmpathySettings() {
@@ -902,37 +673,163 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(showDeepEmpathyAnalysisDialog = false) }
     }
     
-    fun updateDeepEmpathyAnalysisPrompt(prompt: String) {
-        viewModelScope.launch {
-            aiConfigRepository.updateDeepEmpathyAnalysisPrompt(prompt)
-            hideDeepEmpathyAnalysisDialog()
-        }
-    }
-    
-    fun resetDeepEmpathyAnalysisPrompt() {
-        viewModelScope.launch {
-            aiConfigRepository.resetDeepEmpathyAnalysisPrompt()
-        }
-    }
-    
-    /**
-     * Check if embedding features (Memory, RAG) can be enabled
-     * Requires a downloaded embedding model (local embeddings are needed)
-     */
-    private fun canEnableEmbeddingFeature(): Boolean {
-        return _uiState.value.embeddingModels.values.any { 
-            it.status is com.yourown.ai.domain.model.DownloadStatus.Downloaded 
-        }
-    }
-    
     fun hideEmbeddingRequiredDialog() {
         _uiState.update { it.copy(showEmbeddingRequiredDialog = false) }
     }
     
-    /**
-     * Recalculate all embeddings (Memory + RAG)
-     * Use when switching embedding models
-     */
+    // ===== System Prompts Methods =====
+    
+    fun createNewPrompt(type: PromptType) {
+        viewModelScope.launch {
+            systemPromptManager.createNewPrompt(
+                type,
+                _uiState.value.apiPrompts.size,
+                _uiState.value.localPrompts.size
+            )
+        }
+    }
+    
+    fun savePrompt(
+        id: String?,
+        name: String,
+        content: String,
+        type: PromptType,
+        isDefault: Boolean
+    ) {
+        viewModelScope.launch {
+            systemPromptManager.savePrompt(id, name, content, type, isDefault)
+            hideEditPromptDialog()
+        }
+    }
+    
+    fun deletePrompt(id: String) {
+        viewModelScope.launch {
+            systemPromptManager.deletePrompt(id)
+        }
+    }
+    
+    fun setPromptAsDefault(id: String) {
+        viewModelScope.launch {
+            systemPromptManager.setPromptAsDefault(id)
+        }
+    }
+    
+    // ===== Knowledge Documents Methods =====
+    
+    fun createNewDocument() {
+        val count = _uiState.value.knowledgeDocuments.size + 1
+        showEditDocumentDialog(
+            KnowledgeDocument(
+                id = "",
+                name = "Doc $count",
+                content = "",
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+                sizeBytes = 0
+            )
+        )
+    }
+    
+    fun saveDocument(id: String, name: String, content: String) {
+        viewModelScope.launch {
+            try {
+                hideEditDocumentDialog()
+                
+                if (!_uiState.value.showDocumentsListDialog) {
+                    _uiState.update { it.copy(showDocumentsListDialog = true) }
+                }
+                
+                if (id.isEmpty()) {
+                    val result = knowledgeDocumentManager.createDocument(name, content)
+                    if (result.isFailure) {
+                        android.util.Log.e("SettingsViewModel", "Failed to create document", result.exceptionOrNull())
+                    }
+                } else {
+                    val createdAt = _uiState.value.knowledgeDocuments.find { it.id == id }?.createdAt 
+                        ?: System.currentTimeMillis()
+                    val result = knowledgeDocumentManager.updateDocument(id, name, content, createdAt)
+                    if (result.isFailure) {
+                        android.util.Log.e("SettingsViewModel", "Failed to update document", result.exceptionOrNull())
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Error saving document", e)
+            }
+        }
+    }
+    
+    fun deleteDocument(id: String) {
+        viewModelScope.launch {
+            try {
+                val result = knowledgeDocumentManager.deleteDocument(id)
+                if (result.isFailure) {
+                    android.util.Log.e("SettingsViewModel", "Failed to delete document", result.exceptionOrNull())
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Error deleting document", e)
+            }
+        }
+    }
+    
+    // ===== Memory Methods =====
+    
+    fun saveMemory(fact: String) {
+        viewModelScope.launch {
+            val memory = _uiState.value.selectedMemoryForEdit
+            if (memory != null) {
+                memoryManager.updateMemory(memory, fact)
+            }
+            hideEditMemoryDialog()
+        }
+    }
+    
+    fun deleteMemory(id: String) {
+        viewModelScope.launch {
+            try {
+                val memory = _uiState.value.memories.find { it.id == id }
+                if (memory != null) {
+                    memoryManager.deleteMemory(memory)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Error deleting memory", e)
+            }
+        }
+    }
+    
+    // ===== Local Models Methods =====
+    
+    fun downloadModel(model: LocalModel) {
+        viewModelScope.launch {
+            localModelManager.downloadModel(model)
+        }
+    }
+    
+    fun deleteModel(model: LocalModel) {
+        viewModelScope.launch {
+            localModelManager.deleteModel(model)
+        }
+    }
+    
+    fun forceDeleteAllModels() {
+        viewModelScope.launch {
+            localModelManager.forceDeleteAllModels()
+        }
+    }
+    
+    // ===== Embedding Models Methods =====
+    
+    fun downloadEmbeddingModel(model: LocalEmbeddingModel) {
+        viewModelScope.launch {
+            embeddingModelManager.downloadModel(model)
+        }
+    }
+    
+    fun deleteEmbeddingModel(model: LocalEmbeddingModel) {
+        viewModelScope.launch {
+            embeddingModelManager.deleteModel(model)
+        }
+    }
+    
     fun recalculateAllEmbeddings() {
         viewModelScope.launch {
             try {
@@ -944,86 +841,118 @@ class SettingsViewModel @Inject constructor(
                     ) 
                 }
                 
-                var memoryCount = 0
-                var ragCount = 0
+                val result = embeddingModelManager.recalculateAllEmbeddings(
+                    onMemoryProgress = { current, total, percentage ->
+                        val overallProgress = percentage * 0.5f
+                        _uiState.update { 
+                            it.copy(
+                                recalculationProgress = "Memory: $current/$total",
+                                recalculationProgressPercent = overallProgress
+                            ) 
+                        }
+                    },
+                    onRAGProgress = { current, total, percentage ->
+                        val overallProgress = 0.5f + (percentage * 0.5f)
+                        _uiState.update { 
+                            it.copy(
+                                recalculationProgress = "RAG: $current/$total chunks",
+                                recalculationProgressPercent = overallProgress
+                            ) 
+                        }
+                    }
+                )
                 
-                // Step 1: Recalculate Memory embeddings (50% of total progress)
-                _uiState.update { 
-                    it.copy(
-                        recalculationProgress = "Recalculating Memory embeddings...",
-                        recalculationProgressPercent = 0f
-                    ) 
-                }
-                
-                val memoryResult = memoryRepository.recalculateAllEmbeddings { current, total, percentage ->
-                    // Memory is 50% of total, so map 0-1 to 0-0.5
-                    val overallProgress = percentage * 0.5f
+                result.onSuccess { (memoryCount, ragCount) ->
                     _uiState.update { 
                         it.copy(
-                            recalculationProgress = "Memory: $current/$total",
-                            recalculationProgressPercent = overallProgress
+                            isRecalculatingEmbeddings = false,
+                            recalculationProgress = "✅ Completed! Memory: $memoryCount, RAG: $ragCount chunks",
+                            recalculationProgressPercent = 1f
+                        ) 
+                    }
+                    
+                    kotlinx.coroutines.delay(3000)
+                    _uiState.update { 
+                        it.copy(
+                            recalculationProgress = null,
+                            recalculationProgressPercent = 0f
+                        ) 
+                    }
+                }.onFailure { e ->
+                    android.util.Log.e("SettingsViewModel", "Error recalculating embeddings", e)
+                    _uiState.update { 
+                        it.copy(
+                            isRecalculatingEmbeddings = false,
+                            recalculationProgress = "❌ Error: ${e.message}",
+                            recalculationProgressPercent = 0f
+                        ) 
+                    }
+                    
+                    kotlinx.coroutines.delay(5000)
+                    _uiState.update { 
+                        it.copy(
+                            recalculationProgress = null,
+                            recalculationProgressPercent = 0f
                         ) 
                     }
                 }
-                memoryCount = memoryResult.getOrNull() ?: 0
-                
-                // Step 2: Recalculate RAG embeddings (next 50% of total progress)
-                _uiState.update { 
-                    it.copy(
-                        recalculationProgress = "Recalculating RAG embeddings...",
-                        recalculationProgressPercent = 0.5f
-                    ) 
-                }
-                
-                val ragResult = documentEmbeddingRepository.recalculateAllEmbeddings { current, total, percentage ->
-                    // RAG is 50% of total, so map 0-1 to 0.5-1.0
-                    val overallProgress = 0.5f + (percentage * 0.5f)
-                    _uiState.update { 
-                        it.copy(
-                            recalculationProgress = "RAG: $current/$total chunks",
-                            recalculationProgressPercent = overallProgress
-                        ) 
-                    }
-                }
-                ragCount = ragResult.getOrNull() ?: 0
-                
-                // Done
-                _uiState.update { 
-                    it.copy(
-                        isRecalculatingEmbeddings = false,
-                        recalculationProgress = "✅ Completed! Memory: $memoryCount, RAG: $ragCount chunks",
-                        recalculationProgressPercent = 1f
-                    ) 
-                }
-                
-                // Clear progress after 3 seconds
-                kotlinx.coroutines.delay(3000)
-                _uiState.update { 
-                    it.copy(
-                        recalculationProgress = null,
-                        recalculationProgressPercent = 0f
-                    ) 
-                }
-                
             } catch (e: Exception) {
                 android.util.Log.e("SettingsViewModel", "Error recalculating embeddings", e)
-                _uiState.update { 
-                    it.copy(
-                        isRecalculatingEmbeddings = false,
-                        recalculationProgress = "❌ Error: ${e.message}",
-                        recalculationProgressPercent = 0f
-                    ) 
-                }
-                
-                // Clear error after 5 seconds
-                kotlinx.coroutines.delay(5000)
-                _uiState.update { 
-                    it.copy(
-                        recalculationProgress = null,
-                        recalculationProgressPercent = 0f
-                    ) 
-                }
             }
         }
+    }
+    
+    // ===== API Keys Methods =====
+    
+    fun saveApiKey(provider: AIProvider, key: String) {
+        viewModelScope.launch {
+            apiKeyManager.saveApiKey(provider, key)
+            hideApiKeyDialog()
+        }
+    }
+    
+    fun deleteApiKey(provider: AIProvider) {
+        viewModelScope.launch {
+            apiKeyManager.deleteApiKey(provider)
+        }
+    }
+    
+    fun testApiKey(provider: AIProvider) {
+        viewModelScope.launch {
+            val result = apiKeyManager.testApiKey(provider)
+            result.onSuccess { models ->
+                android.util.Log.i("SettingsViewModel", "$provider models: $models")
+            }.onFailure { error ->
+                android.util.Log.e("SettingsViewModel", "Failed to test $provider: ${error.message}")
+            }
+        }
+    }
+    
+    // ===== Helper Methods =====
+    
+    private fun canEnableEmbeddingFeature(): Boolean {
+        return _uiState.value.embeddingModels.values.any { 
+            it.status is DownloadStatus.Downloaded 
+        }
+    }
+    
+    // ===== Sound & Haptics =====
+    
+    private fun observeSoundSettings() {
+        viewModelScope.launch {
+            settingsManager.keyboardSoundVolume.collect { volume ->
+                _uiState.update { it.copy(keyboardSoundVolume = volume) }
+            }
+        }
+    }
+    
+    fun updateKeyboardSoundVolume(volume: Float) {
+        viewModelScope.launch {
+            settingsManager.setKeyboardSoundVolume(volume)
+        }
+    }
+    
+    fun testKeyboardSound() {
+        keyboardSoundManager.playTestSound()
     }
 }

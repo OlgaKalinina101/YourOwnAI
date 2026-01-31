@@ -215,4 +215,88 @@ class OpenAIClient(
         
         awaitClose()
     }.flowOn(Dispatchers.IO)
+    
+    /**
+     * Create chat completion with streaming and multimodal support (images)
+     */
+    fun chatCompletionStreamMultimodal(
+        apiKey: String,
+        model: String,
+        messages: List<MultimodalChatMessage>,
+        temperature: Float? = null,
+        topP: Float? = null,
+        maxTokens: Int? = null
+    ): Flow<String> = callbackFlow {
+        try {
+            val useNewApi = shouldUseMaxCompletionTokens(model)
+            val isReasoning = isReasoningModel(model)
+            
+            val requestBody = MultimodalChatCompletionRequest(
+                model = model,
+                messages = messages,
+                temperature = if (!isReasoning) temperature else null,
+                top_p = if (!isReasoning) topP else null,
+                max_tokens = if (!useNewApi) maxTokens else null,
+                max_completion_tokens = if (useNewApi) maxTokens else null,
+                stream = true
+            )
+            
+            val json = gson.toJson(requestBody)
+            val body = json.toRequestBody("application/json".toMediaType())
+            
+            val request = Request.Builder()
+                .url("$BASE_URL/chat/completions")
+                .header("Authorization", "Bearer $apiKey")
+                .post(body)
+                .build()
+            
+            val response = httpClient.newCall(request).execute()
+            
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string() ?: "Unknown error"
+                close(Exception("HTTP ${response.code}: $errorBody"))
+                return@callbackFlow
+            }
+            
+            val reader = response.body?.byteStream()?.bufferedReader()
+            if (reader == null) {
+                close(Exception("Empty response body"))
+                return@callbackFlow
+            }
+            
+            reader.use { 
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    val currentLine = line ?: continue
+                    
+                    if (currentLine.startsWith("data: ")) {
+                        val data = currentLine.substring(6).trim()
+                        
+                        if (data == "[DONE]") {
+                            break
+                        }
+                        
+                        if (data.isNotEmpty()) {
+                            try {
+                                val chunk = gson.fromJson(data, ChatCompletionChunk::class.java)
+                                val content = chunk.choices.firstOrNull()?.delta?.content
+                                if (!content.isNullOrEmpty()) {
+                                    trySend(content)
+                                }
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Failed to parse chunk: $data", e)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            close()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in streaming multimodal chat completion", e)
+            close(e)
+        }
+        
+        awaitClose()
+    }.flowOn(Dispatchers.IO)
 }

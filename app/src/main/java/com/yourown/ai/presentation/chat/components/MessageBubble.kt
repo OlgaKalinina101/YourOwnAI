@@ -13,7 +13,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -23,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.yourown.ai.domain.model.Message
 import com.yourown.ai.domain.model.MessageRole
 import java.text.SimpleDateFormat
@@ -107,6 +110,111 @@ fun MessageBubble(
                             }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    // Image attachments (for user messages)
+                    if (message.imageAttachments != null) {
+                        val imagePaths = try {
+                            com.google.gson.Gson().fromJson(
+                                message.imageAttachments,
+                                Array<String>::class.java
+                            ).toList()
+                        } catch (e: Exception) {
+                            emptyList()
+                        }
+                        
+                        if (imagePaths.isNotEmpty()) {
+                            androidx.compose.foundation.lazy.LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(imagePaths.size) { index ->
+                                    val imagePath = imagePaths[index]
+                                    AsyncImage(
+                                        model = java.io.File(imagePath),
+                                        contentDescription = "Attached image",
+                                        modifier = Modifier
+                                            .width(200.dp)
+                                            .height(150.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    
+                    // File attachments (for user messages)
+                    if (message.fileAttachments != null) {
+                        val fileAttachments = try {
+                            com.google.gson.Gson().fromJson(
+                                message.fileAttachments,
+                                Array<com.yourown.ai.domain.model.FileAttachment>::class.java
+                            ).toList()
+                        } catch (e: Exception) {
+                            emptyList()
+                        }
+                        
+                        if (fileAttachments.isNotEmpty()) {
+                            androidx.compose.foundation.lazy.LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(fileAttachments.size) { index ->
+                                    val attachment = fileAttachments[index]
+                                    Surface(
+                                        modifier = Modifier.width(200.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        tonalElevation = 2.dp
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // File icon
+                                            Icon(
+                                                imageVector = when (attachment.type) {
+                                                    "pdf" -> Icons.Default.PictureAsPdf
+                                                    "txt" -> Icons.Default.Description
+                                                    "doc", "docx" -> Icons.Default.Article
+                                                    else -> Icons.Default.InsertDriveFile
+                                                },
+                                                contentDescription = null,
+                                                modifier = Modifier.size(32.dp),
+                                                tint = when (attachment.type) {
+                                                    "pdf" -> MaterialTheme.colorScheme.error
+                                                    else -> MaterialTheme.colorScheme.primary
+                                                }
+                                            )
+                                            
+                                            // File info
+                                            Column(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text(
+                                                    text = attachment.name,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    maxLines = 1,
+                                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Text(
+                                                    text = String.format("%.1f MB", attachment.sizeBytes / (1024f * 1024f)),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                     
                     if (message.isError) {

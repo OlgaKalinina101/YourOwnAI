@@ -9,7 +9,9 @@
 
 YourOwnAI is a privacy-first Android application that gives you complete control over your AI assistant. Use your own API keys, store everything locally, and define your AI's personality exactly how you want it.
 
-**Current Status:** 🚧 Beta - Core features implemented, actively developed
+**Latest:** 🎉 **Multimodal support** - attach images and documents to 26 different models! Plus speech-to-text, pinned favorites, and smart chat sorting. 🎹 **NEW: Keyboard sound & vibration** - immersive typing effects when AI responds!
+
+**Current Status:** 🚀 Beta - Feature-complete, actively polished
 
 ---
 
@@ -141,8 +143,31 @@ The app should feel like a **tool**, not a product with personality. It's your s
 
 #### 💬 Chat Experience
 - **Streaming responses** - real-time AI generation with smooth animations
-- **Multiple conversations** - organize chats by topic
+- **Multiple conversations** - organize chats by topic with smart sorting (newest first)
 - **Model switching** - change AI provider/model per conversation
+- **Pin favorite models** - star icon to pin frequently used models to top of list
+- **Multimodal support (NEW!)** - attach images and documents to your messages:
+  - **Images** - JPEG, PNG, GIF, WebP support
+  - **Documents** - PDF, TXT, DOC, DOCX support (model-dependent)
+  - **26 models** with vision/document capabilities
+  - Automatic compression and encoding
+  - In-chat preview of attachments
+  - Model-specific limits displayed (e.g., "Up to 100 images")
+- **Speech-to-text input** - dictate messages using Android STT
+  - Microphone button dynamically appears when input is empty
+  - Real-time transcription with visual feedback
+  - Pulsating animation during listening
+- **Keyboard sound & vibration (NEW!)** - immersive typing effects:
+  - Realistic typing sounds when AI responds
+  - Haptic feedback (vibration) synchronized with typing
+  - Customizable: enable/disable sound and vibration separately
+  - Smart detection of sentence endings for send sound
+  - Configurable in Settings > Sound & Haptics
+- **Grok-style message input** - minimalist design with smart controls:
+  - Send button transforms into microphone when empty
+  - Attachment menu inside input field (left side)
+  - Dropdown for Image vs Document selection
+  - Clean, unobtrusive UI
 - **Rich markdown rendering**:
   - **bold**, *italic*, [clickable links](url)
   - > blockquotes for emphasis
@@ -179,15 +204,33 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **xAI Grok Voice Agent API** - powered by grok-beta with 24kHz PCM16 audio
 
 #### 🤖 AI Providers & Models
-- **Deepseek** - deepseek-chat, deepseek-reasoner
-- **OpenAI** - GPT-5 series, GPT-4o, o1/o3 reasoning models
+- **Deepseek** - deepseek-chat, deepseek-reasoner (text only)
+- **OpenAI** - GPT-5.2, GPT-5.1, GPT-4o (multimodal: images + PDFs)
   - Smart parameter detection (max_completion_tokens, conditional temperature)
-- **x.ai (Grok)** - Grok 4.1, Grok 4, Grok 3, Grok Code
+  - Up to 500 images or 50 documents per request
+- **x.ai (Grok)** - Grok 4.1, Grok 4, Grok 3, Grok Code (multimodal: images + files)
+  - Unlimited images (20MB each)
+  - 50 documents (PDF, TXT, MD, CSV, JSON, code files)
+  - 48MB per file limit
+- **OpenRouter (NEW!)** - Access 200+ models with one API key:
+  - **Claude** (6 models) - Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5
+    - 100 images + native PDF support (up to 100 pages)
+    - 32MB total request size
+  - **Llama 4** (2 models) - Maverick, Scout
+    - 10 images, native multimodal with early fusion
+    - 10M token context (Scout)
+  - **Gemini** (4 models) - 3 Pro/Flash, 2.5 Pro/Flash
+    - 10 files per prompt, up to 100MB each
+    - PDF support (30MB/2000 pages)
+    - Text, images, audio, video support
+  - **GPT-4o** - Same capabilities as OpenAI direct
 - **Local inference** - Qwen 2.5 1.7B (950MB), Llama 3.2 3B (1.9GB)
   - Download queue system (one at a time)
   - Progress tracking with UI updates
   - Automatic corruption detection (GGUF validation)
   - Thread-safe loading and generation (Mutex)
+
+**Total: 26 models with multimodal support (images/documents)!**
 
 #### ⚙️ AI Configuration
 - **System prompt editor** - customize AI personality
@@ -237,18 +280,10 @@ The app should feel like a **tool**, not a product with personality. It's your s
 
 ### 🚧 Coming Soon
 
-#### 📊 Usage Tracking
-- Monitor token usage per provider and model
-- Cost tracking based on current pricing
-- Daily/weekly/monthly statistics
-- Export usage reports
-
-#### 🧠 Additional AI Features
-- **Message alternatives** - regenerate or swipe for different responses
-- **PDF document support** - extract text from PDFs for RAG
-- **Multi-modal** - image input for vision models
-- **Google account sync** - backup conversations and settings
-- **Voice chat history** - save and continue voice conversations
+#### 🌐 Additional Models & Providers
+- More OpenRouter models (expand from current selection)
+- Groq (ultra-fast inference)
+- Additional multimodal models as they become available
 
 #### 🔒 Security Enhancements
 - Biometric authentication option
@@ -294,6 +329,12 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **API Clients:** OkHttp + Retrofit + Gson
 - **Streaming:** Server-Sent Events (SSE) for real-time responses
 - **Voice:** WebSocket (xAI Grok Voice Agent API) + AudioRecord + AudioTrack
+- **Speech-to-Text:** Android SpeechRecognizer API
+- **Multimodal:**
+  - Image processing: Coil + ExifInterface
+  - Compression: Custom ImageCompressor utility
+  - File handling: FileProcessor utility
+  - Base64 encoding for API transmission
 - **Security:** Certificate Pinning, Network Security Config, API key encryption
 - **Build:** Gradle 8.11+ with R8/ProGuard obfuscation
 
@@ -371,9 +412,9 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
    - Models download one at a time with progress tracking
    - Models are validated automatically (GGUF header check)
 
-4. **For Voice Chat** (optional)
+4. **For Voice Chat & Speech-to-Text** (optional)
    - Grant microphone permission when prompted
-   - Required for speech-to-text input
+   - Required for speech-to-text input and voice conversations
 
 5. **Start chatting!**
    - Select a model from the dropdown
@@ -405,11 +446,13 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
   - Horizontal rules (---, ***, ___)
 
 ### Switching Models
-- Tap model selector at top of chat
+- Tap model selector at top-left of chat (next to back button)
 - Choose from:
-  - **API models** - Deepseek, OpenAI GPT-5/4o, x.ai Grok
+  - **API models** - Deepseek, OpenAI GPT-5/4o, x.ai Grok, OpenRouter (Claude, Llama 4, Gemini)
   - **Local models** - Qwen 2.5 1.7B, Llama 3.2 3B (if downloaded)
+- **Pin favorites** - tap star icon to pin frequently used models to top
 - Model persists per conversation
+- Multimodal capabilities shown automatically (image/document icons)
 
 ### Voice Chat
 1. **Open Voice Chat** - tap microphone button on home screen
@@ -435,6 +478,40 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
    - Voice selected
    - User context included
    - Session details
+
+### Attaching Images and Documents (NEW!)
+1. **Check model support** - attachment icon appears only for multimodal models
+2. **Attach files**:
+   - **Tap paperclip icon** in message input (left side)
+   - **Choose type** from dropdown:
+     - 🖼️ **Image** - Select photos from gallery
+     - 📄 **Document** - Select PDF, TXT, DOC, DOCX files
+3. **Preview attachments**:
+   - Images show thumbnail with size and remove button
+   - Documents show file name, type icon, size, and remove button
+4. **Send message** - attachments are included with your text
+5. **View in chat history** - attachments display in message bubbles:
+   - Images show full preview (tap to view)
+   - Documents show file info with type-specific icon
+6. **Model limits** - automatically enforced:
+   - OpenAI: 500 images or 50 documents
+   - Grok: Unlimited images, 50 documents
+   - Claude: 100 images, 10 PDFs
+   - Llama 4: 10 images
+   - Gemini: 10 files (100MB each)
+7. **Supported formats vary by model**:
+   - All: JPEG, PNG, GIF, WebP
+   - Most: PDF, TXT
+   - Some: DOC, DOCX, MD, CSV, JSON, code files
+
+### Using Speech-to-Text (NEW!)
+1. **Empty message field** - microphone icon appears (right side)
+2. **Tap microphone** - starts listening
+3. **Speak your message** - real-time transcription
+4. **Visual feedback** - pulsating red icon while listening
+5. **Tap again** - stops listening, text appears in field
+6. **Edit if needed** - modify transcribed text
+7. **Send** - microphone transforms into send button
 
 ### Import/Export Chat
 1. **Export chat**:
@@ -556,33 +633,66 @@ YourOwnAI/
 │   │   │   │   └── llama/
 │   │   │   │       ├── LlamaCppWrapper.kt            # JNI wrapper for llama.cpp
 │   │   │   │       └── EmbeddingWrapper.kt           # JNI wrapper for embeddings
+│   │   │   ├── data/
+│   │   │   │   ├── local/
+│   │   │   │   │   ├── dao/              # DAOs for conversations, messages, memories, documents
+│   │   │   │   │   ├── entity/           # Room entities with @Entity annotations
+│   │   │   │   │   ├── preferences/      # SettingsManager (DataStore, pinned models)
+│   │   │   │   │   └── YourOwnAIDatabase.kt
+│   │   │   │   ├── remote/
+│   │   │   │   │   ├── deepseek/         # Deepseek API client
+│   │   │   │   │   ├── openai/           # OpenAI API client (GPT-5, multimodal)
+│   │   │   │   │   ├── openrouter/       # OpenRouter API client (Claude, Llama, Gemini)
+│   │   │   │   │   └── xai/              # x.ai Grok API + Voice Agent + multimodal
+│   │   │   │   ├── repository/
+│   │   │   │   │   ├── AIConfigRepository.kt
+│   │   │   │   │   ├── ApiKeyRepository.kt
+│   │   │   │   │   ├── ConversationRepository.kt
+│   │   │   │   │   ├── MessageRepository.kt    # Auto-updates conversation timestamp
+│   │   │   │   │   ├── MemoryRepository.kt     # Memory with semantic search
+│   │   │   │   │   ├── KnowledgeDocumentRepository.kt
+│   │   │   │   │   ├── DocumentEmbeddingRepository.kt # RAG chunks + embeddings
+│   │   │   │   │   ├── LocalModelRepository.kt
+│   │   │   │   │   └── SystemPromptRepository.kt
+│   │   │   │   ├── service/
+│   │   │   │   │   ├── AIServiceImpl.kt              # Unified API service + multimodal routing
+│   │   │   │   │   ├── LlamaServiceImpl.kt           # Local model service
+│   │   │   │   │   └── EmbeddingServiceImpl.kt       # Embedding service
+│   │   │   │   └── llama/
+│   │   │   │       ├── LlamaCppWrapper.kt            # JNI wrapper for llama.cpp
+│   │   │   │       └── EmbeddingWrapper.kt           # JNI wrapper for embeddings
 │   │   │   ├── domain/
 │   │   │   │   ├── model/                # Models: AIConfig, Message, Memory, etc.
+│   │   │   │   │   ├── ModelCapabilities.kt          # Multimodal capabilities mapping
+│   │   │   │   │   └── FileAttachment.kt             # File attachment metadata
 │   │   │   │   ├── prompt/               # AIPrompts.kt (Deep Empathy, Memory)
 │   │   │   │   ├── service/              # Service interfaces
-│   │   │   │   └── util/                 # SemanticSearchUtil.kt (cosine similarity)
+│   │   │   │   │   └── SpeechRecognitionManager.kt   # Android STT integration
+│   │   │   │   └── util/                 # SemanticSearchUtil, ImageCompressor, FileProcessor
 │   │   │   ├── presentation/
 │   │   │   │   ├── onboarding/           # First launch setup
 │   │   │   │   ├── chat/
-│   │   │   │   │   ├── ChatScreen.kt
-│   │   │   │   │   ├── ChatViewModel.kt  # Context building (Memory, RAG, Deep Empathy, Swipe)
-│   │   │   │   │   └── components/       # MessageBubble, ReplyPreview, ModelSelector, etc.
+│   │   │   │   │   ├── ChatScreen.kt                 # Main chat with multimodal pickers
+│   │   │   │   │   ├── ChatViewModel.kt              # State + attachments management
+│   │   │   │   │   ├── ChatMessageHandler.kt         # Message sending + AI generation
+│   │   │   │   │   ├── ChatContextBuilder.kt         # Context assembly
+│   │   │   │   │   └── components/
+│   │   │   │   │       ├── MessageBubble.kt          # Displays text + attachments
+│   │   │   │   │       ├── MessageInput.kt           # Grok-style with mic/send/attach
+│   │   │   │   │       ├── ModelSelector.kt          # Compact, pinning support
+│   │   │   │   │       ├── AttachedImagesPreview.kt  # Image thumbnail preview
+│   │   │   │   │       ├── AttachedFilesPreview.kt   # File preview with icons
+│   │   │   │   │       └── dialogs/                  # Various dialogs
 │   │   │   │   ├── voice/
 │   │   │   │   │   ├── VoiceChatScreen.kt
-│   │   │   │   │   ├── VoiceChatViewModel.kt  # Real-time voice with xAI Grok
-│   │   │   │   │   └── VoiceComponents.kt     # Waveform, voice selector, etc.
+│   │   │   │   │   ├── VoiceChatViewModel.kt         # Real-time voice with xAI Grok
+│   │   │   │   │   └── VoiceComponents.kt            # Waveform, voice selector, etc.
 │   │   │   │   ├── settings/
 │   │   │   │   │   ├── SettingsScreen.kt
 │   │   │   │   │   ├── SettingsViewModel.kt
 │   │   │   │   │   ├── SettingsDialogs.kt
-│   │   │   │   │   ├── components/       # Advanced settings dialogs
-│   │   │   │   │   │   ├── AdvancedSettingsDialogs.kt  # Context, Memory, RAG, Swipe prompts
-│   │   │   │   │   │   ├── MemoryDialogs.kt
-│   │   │   │   │   │   ├── KnowledgeDocumentDialogs.kt
-│   │   │   │   │   │   ├── DeepEmpathyAnalysisDialog.kt
-│   │   │   │   │   │   └── SystemPromptDialogs.kt
-│   │   │   │   │   └── dialogs/          # ApiKeyDialog, AppearanceDialog
-│   │   │   │   ├── home/                 # Conversations list
+│   │   │   │   │   └── components/       # Advanced settings dialogs
+│   │   │   │   ├── home/                 # Conversations list (sorted by time)
 │   │   │   │   └── theme/                # Material 3 theming
 │   │   │   ├── di/                       # Hilt modules
 │   │   │   │   ├── AppModule.kt
@@ -608,14 +718,16 @@ YourOwnAI/
 ## 🔒 Privacy & Security
 
 ### What We Store Locally
-- Chat conversations (Room Database)
+- Chat conversations (Room Database) with attachment metadata
 - Messages with full request logs (system prompt, context, parameters)
+- Message attachments (images and documents stored in cache)
 - Message replies (swipe message ID and text for context)
 - Long-term memories extracted from conversations
 - Knowledge documents with embeddings and chunks
 - API keys (encrypted with Android Keystore)
 - User preferences (theme, colors, fonts, text size)
 - System prompts (default, local, custom)
+- Pinned models preference (DataStore)
 - AI configuration (temperature, top-p, max tokens, message history)
 - Advanced AI settings (Deep Empathy, Memory, RAG, Swipe prompts and instructions)
 - Downloaded local models (Qwen 2.5, Llama 3.2)
@@ -641,18 +753,50 @@ YourOwnAI/
 
 ## 🌍 Supported AI Providers
 
-| Provider | Models | Notes |
-|----------|--------|-------|
-| Deepseek | Deepseek Chat, Deepseek Reasoner | Fast, cost-effective reasoning |
-| OpenAI | GPT-5, GPT-4o, GPT-4o Mini, o1/o3 | Best quality, newest models |
-| x.ai (Grok) | Grok 4.1, Grok 4, Grok 3, Grok Code + **Voice API** | Fast reasoning, code models + real-time voice |
-| **OpenRouter** (NEW!) | Claude (6), Llama 4 (2), Gemini (4), GPT-4o (1) - **14 models** | Access to 200+ models with one API key |
-| Local | Qwen 2.5 1.7B, Llama 3.2 3B | Completely offline via llama.cpp |
+| Provider | Models | Multimodal | Notes |
+|----------|--------|------------|-------|
+| Deepseek | Deepseek Chat, Deepseek Reasoner | ❌ Text only | Fast, cost-effective reasoning |
+| OpenAI | GPT-5.2, GPT-5.1, GPT-4o | ✅ Images + PDF | Best quality, up to 500 images/50 files |
+| x.ai (Grok) | Grok 4.1, Grok 4, Grok 3, Grok Code + **Voice API** | ✅ Images + Files | Unlimited images, 50 docs (PDF, TXT, code) |
+| **OpenRouter** | **26 models total:** | | Access to 200+ models with one API key |
+| ↳ Claude | Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5 (6) | ✅ Images + PDF | 100 images, native PDF (100 pages), 32MB limit |
+| ↳ Llama 4 | Maverick, Scout (2) | ✅ Images | 10 images, native multimodal, 10M context (Scout) |
+| ↳ Gemini | 3 Pro/Flash, 2.5 Pro/Flash (4) | ✅ Images + PDF | 10 files, 100MB each, audio/video support |
+| ↳ GPT-4o | openai/gpt-4o-2024-05-13 (1) | ✅ Images + PDF | Same as OpenAI direct |
+| Local | Qwen 2.5 1.7B, Llama 3.2 3B | ❌ Text only | Completely offline via llama.cpp |
 
-### Coming Soon
-- More OpenRouter models (expand from 14 to 200+ available)
-- Multimodal support (images, audio, video for Gemini 2.5)
-- Groq (ultra-fast inference)
+**Multimodal Stats:**
+- 🎨 **26 models** support images and/or documents
+- 📄 **23 models** support both images AND documents
+- 🖼️ **3 models** support images only (Llama 4, DeepSeek V3.2 Exp)
+
+### Multimodal Capabilities by Provider
+
+**OpenAI (3 models):**
+- Up to 500 images or 50 documents
+- Formats: JPEG, PNG, GIF, WebP / PDF, TXT, DOC, DOCX
+- 50MB total payload
+
+**x.ai Grok (10 models):**
+- Unlimited images (20MB each)
+- Up to 50 documents (48MB each)
+- Formats: JPG, PNG / PDF, TXT, MD, CSV, JSON, code files
+
+**Claude via OpenRouter (6 models):**
+- Up to 100 images (8000x8000px)
+- Native PDF support (100 pages, 32MB)
+- Formats: JPEG, PNG, GIF, WebP / PDF
+
+**Llama 4 via OpenRouter (2 models):**
+- Up to 10 images
+- Native multimodal with early fusion
+- Pre-trained on 48 images
+
+**Gemini via OpenRouter (4 models):**
+- Up to 10 files (consumer), 3,000 files (enterprise)
+- 100MB per file via File API
+- PDF support (30MB/2000 pages)
+- Formats: JPEG, PNG, GIF, WebP / PDF, TXT, DOC, DOCX, MD, CSV
 
 ## 🗺 Roadmap
 
@@ -688,16 +832,37 @@ YourOwnAI/
 - [x] Markdown rendering (headings, horizontal rules)
 - [x] Placeholder validation for prompts
 
-### Phase 3: Additional Features (In Progress)
+### Phase 3: Multimodal & Voice ✅ (Completed)
 - [x] Voice chat - real-time voice conversation with xAI Grok
 - [x] Voice chat persistent history (last 100 messages)
-- [x] OpenRouter integration - 14 models (Claude, Llama 4, Gemini, GPT-4o)
+- [x] Speech-to-text input (Android STT)
+- [x] OpenRouter integration - 13 models (Claude, Llama 4, Gemini, GPT-4o)
 - [x] Context Inheritance - fork conversations with inherited message history
 - [x] Improved Memory filtering - excludes non-meaningful responses
+- [x] **Multimodal support - images and documents**
+  - [x] Image attachment support (compress, preview, display)
+  - [x] Document attachment support (PDF, TXT, DOC, DOCX)
+  - [x] Model capabilities mapping (26 models)
+  - [x] OpenAI multimodal API integration
+  - [x] x.ai Grok multimodal API integration
+  - [x] Claude multimodal via OpenRouter
+  - [x] Attachment UI components (preview, display in chat)
+- [x] **Keyboard sound & vibration** 🎹
+  - [x] Realistic typing sounds when AI responds
+  - [x] Haptic feedback (vibration) synchronized with typing
+  - [x] Settings toggle for sound and vibration
+  - [x] Smart detection of sentence endings
+  - [x] File picker and image picker integration
+  - [x] Base64 encoding and compression
+- [x] **UI improvements**
+  - [x] Pin favorite models to top of list
+  - [x] Grok-style message input (mic/send dynamic switching)
+  - [x] Attachment dropdown menu (Image vs Document)
+  - [x] Chat sorting by last message time
+  - [x] ModelSelector moved to top row (compact)
+  - [x] Chat title moved to bottom row (centered)
 - [ ] Usage tracking (tokens, cost)
-- [ ] More OpenRouter models (expand from 14 to 200+)
-- [ ] OpenRouter multimodal support (images, audio, video)
-- [ ] PDF document support for RAG
+- [ ] More OpenRouter models (expand selection)
 
 ### Phase 4: Polish & Security
 - [ ] Biometric authentication
@@ -843,6 +1008,40 @@ A: Context Inheritance lets you "fork" a conversation - create a new chat that i
 
 **Q: Can I contribute?**
 A: Absolutely! Fork the repo, make changes, and submit a PR. All contributions welcome.
+
+**Q: How do I attach images or documents?**
+A: 
+1. Select a multimodal model (GPT-5, Grok, Claude, etc.)
+2. Tap the paperclip icon in message input
+3. Choose "Image" or "Document" from dropdown
+4. Select file from your device
+5. Preview appears - tap X to remove if needed
+6. Type your message and send
+Images are automatically compressed. Model limits are enforced (e.g., Grok allows unlimited images, Claude allows 100).
+
+**Q: Which models support images and documents?**
+A: **26 models** support multimodal:
+- **OpenAI** (3): GPT-5.2, 5.1, 4o - images + PDF/TXT/DOC
+- **x.ai Grok** (10): All models - unlimited images + PDF/TXT/code files
+- **Claude** (6): All 4.5/4/3.7/3.5 via OpenRouter - 100 images + native PDF
+- **Llama 4** (2): Maverick, Scout - 10 images each
+- **Gemini** (4): 3 Pro/Flash, 2.5 Pro/Flash - 10 files, audio/video support
+- **GPT-4o** (1): Via OpenRouter - same as OpenAI direct
+
+**Q: Are there limits on attachments?**
+A: Yes, each model has specific limits:
+- **GPT-5/4o**: 500 images or 50 docs, 50MB total
+- **Grok**: Unlimited images (20MB each), 50 docs (48MB each)
+- **Claude**: 100 images, 10 PDFs, 32MB request size
+- **Llama 4**: 10 images only
+- **Gemini**: 10 files (100MB each), PDF up to 30MB/2000 pages
+Limits are automatically enforced in the UI.
+
+**Q: Can I use speech-to-text to write messages?**
+A: Yes! When the message field is empty, tap the microphone icon. Speak your message, tap again to stop. The transcribed text appears in the field for you to edit before sending. This uses Android's built-in Speech Recognition (works offline if you have language packs installed).
+
+**Q: How do I pin my favorite models?**
+A: Tap the star icon next to any model in the model selector dropdown. Pinned models appear at the top of the list for quick access. Your pins are saved across app restarts.
 
 **Q: Will this be on Google Play?**
 A: Yes, once we reach stable 1.0. For now, download APK from GitHub Releases.

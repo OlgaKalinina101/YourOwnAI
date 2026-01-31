@@ -7,12 +7,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.yourown.ai.presentation.theme.ColorStyle
 import com.yourown.ai.presentation.theme.FontScale
 import com.yourown.ai.presentation.theme.FontStyle
 import com.yourown.ai.presentation.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,6 +43,12 @@ class SettingsManager @Inject constructor(
         private val SELECTED_MODEL_TYPE = stringPreferencesKey("selected_model_type") // "local" or "api"
         private val SELECTED_MODEL_ID = stringPreferencesKey("selected_model_id")
         private val SELECTED_MODEL_PROVIDER = stringPreferencesKey("selected_model_provider") // for API models
+        
+        // Pinned models
+        private val PINNED_MODELS = stringSetPreferencesKey("pinned_models")
+        
+        // Keyboard sound settings
+        private val KEYBOARD_SOUND_VOLUME = floatPreferencesKey("keyboard_sound_volume")
     }
     
     // Theme Mode
@@ -149,6 +157,38 @@ class SettingsManager @Inject constructor(
             } else {
                 preferences.remove(SELECTED_MODEL_PROVIDER)
             }
+        }
+    }
+    
+    // Pinned Models
+    val pinnedModels: Flow<Set<String>> = dataStore.data.map { preferences ->
+        preferences[PINNED_MODELS] ?: emptySet()
+    }
+    
+    suspend fun togglePinnedModel(modelKey: String) {
+        dataStore.edit { preferences ->
+            val current = preferences[PINNED_MODELS] ?: emptySet()
+            preferences[PINNED_MODELS] = if (modelKey in current) {
+                current - modelKey
+            } else {
+                current + modelKey
+            }
+        }
+    }
+    
+    suspend fun isPinnedModel(modelKey: String): Boolean {
+        val current = dataStore.data.map { it[PINNED_MODELS] ?: emptySet() }
+        return current.map { modelKey in it }.first()
+    }
+    
+    // Keyboard Sound Settings
+    val keyboardSoundVolume: Flow<Float> = dataStore.data.map { preferences ->
+        preferences[KEYBOARD_SOUND_VOLUME] ?: 0f // Default: 0% (off)
+    }
+    
+    suspend fun setKeyboardSoundVolume(volume: Float) {
+        dataStore.edit { preferences ->
+            preferences[KEYBOARD_SOUND_VOLUME] = volume.coerceIn(0f, 1f)
         }
     }
 }

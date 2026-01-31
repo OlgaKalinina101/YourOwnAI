@@ -31,7 +31,7 @@ import com.yourown.ai.data.local.entity.*
         SystemPromptEntity::class,
         KnowledgeDocumentEntity::class,
     ],
-    version = 8,  // Increased: added sourceConversationId to ConversationEntity
+    version = 10,  // Increased: added fileAttachments to MessageEntity
     exportSchema = true
 )
 abstract class YourOwnAIDatabase : RoomDatabase() {

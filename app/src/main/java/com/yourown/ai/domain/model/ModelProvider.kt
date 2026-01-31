@@ -17,6 +17,14 @@ sealed class ModelProvider {
         val modelId: String,
         val displayName: String
     ) : ModelProvider()
+    
+    /**
+     * Get unique key for model identification (used for pinning, etc.)
+     */
+    fun getModelKey(): String = when (this) {
+        is Local -> "local:${model.name}"
+        is API -> "api:${provider.name}:${modelId}"
+    }
 }
 
 /**

@@ -17,10 +17,20 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourown.ai.presentation.chat.components.*
+import com.yourown.ai.domain.model.ModelCapabilities
 import kotlinx.coroutines.launch
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.yourown.ai.domain.model.ModelProvider
+import com.yourown.ai.presentation.chat.components.dialogs.EditTitleDialog
+import com.yourown.ai.presentation.chat.components.dialogs.ExportChatDialog
+import com.yourown.ai.presentation.chat.components.dialogs.RequestLogsDialog
+import com.yourown.ai.presentation.chat.components.dialogs.SearchDialog
+import com.yourown.ai.presentation.chat.components.dialogs.SystemPromptDialog
+import com.yourown.ai.presentation.chat.components.dialogs.ErrorDialog
+import com.yourown.ai.presentation.chat.components.dialogs.ImportChatDialog
+import com.yourown.ai.presentation.chat.components.dialogs.SourceChatSelectionDialog
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
@@ -40,6 +50,53 @@ fun ChatScreen(
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    
+    // Speech recognition manager
+    val speechRecognitionManager = remember { 
+        com.yourown.ai.domain.service.SpeechRecognitionManager(context) 
+    }
+    
+    // Observe speech recognition state
+    val isListening by speechRecognitionManager.isListening.collectAsState()
+    val recognizedText by speechRecognitionManager.recognizedText.collectAsState()
+    
+    // Track the last processed text to avoid duplicates
+    var lastProcessedText by remember { mutableStateOf("") }
+    
+    // Update input text when speech is recognized (only once per recognition)
+    LaunchedEffect(recognizedText) {
+        if (recognizedText.isNotEmpty() && recognizedText != lastProcessedText) {
+            lastProcessedText = recognizedText
+            val currentText = uiState.inputText.trim()
+            val newText = if (currentText.isNotEmpty()) {
+                "$currentText $recognizedText"
+            } else {
+                recognizedText
+            }
+            viewModel.updateInputText(newText)
+        }
+    }
+    
+    // Update isListening state in ViewModel
+    LaunchedEffect(isListening) {
+        viewModel.setListeningState(isListening)
+    }
+    
+    // Request microphone permission
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            speechRecognitionManager.startListening()
+        }
+    }
+    
+    // Cleanup speech recognizer on dispose
+    DisposableEffect(Unit) {
+        onDispose {
+            speechRecognitionManager.destroy()
+        }
+    }
     
     // File picker for saving chat export
     val saveFileLauncher = rememberLauncherForActivityResult(
@@ -83,6 +140,43 @@ fun ChatScreen(
         } ?: run {
             android.util.Log.w("ChatScreen", "File picker cancelled or returned null")
         }
+    }
+    
+    // Image picker for attachments
+    // Image picker for multiple images
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        uris.forEach { uri ->
+            viewModel.addImage(uri)
+        }
+    }
+    
+    // File picker for multiple documents (PDF, TXT, DOC, DOCX)
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        uris.forEach { uri ->
+            viewModel.addFile(uri)
+        }
+    }
+    
+    // Check if current model supports attachments
+    val supportsAttachments = remember(uiState.selectedModel) {
+        uiState.selectedModel?.let { 
+            ModelCapabilities.supportsAttachments(it) 
+        } ?: false
+    }
+    
+    // Check if model supports documents
+    val supportsDocuments = remember(uiState.selectedModel) {
+        uiState.selectedModel?.let { model ->
+            val modelId = when (model) {
+                is ModelProvider.Local -> return@let false // Local models don't support documents
+                is ModelProvider.API -> model.modelId
+            }
+            ModelCapabilities.forModel(modelId).supportsDocuments
+        } ?: false
     }
     
     // Check if scrolled to bottom
@@ -186,6 +280,7 @@ fun ChatScreen(
                     selectedModel = uiState.selectedModel,
                     availableModels = uiState.availableModels,
                     localModels = uiState.localModels,
+                    pinnedModels = uiState.pinnedModels,
                     isSearchMode = uiState.isSearchMode,
                     searchQuery = uiState.searchQuery,
                     currentSearchIndex = uiState.currentSearchIndex,
@@ -194,6 +289,7 @@ fun ChatScreen(
                     onEditTitle = viewModel::showEditTitleDialog,
                     onModelSelect = viewModel::selectModel,
                     onDownloadModel = viewModel::downloadModel,
+                    onTogglePinned = viewModel::togglePinnedModel,
                     onSettingsClick = onNavigateToSettings,
                     onSearchClick = viewModel::toggleSearchMode,
                     onSearchQueryChange = viewModel::updateSearchQuery,
@@ -322,12 +418,49 @@ fun ChatScreen(
                     )
                 }
                 
+                // Attached images preview
+                if (uiState.attachedImages.isNotEmpty()) {
+                    AttachedImagesPreview(
+                        images = uiState.attachedImages,
+                        onRemoveImage = viewModel::removeImage
+                    )
+                }
+                
+                // Attached files preview
+                if (uiState.attachedFiles.isNotEmpty()) {
+                    AttachedFilesPreview(
+                        files = uiState.attachedFiles,
+                        onRemoveFile = viewModel::removeFile
+                    )
+                }
+                
                 // Input - внизу, внутри imePadding колонки
                 MessageInput(
                     text = uiState.inputText,
                     onTextChange = viewModel::updateInputText,
                     onSend = viewModel::sendMessage,
+                    onVoiceInput = {
+                        if (isListening) {
+                            speechRecognitionManager.stopListening()
+                        } else {
+                            // Check if permission is granted
+                            if (context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) 
+                                == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                speechRecognitionManager.startListening()
+                            } else {
+                                micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                            }
+                        }
+                    },
+                    onAttachImage = {
+                        imagePickerLauncher.launch("image/*")
+                    },
+                    onAttachFile = if (supportsDocuments) {
+                        { filePickerLauncher.launch("*/*") } // Accept all file types, will filter in processor
+                    } else null,
+                    isListening = isListening,
                     enabled = !uiState.isLoading && uiState.selectedModel != null,
+                    supportsAttachments = supportsAttachments,
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()

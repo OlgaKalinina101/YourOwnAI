@@ -72,6 +72,10 @@ data class MessageEntity(
     val swipeMessageId: String? = null,   // ID альтернативного ответа
     val swipeMessageText: String? = null, // Текст альтернативного ответа
     
+    // Attachments
+    val imageAttachments: String? = null, // JSON array of image paths
+    val fileAttachments: String? = null, // JSON array: [{"path":"path1","name":"file.pdf","type":"pdf"}]
+    
     // Settings snapshot - флаги на момент генерации сообщения
     val temperature: Float? = null,
     val topP: Float? = null,

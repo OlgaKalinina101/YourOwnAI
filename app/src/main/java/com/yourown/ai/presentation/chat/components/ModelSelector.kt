@@ -23,8 +23,10 @@ fun ModelSelector(
     selectedModel: ModelProvider?,
     availableModels: List<ModelProvider>,
     localModels: Map<LocalModel, LocalModelInfo>,
+    pinnedModels: Set<String>,
     onModelSelect: (ModelProvider) -> Unit,
     onDownloadModel: (LocalModel) -> Unit,
+    onTogglePinned: (ModelProvider) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -39,11 +41,13 @@ fun ModelSelector(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier
+        modifier = modifier.widthIn(min = 280.dp)
     ) {
         OutlinedButton(
             onClick = { expanded = true },
-            modifier = Modifier.menuAnchor(),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Icon(
@@ -67,7 +71,8 @@ fun ModelSelector(
         
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.widthIn(min = 280.dp)
         ) {
             if (availableModels.isEmpty()) {
                 DropdownMenuItem(
@@ -85,19 +90,30 @@ fun ModelSelector(
                 val localModelProviders = availableModels.filterIsInstance<ModelProvider.Local>()
                 val apiModels = availableModels.filterIsInstance<ModelProvider.API>()
                 
+                // Sort models: pinned first, then others
+                fun sortByPinned(models: List<ModelProvider>): List<ModelProvider> {
+                    val pinned = models.filter { it.getModelKey() in pinnedModels }
+                    val unpinned = models.filter { it.getModelKey() !in pinnedModels }
+                    return pinned + unpinned
+                }
+                
+                val sortedLocalModels = sortByPinned(localModelProviders)
+                val sortedApiModels = sortByPinned(apiModels)
+                
                 // Local models section
-                if (localModelProviders.isNotEmpty()) {
+                if (sortedLocalModels.isNotEmpty()) {
                     Text(
                         text = "LOCAL MODELS",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    localModelProviders.forEach { provider ->
-                        val modelInfo = localModels[provider.model]
+                    sortedLocalModels.forEach { provider ->
+                        val modelInfo = localModels[(provider as ModelProvider.Local).model]
                         ModelMenuItem(
                             provider = provider,
                             isSelected = selectedModel == provider,
+                            isPinned = provider.getModelKey() in pinnedModels,
                             modelInfo = modelInfo,
                             onSelect = {
                                 onModelSelect(provider)
@@ -105,14 +121,17 @@ fun ModelSelector(
                             },
                             onDownload = {
                                 onDownloadModel(provider.model)
+                            },
+                            onTogglePinned = {
+                                onTogglePinned(provider)
                             }
                         )
                     }
                 }
                 
                 // API models section
-                if (apiModels.isNotEmpty()) {
-                    if (localModelProviders.isNotEmpty()) {
+                if (sortedApiModels.isNotEmpty()) {
+                    if (sortedLocalModels.isNotEmpty()) {
                         Divider(modifier = Modifier.padding(vertical = 4.dp))
                     }
                     Text(
@@ -121,16 +140,20 @@ fun ModelSelector(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    apiModels.forEach { provider ->
+                    sortedApiModels.forEach { provider ->
                         ModelMenuItem(
                             provider = provider,
                             isSelected = selectedModel == provider,
+                            isPinned = provider.getModelKey() in pinnedModels,
                             modelInfo = null,
                             onSelect = {
                                 onModelSelect(provider)
                                 expanded = false
                             },
-                            onDownload = {}
+                            onDownload = {},
+                            onTogglePinned = {
+                                onTogglePinned(provider)
+                            }
                         )
                     }
                 }
@@ -143,9 +166,11 @@ fun ModelSelector(
 private fun ModelMenuItem(
     provider: ModelProvider,
     isSelected: Boolean,
+    isPinned: Boolean,
     modelInfo: LocalModelInfo?,
     onSelect: () -> Unit,
-    onDownload: () -> Unit
+    onDownload: () -> Unit,
+    onTogglePinned: () -> Unit
 ) {
     DropdownMenuItem(
         text = {
@@ -154,6 +179,21 @@ private fun ModelMenuItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Pin icon
+                IconButton(
+                    onClick = onTogglePinned,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        if (isPinned) Icons.Default.Star else Icons.Default.StarBorder,
+                        contentDescription = if (isPinned) "Unpin" else "Pin",
+                        modifier = Modifier.size(16.dp),
+                        tint = if (isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(4.dp))
+                
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = when (provider) {

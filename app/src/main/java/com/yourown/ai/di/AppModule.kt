@@ -20,4 +20,15 @@ object AppModule {
     ): SettingsManager {
         return SettingsManager(context)
     }
+    
+    @Provides
+    @Singleton
+    fun provideKeyboardSoundManager(
+        @ApplicationContext context: Context
+    ): com.yourown.ai.domain.service.KeyboardSoundManager {
+        return com.yourown.ai.domain.service.KeyboardSoundManager(
+            context = context,
+            scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default + kotlinx.coroutines.SupervisorJob())
+        )
+    }
 }

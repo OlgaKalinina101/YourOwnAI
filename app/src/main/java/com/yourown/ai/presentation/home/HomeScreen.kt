@@ -251,7 +251,7 @@ fun HomeScreen(
     
     // Import dialog
     if (uiState.showImportDialog) {
-        com.yourown.ai.presentation.chat.components.ImportChatDialog(
+        com.yourown.ai.presentation.chat.components.dialogs.ImportChatDialog(
             onDismiss = viewModel::hideImportDialog,
             onImport = { chatText ->
                 viewModel.importChat(chatText)
@@ -270,7 +270,7 @@ fun HomeScreen(
     }
     
     if (uiState.showSourceChatDialog) {
-        com.yourown.ai.presentation.chat.components.SourceChatSelectionDialog(
+        com.yourown.ai.presentation.chat.components.dialogs.SourceChatSelectionDialog(
             conversations = uiState.conversations,
             selectedSourceChatId = uiState.selectedSourceChatId,
             onSourceChatSelected = viewModel::selectSourceChat,

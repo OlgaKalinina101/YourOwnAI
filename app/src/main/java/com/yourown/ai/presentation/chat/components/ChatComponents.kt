@@ -22,6 +22,7 @@ fun ChatTopBar(
     selectedModel: com.yourown.ai.domain.model.ModelProvider?,
     availableModels: List<com.yourown.ai.domain.model.ModelProvider>,
     localModels: Map<com.yourown.ai.domain.model.LocalModel, com.yourown.ai.domain.model.LocalModelInfo>,
+    pinnedModels: Set<String>,
     isSearchMode: Boolean,
     searchQuery: String,
     currentSearchIndex: Int,
@@ -30,6 +31,7 @@ fun ChatTopBar(
     onEditTitle: () -> Unit,
     onModelSelect: (com.yourown.ai.domain.model.ModelProvider) -> Unit,
     onDownloadModel: (com.yourown.ai.domain.model.LocalModel) -> Unit,
+    onTogglePinned: (com.yourown.ai.domain.model.ModelProvider) -> Unit,
     onSettingsClick: () -> Unit,
     onSearchClick: () -> Unit = {},
     onSearchQueryChange: (String) -> Unit = {},
@@ -113,7 +115,8 @@ fun ChatTopBar(
                     }
                 }
             } else {
-                // Normal mode: Back, Title+Edit, More Menu, Settings
+                // Normal mode: Two rows
+                // Row 1: Back, ModelSelector (compact, left-aligned), More Menu, Settings
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -121,105 +124,114 @@ fun ChatTopBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Back button
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                    // Left side: Back button + ModelSelector
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f, fill = false)
+                    ) {
+                        // Back button
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Default.ArrowBack, "Back")
+                        }
+                        
+                        // Model selector (compact, not stretched)
+                        ModelSelector(
+                            selectedModel = selectedModel,
+                            availableModels = availableModels,
+                            localModels = localModels,
+                            pinnedModels = pinnedModels,
+                            onModelSelect = onModelSelect,
+                            onDownloadModel = onDownloadModel,
+                            onTogglePinned = onTogglePinned,
+                            modifier = Modifier.widthIn(max = 200.dp)
+                        )
                     }
                     
-                    // Title + Edit button
-                    androidx.compose.runtime.key(conversationTitle) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = conversationTitle,
-                                fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            IconButton(
-                                onClick = onEditTitle,
-                                modifier = Modifier.size(32.dp)
+                    // Right side: More menu + Settings
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // More menu button
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, "More options")
+                            }
+                        
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
                             ) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Edit Title",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurface
+                                DropdownMenuItem(
+                                    text = { Text("Search") },
+                                    onClick = {
+                                        showMenu = false
+                                        onSearchClick()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Search, contentDescription = null)
+                                    }
+                                )
+                                
+                                DropdownMenuItem(
+                                    text = { Text("Persona") },
+                                    onClick = {
+                                        showMenu = false
+                                        onSystemPromptClick()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Person, contentDescription = null)
+                                    }
+                                )
+                                
+                                DropdownMenuItem(
+                                    text = { Text("Save chat") },
+                                    onClick = {
+                                        showMenu = false
+                                        onExportChatClick()
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Download, contentDescription = null)
+                                    }
                                 )
                             }
                         }
-                    }
-                    
-                    // More menu button
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, "More options")
+                        
+                        // Settings button
+                        IconButton(onClick = onSettingsClick) {
+                            Icon(Icons.Default.Settings, "Settings")
                         }
-                    
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Search") },
-                            onClick = {
-                                showMenu = false
-                                onSearchClick()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = null)
-                            }
-                        )
-                        
-                        DropdownMenuItem(
-                            text = { Text("Persona") },
-                            onClick = {
-                                showMenu = false
-                                onSystemPromptClick()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Person, contentDescription = null)
-                            }
-                        )
-                        
-                        DropdownMenuItem(
-                            text = { Text("Save chat") },
-                            onClick = {
-                                showMenu = false
-                                onExportChatClick()
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Download, contentDescription = null)
-                            }
-                        )
                     }
                 }
                 
-                // Settings button
-                IconButton(onClick = onSettingsClick) {
-                    Icon(Icons.Default.Settings, "Settings")
+                // Row 2: Title + Edit button (centered)
+                androidx.compose.runtime.key(conversationTitle) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = conversationTitle,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        IconButton(
+                            onClick = onEditTitle,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit Title",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
-            }
-            }
-            
-            // Model selector row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                ModelSelector(
-                    selectedModel = selectedModel,
-                    availableModels = availableModels,
-                    localModels = localModels,
-                    onModelSelect = onModelSelect,
-                    onDownloadModel = onDownloadModel
-                )
             }
         }
     }

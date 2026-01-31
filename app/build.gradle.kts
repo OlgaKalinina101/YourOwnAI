@@ -129,6 +129,12 @@ dependencies {
     // Accompanist (для system UI controller)
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
     
+    // Coil (Image loading)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // EXIF (Image orientation)
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+    
     // Llamatik - Kotlin Multiplatform llama.cpp integration
     implementation("com.llamatik:library:0.13.0")
 

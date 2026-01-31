@@ -1,111 +1,95 @@
 package com.yourown.ai.presentation.settings.dialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.yourown.ai.domain.model.AIProvider
 
+/**
+ * Dialog for adding/editing API Key
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApiKeyDialog(
     provider: AIProvider,
     onDismiss: () -> Unit,
-    onSave: (AIProvider, String) -> Unit
+    onSave: (String) -> Unit
 ) {
     var apiKey by remember { mutableStateOf("") }
-    var isVisible by remember { mutableStateOf(false) }
-    var showError by remember { mutableStateOf(false) }
+    var showKey by remember { mutableStateOf(false) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = {
-            Icon(Icons.Default.Key, contentDescription = null)
-        },
-        title = {
-            Text("${provider.displayName} API Key")
-        },
+        icon = { Icon(Icons.Default.Key, null) },
+        title = { Text("Add ${provider.displayName} API Key") },
         text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Your API key will be encrypted and stored securely on your device.",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "Enter your API key to use ${provider.displayName}",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
                 OutlinedTextField(
                     value = apiKey,
-                    onValueChange = {
-                        apiKey = it
-                        showError = false
-                    },
+                    onValueChange = { apiKey = it },
+                    modifier = Modifier.fillMaxWidth(),
                     label = { Text("API Key") },
                     placeholder = { Text("sk-...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = if (isVisible) {
+                    visualTransformation = if (showKey) {
                         VisualTransformation.None
                     } else {
                         PasswordVisualTransformation()
                     },
                     trailingIcon = {
-                        IconButton(onClick = { isVisible = !isVisible }) {
+                        IconButton(onClick = { showKey = !showKey }) {
                             Icon(
-                                if (isVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = if (isVisible) "Hide" else "Show"
+                                if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                if (showKey) "Hide key" else "Show key"
                             )
                         }
                     },
-                    isError = showError,
-                    supportingText = if (showError) {
-                        { Text("API key cannot be empty", color = MaterialTheme.colorScheme.error) }
-                    } else null,
-                    singleLine = false,
-                    maxLines = 3
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
                 
-                // Security info
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Help hint
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Encrypted with AES-256",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Your key is stored encrypted on your device",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                
-                // Help text
-                Text(
-                    text = "Get your API key from ${getApiKeyUrl(provider)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         },
         confirmButton = {
             Button(
-                onClick = {
-                    if (apiKey.trim().isEmpty()) {
-                        showError = true
-                    } else {
-                        onSave(provider, apiKey.trim())
-                    }
-                }
+                onClick = { onSave(apiKey) },
+                enabled = apiKey.isNotBlank()
             ) {
                 Text("Save")
             }
@@ -116,14 +100,4 @@ fun ApiKeyDialog(
             }
         }
     )
-}
-
-private fun getApiKeyUrl(provider: AIProvider): String {
-    return when (provider) {
-        AIProvider.DEEPSEEK -> "platform.deepseek.com"
-        AIProvider.OPENAI -> "platform.openai.com"
-        AIProvider.OPENROUTER -> "openrouter.ai"
-        AIProvider.XAI -> "x.ai"
-        AIProvider.CUSTOM -> "your provider"
-    }
 }

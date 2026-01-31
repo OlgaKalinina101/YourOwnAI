@@ -17,6 +17,10 @@ data class Message(
     val swipeMessageId: String? = null,
     val swipeMessageText: String? = null,
     
+    // Attachments (stored as JSON array of paths/URIs)
+    val imageAttachments: String? = null, // JSON array: ["path1", "path2"]
+    val fileAttachments: String? = null, // JSON array: [{"path":"path1","name":"file.pdf","type":"pdf"}]
+    
     // Settings snapshot
     val temperature: Float? = null,
     val topP: Float? = null,
