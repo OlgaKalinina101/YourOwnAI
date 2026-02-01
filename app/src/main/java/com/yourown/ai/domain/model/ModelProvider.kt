@@ -242,12 +242,6 @@ enum class OpenRouterModel(
     ),
 
     // Nous: Hermes
-    NOUS_HERMES_3_405B(
-        modelId = "nousresearch/hermes-3-llama-3.1-405b:free",
-        displayName = "Nous: Hermes 3 free",
-        description = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user"
-    ),
-
     NOUS_HERMES_3_70B(
         modelId = "nousresearch/hermes-3-llama-3.1-70b",
         displayName = "Nous: Hermes 3 70B",

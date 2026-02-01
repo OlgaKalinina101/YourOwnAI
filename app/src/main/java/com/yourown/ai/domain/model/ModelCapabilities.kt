@@ -169,13 +169,6 @@ data class ModelCapabilities(
                     notes = "l3.1-euryale-70b: Text only. Focused on creative roleplay. 32.8K context."
                 )
 
-                // hermes-3-llama-3.1-405b:free - via OpenRouter
-                "hermes-3-llama-3.1-405b:free" -> ModelCapabilities(
-                    supportsVision = false,
-                    supportsDocuments = false,
-                    notes = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user."
-                )
-
                 // hermes-3-llama-3.1-70b - via OpenRouter
                 "nousresearch/hermes-3-llama-3.1-70b" -> ModelCapabilities(
                     supportsVision = false,
