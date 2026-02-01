@@ -507,71 +507,19 @@ class ChatViewModel @Inject constructor(
     fun clearFiles() {
         _uiState.update { it.copy(attachedFiles = emptyList()) }
     }
-    
+
     fun sendMessage() {
         val text = _uiState.value.inputText.trim()
         if (text.isEmpty()) return
-        
+
         val conversationId = _uiState.value.currentConversationId ?: return
         val selectedModel = _uiState.value.selectedModel ?: return
         val attachedImages = _uiState.value.attachedImages
         val attachedFiles = _uiState.value.attachedFiles
-        
+        val replyMessage = _uiState.value.replyToMessage
+
         viewModelScope.launch {
-            val replyMessage = _uiState.value.replyToMessage
-            
-            // Process images - save to cache and get paths
-            val imagePaths = attachedImages.mapNotNull { uri ->
-                try {
-                    com.yourown.ai.util.ImageCompressor.saveCompressedImage(context, uri)
-                } catch (e: Exception) {
-                    Log.e("ChatViewModel", "Error processing image", e)
-                    null
-                }
-            }
-            
-            val imageAttachmentsJson = if (imagePaths.isNotEmpty()) {
-                com.google.gson.Gson().toJson(imagePaths)
-            } else {
-                null
-            }
-            
-            // Process files - save to cache and get metadata
-            val fileAttachments = attachedFiles.mapNotNull { uri ->
-                try {
-                    val filePath = com.yourown.ai.util.FileProcessor.saveFileToCache(context, uri)
-                    if (filePath != null) {
-                        val fileInfo = com.yourown.ai.util.FileProcessor.getFileInfo(context, uri)
-                        if (fileInfo != null) {
-                            val extension = com.yourown.ai.util.FileProcessor.getFileExtension(fileInfo.first)
-                            com.yourown.ai.domain.model.FileAttachment(
-                                path = filePath,
-                                name = fileInfo.first,
-                                type = extension,
-                                sizeBytes = fileInfo.second
-                            )
-                        } else null
-                    } else null
-                } catch (e: Exception) {
-                    Log.e("ChatViewModel", "Error processing file", e)
-                    null
-                }
-            }
-            
-            val fileAttachmentsJson = if (fileAttachments.isNotEmpty()) {
-                com.google.gson.Gson().toJson(fileAttachments)
-            } else {
-                null
-            }
-            
-            _uiState.update { it.copy(
-                isLoading = true, 
-                inputText = "", 
-                replyToMessage = null,
-                attachedImages = emptyList(), // Clear attached images
-                attachedFiles = emptyList() // Clear attached files
-            ) }
-            
+            // 1. Мгновенно создаём и показываем user-сообщение
             val userMessage = Message(
                 id = UUID.randomUUID().toString(),
                 conversationId = conversationId,
@@ -580,38 +528,102 @@ class ChatViewModel @Inject constructor(
                 createdAt = System.currentTimeMillis(),
                 swipeMessageId = replyMessage?.id,
                 swipeMessageText = replyMessage?.content,
-                imageAttachments = imageAttachmentsJson,
-                fileAttachments = fileAttachmentsJson
+                imageAttachments = null,
+                fileAttachments = null
             )
-            
+
+            messageRepository.addMessage(userMessage)
+            _uiState.update { state ->
+                state.copy(
+                    messages = state.messages + userMessage,
+                    inputText = "",
+                    replyToMessage = null,
+                    attachedImages = emptyList(),
+                    attachedFiles = emptyList(),
+                    isLoading = true
+                )
+            }
+
+            // Объявляем переменные ДО блока try
             val aiMessageId = UUID.randomUUID().toString()
             var aiMessageCreated = false
-            
+
+            // 2. Асинхронно обрабатываем attachments и генерируем ответ
             try {
+                // Process images
+                val imagePaths = attachedImages.mapNotNull { uri ->
+                    try {
+                        com.yourown.ai.util.ImageCompressor.saveCompressedImage(context, uri)
+                    } catch (e: Exception) {
+                        Log.e("ChatViewModel", "Error processing image", e)
+                        null
+                    }
+                }
+                val imageAttachmentsJson = if (imagePaths.isNotEmpty()) {
+                    com.google.gson.Gson().toJson(imagePaths)
+                } else null
+
+                // Process files
+                val fileAttachments = attachedFiles.mapNotNull { uri ->
+                    try {
+                        val filePath = com.yourown.ai.util.FileProcessor.saveFileToCache(context, uri)
+                        if (filePath != null) {
+                            val fileInfo = com.yourown.ai.util.FileProcessor.getFileInfo(context, uri)
+                            if (fileInfo != null) {
+                                val extension = com.yourown.ai.util.FileProcessor.getFileExtension(fileInfo.first)
+                                com.yourown.ai.domain.model.FileAttachment(
+                                    path = filePath,
+                                    name = fileInfo.first,
+                                    type = extension,
+                                    sizeBytes = fileInfo.second
+                                )
+                            } else null
+                        } else null
+                    } catch (e: Exception) {
+                        Log.e("ChatViewModel", "Error processing file", e)
+                        null
+                    }
+                }
+                val fileAttachmentsJson = if (fileAttachments.isNotEmpty()) {
+                    com.google.gson.Gson().toJson(fileAttachments)
+                } else null
+
+                // Обновляем userMessage с attachments
+                val updatedUserMessage = userMessage.copy(
+                    imageAttachments = imageAttachmentsJson,
+                    fileAttachments = fileAttachmentsJson
+                )
+                messageRepository.updateMessage(updatedUserMessage)
+
+                _uiState.update { state ->
+                    val updatedMessages = state.messages.map {
+                        if (it.id == userMessage.id) updatedUserMessage else it
+                    }
+                    state.copy(messages = updatedMessages)
+                }
+
+                // 3. Строим историю и context
                 val config = _uiState.value.aiConfig
-                val currentMessages = _uiState.value.messages + userMessage
+                val currentMessages = _uiState.value.messages
                 val sourceConvId = _uiState.value.currentConversation?.sourceConversationId
-                
-                // Build message history with context inheritance
+
                 val allMessages = messageHandler.buildMessageHistoryWithInheritance(
                     currentMessages = currentMessages,
                     sourceConversationId = sourceConvId,
                     messageHistoryLimit = config.messageHistoryLimit
                 )
-                
+
                 val userContextContent = _uiState.value.userContext.content
-                
-                // Build enhanced context FIRST (before sendMessage)
+
                 val enhancedContextResult = messageHandler.buildEnhancedContextForLogs(
                     baseContext = userContextContent,
-                    userMessage = userMessage.content,
+                    userMessage = updatedUserMessage.content,
                     config = config,
                     selectedModel = selectedModel,
                     conversationId = conversationId,
                     swipeMessage = replyMessage
                 )
-                
-                // Build request logs with full context breakdown
+
                 val requestLogs = messageHandler.buildRequestLogs(
                     model = selectedModel,
                     config = config,
@@ -621,13 +633,13 @@ class ChatViewModel @Inject constructor(
                     memoriesUsed = enhancedContextResult.memoriesUsed,
                     ragChunksUsed = enhancedContextResult.ragChunksUsed
                 )
-                
+
+                // 4. Создаём placeholder для AI ответа
                 val modelName = when (selectedModel) {
                     is ModelProvider.Local -> selectedModel.model.modelName
                     is ModelProvider.API -> selectedModel.modelId
                 }
-                
-                // Create placeholder for AI response
+
                 val aiMessage = Message(
                     id = aiMessageId,
                     conversationId = conversationId,
@@ -643,15 +655,15 @@ class ChatViewModel @Inject constructor(
                     systemPrompt = config.systemPrompt,
                     requestLogs = requestLogs
                 )
-                
+
                 messageRepository.addMessage(aiMessage)
                 aiMessageCreated = true
-                
-                // Generate response
+
+                // 5. Генерируем ответ со streaming
                 val responseBuilder = StringBuilder()
-                
+
                 messageHandler.sendMessage(
-                    userMessage = userMessage,
+                    userMessage = updatedUserMessage,
                     selectedModel = selectedModel,
                     config = config,
                     userContext = userContextContent,
@@ -659,14 +671,13 @@ class ChatViewModel @Inject constructor(
                     swipeMessage = replyMessage
                 ).collect { chunk ->
                     responseBuilder.append(chunk)
-                    
-                    // Play keyboard sound for this token
+
                     keyboardSoundManager.playTypingForToken(chunk)
-                    
+
                     val updatedMessage = aiMessage.copy(
                         content = responseBuilder.toString().trim()
                     )
-                    
+
                     _uiState.update { state ->
                         val updatedMessages = state.messages.map { msg ->
                             if (msg.id == aiMessageId) updatedMessage else msg
@@ -674,34 +685,34 @@ class ChatViewModel @Inject constructor(
                         state.copy(messages = updatedMessages)
                     }
                 }
-                
-                // Save final message
+
+                // Сохраняем финальное сообщение
                 val finalMessage = aiMessage.copy(
                     content = responseBuilder.toString().trim()
                 )
                 messageRepository.updateMessage(finalMessage)
-                
-                // Extract memory if enabled
+
+                // Извлекаем memory если включено
                 if (config.memoryEnabled) {
                     messageHandler.extractAndSaveMemory(
-                        userMessage = userMessage,
+                        userMessage = updatedUserMessage,
                         selectedModel = selectedModel,
                         config = config,
                         conversationId = conversationId
                     )
                 }
-                
+
                 _uiState.update { it.copy(shouldScrollToBottom = true) }
-                
+
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error generating response", e)
-                
+
                 val errorModelName = when (selectedModel) {
                     is ModelProvider.Local -> selectedModel.model.modelName
                     is ModelProvider.API -> selectedModel.modelId
                 }
-                
-                _uiState.update { 
+
+                _uiState.update {
                     it.copy(
                         showErrorDialog = true,
                         errorDetails = ErrorDetails(
