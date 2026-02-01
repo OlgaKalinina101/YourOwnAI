@@ -206,29 +206,35 @@ The app should feel like a **tool**, not a product with personality. It's your s
 #### 🤖 AI Providers & Models
 - **Deepseek** - deepseek-chat, deepseek-reasoner (text only)
 - **OpenAI** - GPT-5.2, GPT-5.1, GPT-4o (multimodal: images + PDFs)
-  - Smart parameter detection (max_completion_tokens, conditional temperature)
-  - Up to 500 images or 50 documents per request
+    - **GPT-4.1 Series** (NEW!) - GPT-4.1 (gpt-4.1 or gpt-4.1-2025-04-14 snapshot)
+        - Strongest non-reasoning model with 1M token context, excels at instruction following, coding, long docs/codebases
+        - Multimodal: text + images (same as GPT-4o)
+        - Smart parameter detection (max_completion_tokens, conditional temperature)
+        - Up to 500 images or 50 documents per request
 - **x.ai (Grok)** - Grok 4.1, Grok 4, Grok 3, Grok Code (multimodal: images + files)
-  - Unlimited images (20MB each)
-  - 50 documents (PDF, TXT, MD, CSV, JSON, code files)
-  - 48MB per file limit
+    - Unlimited images (20MB each)
+    - 50 documents (PDF, TXT, MD, CSV, JSON, code files)
+    - 48MB per file limit
 - **OpenRouter (NEW!)** - Access 200+ models with one API key:
-  - **Claude** (6 models) - Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5
-    - 100 images + native PDF support (up to 100 pages)
-    - 32MB total request size
-  - **Llama 4** (2 models) - Maverick, Scout
-    - 10 images, native multimodal with early fusion
-    - 10M token context (Scout)
-  - **Gemini** (4 models) - 3 Pro/Flash, 2.5 Pro/Flash
-    - 10 files per prompt, up to 100MB each
-    - PDF support (30MB/2000 pages)
-    - Text, images, audio, video support
-  - **GPT-4o** - Same capabilities as OpenAI direct
+    - **Claude** (6 models) - Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5
+        - 100 images + native PDF support (up to 100 pages)
+        - 32MB total request size
+    - **Llama 4** (2 models) - Maverick, Scout
+        - 10 images, native multimodal with early fusion
+        - 10M token context (Scout)
+    - **Llama 3.1 Series** (NEW!)
+        - Llama 3.1-euryale (sao10k/l3.1-euryale-70b) — Focused on creative roleplay, immersive storytelling, emotional depth
+        - Nous: Hermes 3 70B (nousresearch/hermes-3-llama-3.1-70b) — Powerful alignment to user, excellent steering/control, agentic + roleplay capabilities
+    - **Gemini** (4 models) - 3 Pro/Flash, 2.5 Pro/Flash
+        - 10 files per prompt, up to 100MB each
+        - PDF support (30MB/2000 pages)
+        - Text, images, audio, video support
+    - **GPT-4o** - Same capabilities as OpenAI direct
 - **Local inference** - Qwen 2.5 1.7B (950MB), Llama 3.2 3B (1.9GB)
-  - Download queue system (one at a time)
-  - Progress tracking with UI updates
-  - Automatic corruption detection (GGUF validation)
-  - Thread-safe loading and generation (Mutex)
+    - Download queue system (one at a time)
+    - Progress tracking with UI updates
+    - Automatic corruption detection (GGUF validation)
+    - Thread-safe loading and generation (Mutex)
 
 **Total: 26 models with multimodal support (images/documents)!**
 
