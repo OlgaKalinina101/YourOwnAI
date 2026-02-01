@@ -35,8 +35,15 @@ YourOwnAI is a privacy-first Android application that gives you complete control
     <td><img src="examples/models1.jpg" width="200"/></td>
     <td><img src="examples/models2.jpg" width="200"/></td>
     <td><img src="examples/local_models.jpg" width="200"/></td>
+  </tr>
+</table>
+
+### 🎙️ Voice Chat
+<table>
+  <tr>
     <td><img src="examples/voice_chat1.jpg" width="200"/></td>
     <td><img src="examples/voice_chat2.jpg" width="200"/></td>
+    <td><img src="examples/voice_chat3.jpg" width="200"/></td>
   </tr>
 </table>
 
