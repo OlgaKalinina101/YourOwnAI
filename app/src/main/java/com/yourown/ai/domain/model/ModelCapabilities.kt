@@ -75,6 +75,20 @@ data class ModelCapabilities(
                     totalAttachmentsLimit = 500,
                     notes = "GPT-4o: Up to 500 images or files, 50MB total payload"
                 )
+
+                // GPT-4o - Fast multimodal only image support
+                "gpt-4.1-2025-04-14", "gpt-4.1" -> ModelCapabilities(
+                    supportsVision = true,
+                    supportsDocuments = false,
+                    imageSupport = ImageSupport(
+                        maxImages = 500,
+                        maxSizePerImageMB = 50,
+                        maxTotalPayloadMB = 50,
+                        supportsDetail = true
+                    ),
+                    totalAttachmentsLimit = 500,
+                    notes = "GPT-4.1: Up to 500 images, 50MB total payload"
+                )
                 
                 // DeepSeek Models - Direct API
                 "deepseek-chat" -> ModelCapabilities(
@@ -147,7 +161,28 @@ data class ModelCapabilities(
                     totalAttachmentsLimit = 10,
                     notes = "Llama 4: Up to 10 images. Native multimodal with early fusion. Pre-trained on 48 images. Via OpenRouter."
                 )
-                
+
+                // l3.1-euryale-70b - via OpenRouter
+                "sao10k/l3.1-euryale-70b" -> ModelCapabilities(
+                    supportsVision = false,
+                    supportsDocuments = false,
+                    notes = "l3.1-euryale-70b: Text only. Focused on creative roleplay. 32.8K context."
+                )
+
+                // hermes-3-llama-3.1-405b:free - via OpenRouter
+                "hermes-3-llama-3.1-405b:free" -> ModelCapabilities(
+                    supportsVision = false,
+                    supportsDocuments = false,
+                    notes = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user."
+                )
+
+                // hermes-3-llama-3.1-70b - via OpenRouter
+                "nousresearch/hermes-3-llama-3.1-70b" -> ModelCapabilities(
+                    supportsVision = false,
+                    supportsDocuments = false,
+                    notes = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user."
+                )
+
                 // Gemini 3 & 2.5 Models via OpenRouter - Full multimodal support
                 "google/gemini-3-pro-preview", "google/gemini-3-flash-preview",
                 "google/gemini-2.5-pro", "google/gemini-2.5-flash" -> ModelCapabilities(

@@ -11,6 +11,16 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
+ * Enhanced context result with breakdown
+ */
+data class EnhancedContextResult(
+    val fullContext: String,
+    val deepEmpathyAnalysis: String? = null,
+    val memoriesUsed: List<String> = emptyList(),
+    val ragChunksUsed: List<String> = emptyList()
+)
+
+/**
  * Builds enhanced context with Deep Empathy, Memory, and RAG
  */
 class ChatContextBuilder @Inject constructor(
@@ -40,7 +50,7 @@ class ChatContextBuilder @Inject constructor(
         selectedModel: ModelProvider,
         conversationId: String,
         swipeMessage: Message? = null
-    ): String {
+    ): EnhancedContextResult {
         val parts = mutableListOf<String>()
         
         // Deep Empathy, Memory and RAG work ONLY with API models
@@ -111,7 +121,15 @@ class ChatContextBuilder @Inject constructor(
             parts.add(ragText)
         }
         
-        return parts.joinToString("\n\n")
+        val fullContext = parts.joinToString("\n\n")
+        
+        // Return result with breakdown
+        return EnhancedContextResult(
+            fullContext = fullContext,
+            deepEmpathyAnalysis = deepEmpathyFocusPrompt,
+            memoriesUsed = relevantMemories.map { it.fact },
+            ragChunksUsed = relevantChunks.map { it.content }
+        )
     }
     
     /**

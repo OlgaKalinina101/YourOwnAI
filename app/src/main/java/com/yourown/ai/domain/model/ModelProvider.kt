@@ -74,6 +74,13 @@ enum class OpenAIModel(
         displayName = "GPT-5.1",
         description = "Coding with configurable reasoning effort"
     ),
+
+    // GPT-4.1 Series
+    GPT_4_1(
+        modelId = "gpt-4.1-2025-04-14",
+        displayName = "GPT-4.1",
+        description = "Strong, intelligent, base"
+    ),
     
     // GPT-4o Series
     GPT_4O(
@@ -202,6 +209,13 @@ enum class OpenRouterModel(
         displayName = "Llama 4 Scout",
         description = "Efficient Llama 4 variant for fast inference"
     ),
+
+    // Llama 3.1 Series
+    LLAMA_3_1_EURUALE(
+        modelId = "sao10k/l3.1-euryale-70b",
+        displayName = "Llama 3.1-euryale",
+        description = "Euryale L3.1 70B v2.2 focused on creative roleplay"
+    ),
     
     // Gemini 3 Series (with reasoning tokens)
     GEMINI_3_PRO_PREVIEW(
@@ -225,6 +239,19 @@ enum class OpenRouterModel(
         modelId = "google/gemini-2.5-flash",
         displayName = "Gemini 2.5 Flash",
         description = "Fast multimodal with 1M+ context"
+    ),
+
+    // Nous: Hermes
+    NOUS_HERMES_3_405B(
+        modelId = "nousresearch/hermes-3-llama-3.1-405b:free",
+        displayName = "Nous: Hermes 3 free",
+        description = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user"
+    ),
+
+    NOUS_HERMES_3_70B(
+        modelId = "nousresearch/hermes-3-llama-3.1-70b",
+        displayName = "Nous: Hermes 3 70B",
+        description = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user."
     ),
     
     // OpenAI GPT-4o Series

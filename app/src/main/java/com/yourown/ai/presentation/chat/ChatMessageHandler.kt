@@ -36,7 +36,7 @@ class ChatMessageHandler @Inject constructor(
         messageRepository.addMessage(userMessage)
         
         // Build enhanced context with Deep Empathy, Memory, and RAG
-        val enhancedContext = contextBuilder.buildEnhancedContext(
+        val enhancedContextResult = contextBuilder.buildEnhancedContext(
             baseContext = userContext,
             userMessage = userMessage.content,
             config = config,
@@ -56,11 +56,32 @@ class ChatMessageHandler @Inject constructor(
             provider = selectedModel,
             messages = allMessages + userMessage,
             systemPrompt = systemPrompt,
-            userContext = enhancedContext.ifBlank { null },
+            userContext = enhancedContextResult.fullContext.ifBlank { null },
             config = config
         ).collect { chunk ->
             emit(chunk)
         }
+    }
+    
+    /**
+     * Build enhanced context for logging (without sending message)
+     */
+    suspend fun buildEnhancedContextForLogs(
+        baseContext: String,
+        userMessage: String,
+        config: AIConfig,
+        selectedModel: ModelProvider,
+        conversationId: String,
+        swipeMessage: Message? = null
+    ): EnhancedContextResult {
+        return contextBuilder.buildEnhancedContext(
+            baseContext = baseContext,
+            userMessage = userMessage,
+            config = config,
+            selectedModel = selectedModel,
+            conversationId = conversationId,
+            swipeMessage = swipeMessage
+        )
     }
     
     /**
@@ -222,7 +243,10 @@ class ChatMessageHandler @Inject constructor(
         model: ModelProvider,
         config: AIConfig,
         allMessages: List<Message> = emptyList(),
-        userContext: String? = null
+        fullContext: String? = null,
+        deepEmpathyAnalysis: String? = null,
+        memoriesUsed: List<String> = emptyList(),
+        ragChunksUsed: List<String> = emptyList()
     ): String {
         val modelInfo = when (model) {
             is ModelProvider.Local -> mapOf(
@@ -256,6 +280,23 @@ class ChatMessageHandler @Inject constructor(
             )
         }
         
+        // Build context breakdown
+        val contextBreakdown = mutableMapOf<String, Any>()
+        if (!fullContext.isNullOrBlank()) {
+            contextBreakdown["full_context"] = fullContext
+        }
+        if (!deepEmpathyAnalysis.isNullOrBlank()) {
+            contextBreakdown["deep_empathy_analysis"] = deepEmpathyAnalysis
+        }
+        if (memoriesUsed.isNotEmpty()) {
+            contextBreakdown["memories_count"] = memoriesUsed.size
+            contextBreakdown["memories"] = memoriesUsed
+        }
+        if (ragChunksUsed.isNotEmpty()) {
+            contextBreakdown["rag_chunks_count"] = ragChunksUsed.size
+            contextBreakdown["rag_chunks"] = ragChunksUsed.map { it.take(200) + if (it.length > 200) "..." else "" }
+        }
+        
         // Build full request snapshot
         val requestSnapshot = mapOf(
             "timestamp" to System.currentTimeMillis(),
@@ -268,10 +309,11 @@ class ChatMessageHandler @Inject constructor(
             ),
             "flags" to mapOf(
                 "deep_empathy" to config.deepEmpathy,
-                "memory_enabled" to config.memoryEnabled
+                "memory_enabled" to config.memoryEnabled,
+                "rag_enabled" to config.ragEnabled
             ),
             "system_prompt" to actualSystemPrompt,
-            "user_context" to (userContext ?: ""),
+            "context" to contextBreakdown,
             "message_count" to mapOf(
                 "total" to allMessages.size,
                 "sent_to_model" to relevantMessages.size

@@ -601,12 +601,25 @@ class ChatViewModel @Inject constructor(
                 
                 val userContextContent = _uiState.value.userContext.content
                 
-                // Build request logs
+                // Build enhanced context FIRST (before sendMessage)
+                val enhancedContextResult = messageHandler.buildEnhancedContextForLogs(
+                    baseContext = userContextContent,
+                    userMessage = userMessage.content,
+                    config = config,
+                    selectedModel = selectedModel,
+                    conversationId = conversationId,
+                    swipeMessage = replyMessage
+                )
+                
+                // Build request logs with full context breakdown
                 val requestLogs = messageHandler.buildRequestLogs(
                     model = selectedModel,
                     config = config,
                     allMessages = allMessages,
-                    userContext = userContextContent.ifBlank { null }
+                    fullContext = enhancedContextResult.fullContext,
+                    deepEmpathyAnalysis = enhancedContextResult.deepEmpathyAnalysis,
+                    memoriesUsed = enhancedContextResult.memoriesUsed,
+                    ragChunksUsed = enhancedContextResult.ragChunksUsed
                 )
                 
                 val modelName = when (selectedModel) {
