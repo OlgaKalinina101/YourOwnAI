@@ -1,6 +1,8 @@
 package com.yourown.ai.presentation.chat.components.dialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -106,17 +108,18 @@ fun RequestLogsDialog(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
-                    androidx.compose.foundation.layout.Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(12.dp)
-                    ) {
-                        androidx.compose.foundation.text.selection.SelectionContainer {
+                    androidx.compose.foundation.text.selection.SelectionContainer {
+                        androidx.compose.foundation.layout.Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(androidx.compose.foundation.rememberScrollState())
+                                .padding(12.dp)
+                        ) {
                             Text(
                                 text = logs,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }

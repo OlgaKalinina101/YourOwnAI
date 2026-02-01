@@ -11,6 +11,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +50,7 @@ fun MessageBubble(
     modifier: Modifier = Modifier,
     searchQuery: String = ""
 ) {
+    var showRegenerateDialog by remember { mutableStateOf(false) }
     val isUser = message.role == MessageRole.USER
     val isDark = isSystemInDarkTheme()
     
@@ -342,7 +347,7 @@ fun MessageBubble(
                     
                     // Regenerate button
                     IconButton(
-                        onClick = onRegenerate,
+                        onClick = { showRegenerateDialog = true },
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
@@ -370,6 +375,35 @@ fun MessageBubble(
                 }
             }
         }
+    }
+    
+    // Regenerate confirmation dialog
+    if (showRegenerateDialog) {
+        AlertDialog(
+            onDismissRequest = { showRegenerateDialog = false },
+            title = { Text("Regenerate Response?") },
+            text = { 
+                Text("This will delete the current response and generate a new one. This action cannot be undone.") 
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRegenerateDialog = false
+                        onRegenerate()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("Regenerate")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRegenerateDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -469,7 +503,13 @@ private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
             val headingMatch = Regex("^(#{1,3})\\s+(.+)$").find(trimmedLine)
             if (headingMatch != null) {
                 val level = headingMatch.groupValues[1].length
-                val headingText = headingMatch.groupValues[2]
+                var headingText = headingMatch.groupValues[2]
+                
+                // Clean markdown formatting from heading text
+                headingText = headingText
+                    .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")  // Remove **bold**
+                    .replace(Regex("\\*(.+?)\\*"), "$1")        // Remove *italic*
+                    .replace(Regex("\\[(.+?)\\]\\(.+?\\)"), "$1") // Remove [link](url) - keep text only
                 
                 val headingSize = when (level) {
                     1 -> 1.5f // H1
