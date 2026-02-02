@@ -519,7 +519,18 @@ class ChatViewModel @Inject constructor(
         val replyMessage = _uiState.value.replyToMessage
 
         viewModelScope.launch {
-            // 1. Мгновенно создаём и показываем user-сообщение
+            // Сразу очищаем UI
+            _uiState.update { state ->
+                state.copy(
+                    inputText = "",
+                    replyToMessage = null,
+                    attachedImages = emptyList(),
+                    attachedFiles = emptyList(),
+                    isLoading = true
+                )
+            }
+
+            // 1. Создаём сообщение
             val userMessage = Message(
                 id = UUID.randomUUID().toString(),
                 conversationId = conversationId,
@@ -532,23 +543,10 @@ class ChatViewModel @Inject constructor(
                 fileAttachments = null
             )
 
-            messageRepository.addMessage(userMessage)
-            _uiState.update { state ->
-                state.copy(
-                    messages = state.messages + userMessage,
-                    inputText = "",
-                    replyToMessage = null,
-                    attachedImages = emptyList(),
-                    attachedFiles = emptyList(),
-                    isLoading = true
-                )
-            }
-
             // Объявляем переменные ДО блока try
             val aiMessageId = UUID.randomUUID().toString()
             var aiMessageCreated = false
 
-            // 2. Асинхронно обрабатываем attachments и генерируем ответ
             try {
                 // Process images
                 val imagePaths = attachedImages.mapNotNull { uri ->
@@ -588,21 +586,19 @@ class ChatViewModel @Inject constructor(
                     com.google.gson.Gson().toJson(fileAttachments)
                 } else null
 
-                // Обновляем userMessage с attachments
-                val updatedUserMessage = userMessage.copy(
+                // 2. Создаём ФИНАЛЬНОЕ сообщение со всеми attachments
+                val finalUserMessage = userMessage.copy(
                     imageAttachments = imageAttachmentsJson,
                     fileAttachments = fileAttachmentsJson
                 )
-                messageRepository.updateMessage(updatedUserMessage)
 
-                _uiState.update { state ->
-                    val updatedMessages = state.messages.map {
-                        if (it.id == userMessage.id) updatedUserMessage else it
-                    }
-                    state.copy(messages = updatedMessages)
-                }
+                // 3. Добавляем ОДИН РАЗ в БД - БД сама обновит UI через Flow
+                messageRepository.addMessage(finalUserMessage)
 
-                // 3. Строим историю и context
+                // 4. Небольшая задержка чтобы БД успела обновиться
+                kotlinx.coroutines.delay(50)
+
+                // 5. Строим историю и context
                 val config = _uiState.value.aiConfig
                 val currentMessages = _uiState.value.messages
                 val sourceConvId = _uiState.value.currentConversation?.sourceConversationId
@@ -617,7 +613,7 @@ class ChatViewModel @Inject constructor(
 
                 val enhancedContextResult = messageHandler.buildEnhancedContextForLogs(
                     baseContext = userContextContent,
-                    userMessage = updatedUserMessage.content,
+                    userMessage = finalUserMessage.content,
                     config = config,
                     selectedModel = selectedModel,
                     conversationId = conversationId,
@@ -634,7 +630,7 @@ class ChatViewModel @Inject constructor(
                     ragChunksUsed = enhancedContextResult.ragChunksUsed
                 )
 
-                // 4. Создаём placeholder для AI ответа
+                // 6. Создаём placeholder для AI ответа
                 val modelName = when (selectedModel) {
                     is ModelProvider.Local -> selectedModel.model.modelName
                     is ModelProvider.API -> selectedModel.modelId
@@ -659,11 +655,14 @@ class ChatViewModel @Inject constructor(
                 messageRepository.addMessage(aiMessage)
                 aiMessageCreated = true
 
-                // 5. Генерируем ответ со streaming
+                // Задержка для AI сообщения
+                kotlinx.coroutines.delay(50)
+
+                // 7. Генерируем ответ со streaming
                 val responseBuilder = StringBuilder()
 
                 messageHandler.sendMessage(
-                    userMessage = updatedUserMessage,
+                    userMessage = finalUserMessage,
                     selectedModel = selectedModel,
                     config = config,
                     userContext = userContextContent,
@@ -678,12 +677,7 @@ class ChatViewModel @Inject constructor(
                         content = responseBuilder.toString().trim()
                     )
 
-                    _uiState.update { state ->
-                        val updatedMessages = state.messages.map { msg ->
-                            if (msg.id == aiMessageId) updatedMessage else msg
-                        }
-                        state.copy(messages = updatedMessages)
-                    }
+                    messageRepository.updateMessage(updatedMessage)
                 }
 
                 // Сохраняем финальное сообщение
@@ -695,7 +689,7 @@ class ChatViewModel @Inject constructor(
                 // Извлекаем memory если включено
                 if (config.memoryEnabled) {
                     messageHandler.extractAndSaveMemory(
-                        userMessage = updatedUserMessage,
+                        userMessage = finalUserMessage,
                         selectedModel = selectedModel,
                         config = config,
                         conversationId = conversationId
@@ -706,6 +700,7 @@ class ChatViewModel @Inject constructor(
 
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error generating response", e)
+                e.printStackTrace()
 
                 val errorModelName = when (selectedModel) {
                     is ModelProvider.Local -> selectedModel.model.modelName
