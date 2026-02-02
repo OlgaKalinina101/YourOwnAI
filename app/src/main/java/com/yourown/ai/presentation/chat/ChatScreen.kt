@@ -22,6 +22,15 @@ import kotlinx.coroutines.launch
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import com.yourown.ai.domain.model.ModelProvider
 import com.yourown.ai.presentation.chat.components.dialogs.EditTitleDialog
 import com.yourown.ai.presentation.chat.components.dialogs.ExportChatDialog
@@ -353,23 +362,115 @@ fun ChatScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.Start
+                                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            strokeWidth = 2.dp
+                                        val textToType = "Thinking"
+                                        val charCount = textToType.length
+
+                                        val infiniteTransition = rememberInfiniteTransition(label = "typewriter")
+
+                                        // ИЗМЕНЕНО: делаем цикл длиннее - typewriter + пауза с точками
+                                        val totalCycleDuration = (charCount * 150) + 1500 // typewriter + 1.5 сек с точками
+
+                                        val progress by infiniteTransition.animateFloat(
+                                            initialValue = 0f,
+                                            targetValue = 1f,
+                                            animationSpec = infiniteRepeatable(
+                                                animation = tween(
+                                                    durationMillis = totalCycleDuration,
+                                                    easing = LinearEasing
+                                                ),
+                                                repeatMode = RepeatMode.Restart
+                                            ),
+                                            label = "cycle"
                                         )
-                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        // Typewriter фаза длится только первую часть цикла
+                                        val typewriterProgress = (progress * totalCycleDuration / (charCount * 150f)).coerceIn(0f, 1f)
+                                        val typedIndex = (typewriterProgress * charCount).toInt().coerceIn(0, charCount)
+
+                                        // Показываем ли точки (когда typewriter закончен)
+                                        val showDots = typedIndex >= charCount
+
+                                        // Текст typewriter
                                         Text(
-                                            text = "Thinking...",
+                                            text = textToType.substring(0, typedIndex),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
+
+                                        // Три точки появляются ТОЛЬКО после typewriter
+                                        if (showDots) {
+                                            Spacer(Modifier.width(8.dp))
+
+                                            // Bounce dots
+                                            val dot1 by infiniteTransition.animateFloat(
+                                                initialValue = 0f,
+                                                targetValue = 1f,
+                                                animationSpec = infiniteRepeatable(
+                                                    animation = tween(600, easing = FastOutSlowInEasing),
+                                                    repeatMode = RepeatMode.Reverse
+                                                ),
+                                                label = "dot1"
+                                            )
+                                            val dot2 by infiniteTransition.animateFloat(
+                                                initialValue = 0f,
+                                                targetValue = 1f,
+                                                animationSpec = infiniteRepeatable(
+                                                    animation = tween(600, delayMillis = 200, easing = FastOutSlowInEasing),
+                                                    repeatMode = RepeatMode.Reverse
+                                                ),
+                                                label = "dot2"
+                                            )
+                                            val dot3 by infiniteTransition.animateFloat(
+                                                initialValue = 0f,
+                                                targetValue = 1f,
+                                                animationSpec = infiniteRepeatable(
+                                                    animation = tween(600, delayMillis = 400, easing = FastOutSlowInEasing),
+                                                    repeatMode = RepeatMode.Reverse
+                                                ),
+                                                label = "dot3"
+                                            )
+
+                                            Box(Modifier.size(20.dp)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.CenterStart)
+                                                        .offset(y = (-4.dp) * dot1)
+                                                        .size(6.dp)
+                                                        .background(
+                                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f + 0.3f * dot1),
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.Center)
+                                                        .offset(y = (-4.dp) * dot2)
+                                                        .size(6.dp)
+                                                        .background(
+                                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f + 0.3f * dot2),
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.CenterEnd)
+                                                        .offset(y = (-4.dp) * dot3)
+                                                        .size(6.dp)
+                                                        .background(
+                                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f + 0.3f * dot3),
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
-                            
+
                             // Bottom spacer to ensure last message is fully visible
                             item {
                                 Spacer(modifier = Modifier.height(8.dp))

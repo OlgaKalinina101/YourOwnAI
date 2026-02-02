@@ -176,6 +176,27 @@ data class ModelCapabilities(
                     notes = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user."
                 )
 
+                // Cohere: Command R+ (08-2024) - via OpenRouter
+                "cohere/command-r-plus-08-2024" -> ModelCapabilities(
+                    supportsVision = false,
+                    supportsDocuments = false,
+                    notes = "It's useful for roleplay, general consumer usecases, and Retrieval Augmented Generation (RAG). 128,000 context."
+                )
+
+                // Mistral Large - via OpenRouter
+                "mistralai/mistral-large" -> ModelCapabilities(
+                    supportsVision = false,
+                    supportsDocuments = false,
+                    notes = "It's a proprietary weights-available model and excels at reasoning, code, JSON, chat, and more."
+                )
+
+                // Qwen3 Max - via OpenRouter
+                "qwen/qwen3-max" -> ModelCapabilities(
+                    supportsVision = false,
+                    supportsDocuments = false,
+                    notes = "major improvements in reasoning, instruction following, multilingual support, and long-tail knowledge coverage compared to the January 2025 version."
+                )
+
                 // Gemini 3 & 2.5 Models via OpenRouter - Full multimodal support
                 "google/gemini-3-pro-preview", "google/gemini-3-flash-preview",
                 "google/gemini-2.5-pro", "google/gemini-2.5-flash" -> ModelCapabilities(

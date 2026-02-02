@@ -247,7 +247,28 @@ enum class OpenRouterModel(
         displayName = "Nous: Hermes 3 70B",
         description = "Focused on aligning LLMs to the user, with powerful steering capabilities and control given to the end user."
     ),
-    
+
+    // Cohere: Command R+ (08-2024)
+    COHERE_COMMAND_R(
+        modelId = "cohere/command-r-plus-08-2024",
+        displayName = "Cohere: Command R+",
+        description = "It's useful for roleplay, general consumer usecases, and Retrieval Augmented Generation (RAG). 128,000 context."
+    ),
+
+    // Mistral Large
+    MISTRAL_LARGE(
+        modelId = "mistralai/mistral-large",
+        displayName = "Mistral Large",
+        description = "It's a proprietary weights-available model and excels at reasoning, code, JSON, chat, and more."
+    ),
+
+    // Qwen3 Max
+    QWEN_3_MAX(
+        modelId = "qwen/qwen3-max",
+        displayName = "Qwen 3",
+        description = "major improvements in reasoning, instruction following, multilingual support, and long-tail knowledge coverage compared to the January 2025 version."
+    ),
+
     // OpenAI GPT-4o Series
     GPT_4O_2024_05_13(
         modelId = "openai/gpt-4o-2024-05-13",
