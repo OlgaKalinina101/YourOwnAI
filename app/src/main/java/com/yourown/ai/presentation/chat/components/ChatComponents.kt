@@ -40,7 +40,8 @@ fun ChatTopBar(
     onSearchPrevious: () -> Unit = {},
     onSearchClose: () -> Unit = {},
     onSystemPromptClick: () -> Unit = {},
-    onExportChatClick: () -> Unit = {}
+    onExportChatClick: () -> Unit = {},
+    isExporting: Boolean = false
 ) {
     var showMenu by remember { mutableStateOf(false) }
     
@@ -185,13 +186,21 @@ fun ChatTopBar(
                                 )
                                 
                                 DropdownMenuItem(
-                                    text = { Text("Save chat") },
+                                    text = { Text(if (isExporting) "Exporting..." else "Save chat") },
                                     onClick = {
                                         showMenu = false
                                         onExportChatClick()
                                     },
+                                    enabled = !isExporting,
                                     leadingIcon = {
-                                        Icon(Icons.Default.Download, contentDescription = null)
+                                        if (isExporting) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(20.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Icon(Icons.Default.Download, contentDescription = null)
+                                        }
                                     }
                                 )
                             }

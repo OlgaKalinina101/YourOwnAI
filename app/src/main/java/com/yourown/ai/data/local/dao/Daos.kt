@@ -33,6 +33,9 @@ interface ConversationDao {
 
 @Dao
 interface MessageDao {
+    @Query("SELECT * FROM messages ORDER BY createdAt ASC")
+    fun getAllMessages(): Flow<List<MessageEntity>>
+    
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY createdAt ASC")
     fun getMessagesByConversation(conversationId: String): Flow<List<MessageEntity>>
     
@@ -147,6 +150,9 @@ interface SystemPromptDao {
     @Query("SELECT * FROM system_prompts ORDER BY isDefault DESC, usageCount DESC, createdAt DESC")
     fun getAllPrompts(): Flow<List<SystemPromptEntity>>
     
+    @Query("SELECT * FROM system_prompts ORDER BY isDefault DESC, usageCount DESC, createdAt DESC")
+    suspend fun getAllPromptsSync(): List<SystemPromptEntity>
+    
     @Query("SELECT * FROM system_prompts WHERE promptType = :type ORDER BY isDefault DESC, usageCount DESC, createdAt DESC")
     fun getPromptsByType(type: String): Flow<List<SystemPromptEntity>>
     
@@ -217,6 +223,9 @@ interface KnowledgeDocumentDao {
 interface PersonaDao {
     @Query("SELECT * FROM personas ORDER BY createdAt DESC")
     fun getAllPersonas(): Flow<List<PersonaEntity>>
+    
+    @Query("SELECT * FROM personas ORDER BY createdAt DESC")
+    suspend fun getAllPersonasSync(): List<PersonaEntity>
     
     @Query("SELECT * FROM personas WHERE id = :id")
     suspend fun getPersonaById(id: String): PersonaEntity?

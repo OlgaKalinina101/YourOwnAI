@@ -1,11 +1,14 @@
 package com.yourown.ai.data.repository
 
 import com.yourown.ai.data.local.dao.MessageDao
+import com.yourown.ai.data.local.entity.MessageEntity
 import com.yourown.ai.data.mapper.toDomain
 import com.yourown.ai.data.mapper.toEntity
 import com.yourown.ai.domain.model.Message
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,6 +18,14 @@ class MessageRepository @Inject constructor(
     private val messageDao: MessageDao,
     private val conversationDao: com.yourown.ai.data.local.dao.ConversationDao
 ) {
+    
+    /**
+     * Get all messages (for syncing)
+     */
+    fun getAllMessages(): Flow<List<Message>> {
+        return messageDao.getAllMessages()
+            .map { entities -> entities.map { it.toDomain() } }
+    }
     
     /**
      * Get messages for conversation
@@ -161,5 +172,19 @@ class MessageRepository @Inject constructor(
         
         // Take last N pairs and flatten to list
         return pairs.takeLast(pairLimit).flatMap { listOf(it.first, it.second) }
+    }
+    
+    /**
+     * Upsert message (for cloud sync)
+     */
+    suspend fun upsertMessage(message: MessageEntity): Unit = withContext(Dispatchers.IO) {
+        messageDao.insertMessage(message)
+    }
+    
+    /**
+     * Upsert multiple messages (for cloud sync)
+     */
+    suspend fun upsertMessages(messages: List<MessageEntity>): Unit = withContext(Dispatchers.IO) {
+        messageDao.insertMessages(messages)
     }
 }

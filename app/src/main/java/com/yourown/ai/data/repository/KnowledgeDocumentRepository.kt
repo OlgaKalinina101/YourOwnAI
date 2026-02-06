@@ -3,8 +3,10 @@ package com.yourown.ai.data.repository
 import com.yourown.ai.data.local.YourOwnAIDatabase
 import com.yourown.ai.data.local.entity.KnowledgeDocumentEntity
 import com.yourown.ai.domain.model.KnowledgeDocument
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -164,4 +166,18 @@ class KnowledgeDocumentRepository @Inject constructor(
         updatedAt = updatedAt,
         sizeBytes = sizeBytes
     )
+    
+    /**
+     * Upsert document (for cloud sync)
+     */
+    suspend fun upsertDocument(document: KnowledgeDocumentEntity): Unit = withContext(Dispatchers.IO) {
+        dao.insertDocument(document)
+    }
+    
+    /**
+     * Upsert multiple documents (for cloud sync)
+     */
+    suspend fun upsertDocuments(documents: List<KnowledgeDocumentEntity>): Unit = withContext(Dispatchers.IO) {
+        documents.forEach { dao.insertDocument(it) }
+    }
 }

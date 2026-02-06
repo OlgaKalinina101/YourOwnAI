@@ -482,4 +482,25 @@ class DocumentEmbeddingRepository @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    /**
+     * Get all document chunks (for syncing)
+     */
+    suspend fun getAllChunks(): List<DocumentChunkEntity> = withContext(Dispatchers.IO) {
+        documentChunkDao.getAllChunks()
+    }
+    
+    /**
+     * Upsert document chunk (for cloud sync)
+     */
+    suspend fun upsertChunk(chunk: DocumentChunkEntity): Unit = withContext(Dispatchers.IO) {
+        documentChunkDao.insertChunk(chunk)
+    }
+    
+    /**
+     * Upsert multiple document chunks (for cloud sync)
+     */
+    suspend fun upsertChunks(chunks: List<DocumentChunkEntity>): Unit = withContext(Dispatchers.IO) {
+        documentChunkDao.insertChunks(chunks)
+    }
 }

@@ -110,4 +110,10 @@ interface MemoryDao {
      */
     @Query("DELETE FROM memories")
     suspend fun deleteAllMemories()
+    
+    /**
+     * Get all memory entities (including embeddings) for syncing
+     */
+    @Query("SELECT * FROM memories WHERE is_archived = 0 ORDER BY created_at DESC")
+    suspend fun getAllMemoriesEntity(): List<MemoryEntity>
 }

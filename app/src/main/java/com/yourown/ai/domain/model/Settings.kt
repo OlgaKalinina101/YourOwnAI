@@ -35,6 +35,10 @@ data class AIConfig(
     val ragChunkLimit: Int = 5, // Number of RAG chunks to include in context
     val ragTitle: String = "Твоя библиотека текстов",
     val ragInstructions: String = DEFAULT_RAG_INSTRUCTIONS,
+    val useApiEmbeddings: Boolean = false, // Use API embeddings instead of local
+    val apiEmbeddingsModel: String = "text-embedding-3-small", // API embeddings model
+    val useRagInMessageHistory: Boolean = false, // Include RAG chunks in message history
+    val ragInMessageHistoryLimit: Int = 4, // Number of RAG chunks to include in message history (max 12)
     val contextInstructions: String = DEFAULT_CONTEXT_INSTRUCTIONS,
     val swipeMessagePrompt: String = DEFAULT_SWIPE_MESSAGE_PROMPT,
     val messageHistoryLimit: Int = 10 // Number of messages to keep in context
@@ -158,6 +162,8 @@ data class AIConfig(
         const val MAX_MEMORY_MIN_AGE_DAYS = 30
         const val MIN_RAG_CHUNK_LIMIT = 1
         const val MAX_RAG_CHUNK_LIMIT = 10
+        const val MIN_RAG_IN_MESSAGE_HISTORY_LIMIT = 1
+        const val MAX_RAG_IN_MESSAGE_HISTORY_LIMIT = 12
     }
 }
 
@@ -192,3 +198,25 @@ data class ApiKeyInfo(
     val isSet: Boolean = false,
     val displayKey: String? = null // Last 4 chars for display
 )
+
+/**
+ * Cloud Sync Settings (Supabase)
+ */
+data class CloudSyncSettings(
+    val enabled: Boolean = false,
+    val supabaseUrl: String = "", // Project URL (stored encrypted)
+    val supabaseKey: String = "", // API Key (stored encrypted)
+    val autoSyncEnabled: Boolean = false,
+    val syncIntervalMinutes: Int = 30,
+    val lastSyncTimestamp: Long = 0L,
+    val syncOnlyOnWifi: Boolean = true,
+    val uploadedDataMB: Float = 0f // Tracked uploaded data size in MB
+) {
+    val isConfigured: Boolean
+        get() = supabaseUrl.isNotBlank() && supabaseKey.isNotBlank()
+    
+    // For backward compatibility
+    @Deprecated("Use supabaseUrl instead")
+    val postgresConnectionString: String
+        get() = supabaseUrl
+}

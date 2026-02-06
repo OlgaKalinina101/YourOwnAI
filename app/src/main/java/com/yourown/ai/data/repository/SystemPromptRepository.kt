@@ -3,8 +3,10 @@ package com.yourown.ai.data.repository
 import com.yourown.ai.data.local.dao.SystemPromptDao
 import com.yourown.ai.data.local.entity.SystemPromptEntity
 import com.yourown.ai.domain.model.SystemPrompt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -162,6 +164,27 @@ class SystemPromptRepository @Inject constructor(
                 isDefault = true
             )
         }
+    }
+    
+    /**
+     * Get all system prompt entities (for syncing)
+     */
+    suspend fun getAllPromptsEntities(): List<SystemPromptEntity> = withContext(Dispatchers.IO) {
+        systemPromptDao.getAllPromptsSync()
+    }
+    
+    /**
+     * Upsert system prompt (for cloud sync)
+     */
+    suspend fun upsertSystemPrompt(prompt: SystemPromptEntity): Unit = withContext(Dispatchers.IO) {
+        systemPromptDao.insertPrompt(prompt)
+    }
+    
+    /**
+     * Upsert multiple system prompts (for cloud sync)
+     */
+    suspend fun upsertSystemPrompts(prompts: List<SystemPromptEntity>): Unit = withContext(Dispatchers.IO) {
+        prompts.forEach { systemPromptDao.insertPrompt(it) }
     }
     
     private fun SystemPromptEntity.toDomainModel(): SystemPrompt {

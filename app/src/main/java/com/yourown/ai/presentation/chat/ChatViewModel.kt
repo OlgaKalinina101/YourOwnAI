@@ -4,6 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.yourown.ai.data.local.preferences.SettingsManager
 import com.yourown.ai.data.repository.ApiKeyRepository
 import com.yourown.ai.data.repository.ConversationRepository
@@ -13,8 +17,11 @@ import com.yourown.ai.domain.model.*
 import com.yourown.ai.domain.service.LlamaService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.UUID
 import javax.inject.Inject
 
@@ -62,7 +69,10 @@ data class ChatUiState(
     val selectedNewChatPersonaId: String? = null,
     val isListening: Boolean = false,
     val attachedImages: List<android.net.Uri> = emptyList(),
-    val attachedFiles: List<android.net.Uri> = emptyList()
+    val attachedFiles: List<android.net.Uri> = emptyList(),
+    val isExporting: Boolean = false,
+    val exportProgress: Float = 0f,
+    val exportProgressMessage: String = ""
 )
 
 /**
@@ -734,19 +744,15 @@ class ChatViewModel @Inject constructor(
                 // 3. Добавляем ОДИН РАЗ в БД - БД сама обновит UI через Flow
                 messageRepository.addMessage(finalUserMessage)
 
-                // 4. Небольшая задержка чтобы БД успела обновиться
-                kotlinx.coroutines.delay(50)
-
-                // 5. Строим историю и context
+                // 4. Строим историю и context
                 val config = getEffectiveConfig() // Используем настройки Persona, если она активна
-                val currentMessages = _uiState.value.messages
                 val sourceConvId = _uiState.value.currentConversation?.sourceConversationId
 
-                // Добавляем текущее user сообщение в список (Flow еще не обновился)
-                val messagesWithCurrent = currentMessages + finalUserMessage
+                // Получаем все сообщения из БД напрямую (включая только что добавленное)
+                val allMessagesFromDb = messageRepository.getMessagesByConversation(conversationId).first()
 
                 val allMessages = messageHandler.buildMessageHistoryWithInheritance(
-                    currentMessages = messagesWithCurrent,
+                    currentMessages = allMessagesFromDb,
                     sourceConversationId = sourceConvId,
                     messageHistoryLimit = config.messageHistoryLimit
                 )
@@ -1135,10 +1141,216 @@ class ChatViewModel @Inject constructor(
         
         if (conversation == null || allMessages.isEmpty()) return
         
-        val exportedText = importExportManager.exportChat(conversation, allMessages, filterByLikes)
-        
-        _uiState.update { 
-            it.copy(showExportDialog = true, exportedChatText = exportedText) 
+        viewModelScope.launch {
+            try {
+                // Filter messages if needed
+                val messagesToExport = if (filterByLikes) {
+                    allMessages.filter { it.isLiked }
+                } else {
+                    allMessages
+                }
+                
+                if (messagesToExport.isEmpty() && filterByLikes) {
+                    _uiState.update { 
+                        it.copy(
+                            showExportDialog = true,
+                            exportedChatText = "No liked messages to export.\n\nTip: Like messages by clicking the ❤️ icon in the message menu.",
+                            isExporting = false
+                        ) 
+                    }
+                    return@launch
+                }
+                
+                // HYBRID APPROACH: Choose method based on chat size
+                // Small/medium chats (< 30): Direct export with yield
+                // Large chats (>= 30): WorkManager with notification
+                if (messagesToExport.size < 30) {
+                    exportChatDirect(conversation, messagesToExport, filterByLikes)
+                } else {
+                    exportChatWithWorkManager(conversation, messagesToExport, filterByLikes)
+                }
+                
+            } catch (e: Exception) {
+                android.util.Log.e("ChatViewModel", "Export failed", e)
+                _uiState.update { 
+                    it.copy(
+                        showExportDialog = true,
+                        exportedChatText = "Export failed: ${e.message}",
+                        isExporting = false
+                    ) 
+                }
+            }
+        }
+    }
+    
+    /**
+     * Direct export for small/medium chats (< 1000 messages)
+     */
+    private suspend fun exportChatDirect(
+        conversation: Conversation,
+        messages: List<Message>,
+        filterByLikes: Boolean
+    ) = withContext(Dispatchers.Default) {
+        try {
+            // Show spinner
+            withContext(Dispatchers.Main) {
+                _uiState.update { 
+                    it.copy(
+                        isExporting = true, 
+                        exportProgressMessage = "Exporting ${messages.size} messages..."
+                    ) 
+                }
+            }
+            
+            android.util.Log.d("ChatViewModel", "Direct export of ${messages.size} messages")
+            val startTime = System.currentTimeMillis()
+            
+            // Export with yields
+            val exportedText = importExportManager.exportChatWithProgress(
+                conversation = conversation,
+                messages = messages,
+                filterByLikes = filterByLikes,
+                onProgress = { _, _ -> } // No-op: UI updates are too expensive
+            )
+            
+            val duration = System.currentTimeMillis() - startTime
+            android.util.Log.d("ChatViewModel", "Direct export completed in ${duration}ms")
+            
+            // Show result
+            withContext(Dispatchers.Main) {
+                _uiState.update { 
+                    it.copy(
+                        showExportDialog = true, 
+                        exportedChatText = exportedText,
+                        isExporting = false
+                    ) 
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ChatViewModel", "Direct export failed", e)
+            withContext(Dispatchers.Main) {
+                _uiState.update { 
+                    it.copy(
+                        showExportDialog = true,
+                        exportedChatText = "Export failed: ${e.message}",
+                        isExporting = false
+                    ) 
+                }
+            }
+        }
+    }
+    
+    /**
+     * WorkManager export for large chats (>= 1000 messages)
+     * Shows notification, works in real background
+     */
+    private suspend fun exportChatWithWorkManager(
+        conversation: Conversation,
+        messages: List<Message>,
+        filterByLikes: Boolean
+    ) {
+        try {
+            android.util.Log.d("ChatViewModel", "WorkManager export of ${messages.size} messages")
+            
+            // Prepare output file
+            val exportDir = File(context.getExternalFilesDir(null), "exports")
+            exportDir.mkdirs()
+            val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+            val fileName = "chat_export_${conversation.id}_$timestamp.md"
+            val outputFile = File(exportDir, fileName)
+            
+            // Create WorkManager request
+            val inputData = Data.Builder()
+                .putString(ExportChatWorker.KEY_CONVERSATION_ID, conversation.id)
+                .putBoolean(ExportChatWorker.KEY_FILTER_LIKES, filterByLikes)
+                .putString(ExportChatWorker.KEY_OUTPUT_FILE, outputFile.absolutePath)
+                .putInt(ExportChatWorker.KEY_TOTAL_MESSAGES, messages.size)
+                .build()
+            
+            val workRequest = OneTimeWorkRequestBuilder<ExportChatWorker>()
+                .setInputData(inputData)
+                .build()
+            
+            val workManager = WorkManager.getInstance(context)
+            workManager.enqueue(workRequest)
+            
+            // Show notification info
+            withContext(Dispatchers.Main) {
+                _uiState.update { 
+                    it.copy(
+                        showExportDialog = true,
+                        exportedChatText = """
+                            Exporting ${messages.size} messages in background...
+                            
+                            📱 Check your notification panel for progress
+                            ✅ You can close the app - export will continue
+                            📁 File will be saved to: ${outputFile.name}
+                            
+                            The exported file will open automatically when done.
+                        """.trimIndent(),
+                        isExporting = false
+                    )
+                }
+            }
+            
+            // Observe work progress
+            workManager.getWorkInfoByIdLiveData(workRequest.id).observeForever { workInfo ->
+                if (workInfo != null) {
+                    when (workInfo.state) {
+                        WorkInfo.State.SUCCEEDED -> {
+                            val exportedFilePath = workInfo.outputData.getString(ExportChatWorker.KEY_OUTPUT_FILE)
+                            android.util.Log.d("ChatViewModel", "WorkManager export succeeded: $exportedFilePath")
+                            
+                            // Load exported file and show in dialog
+                            viewModelScope.launch {
+                                try {
+                                    val exportedText = File(exportedFilePath ?: return@launch).readText()
+                                    _uiState.update { 
+                                        it.copy(
+                                            showExportDialog = true,
+                                            exportedChatText = exportedText,
+                                            isExporting = false
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("ChatViewModel", "Failed to read exported file", e)
+                                }
+                            }
+                        }
+                        WorkInfo.State.FAILED -> {
+                            val error = workInfo.outputData.getString("error") ?: "Unknown error"
+                            android.util.Log.e("ChatViewModel", "WorkManager export failed: $error")
+                            
+                            viewModelScope.launch {
+                                _uiState.update { 
+                                    it.copy(
+                                        showExportDialog = true,
+                                        exportedChatText = "Export failed: $error",
+                                        isExporting = false
+                                    )
+                                }
+                            }
+                        }
+                        else -> {
+                            // In progress...
+                            android.util.Log.d("ChatViewModel", "WorkManager export state: ${workInfo.state}")
+                        }
+                    }
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ChatViewModel", "WorkManager export setup failed", e)
+            withContext(Dispatchers.Main) {
+                _uiState.update { 
+                    it.copy(
+                        showExportDialog = true,
+                        exportedChatText = "Export setup failed: ${e.message}",
+                        isExporting = false
+                    )
+                }
+            }
         }
     }
     

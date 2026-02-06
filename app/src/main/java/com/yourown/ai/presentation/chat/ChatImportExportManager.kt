@@ -4,6 +4,7 @@ import android.util.Log
 import com.yourown.ai.data.repository.ConversationRepository
 import com.yourown.ai.data.repository.MessageRepository
 import com.yourown.ai.domain.model.*
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -17,7 +18,7 @@ class ChatImportExportManager @Inject constructor(
 ) {
     
     /**
-     * Export chat to markdown text
+     * Export chat to markdown text (legacy, without progress)
      */
     fun exportChat(
         conversation: Conversation,
@@ -28,7 +29,6 @@ class ChatImportExportManager @Inject constructor(
             return ""
         }
         
-        // Filter messages by likes if requested
         val filteredMessages = if (filterByLikes) {
             messages.filter { it.isLiked }
         } else {
@@ -70,6 +70,83 @@ class ChatImportExportManager @Inject constructor(
             exportBuilder.appendLine()
             exportBuilder.appendLine("---")
             exportBuilder.appendLine()
+        }
+        
+        return exportBuilder.toString()
+    }
+    
+    /**
+     * Export chat to markdown text with progress callback (suspend version)
+     * Highly optimized for HUGE chats - aggressive yielding every 25 messages
+     */
+    suspend fun exportChatWithProgress(
+        conversation: Conversation,
+        messages: List<Message>,
+        filterByLikes: Boolean = false,
+        onProgress: (Float, String) -> Unit = { _, _ -> }
+    ): String {
+        if (messages.isEmpty()) {
+            return ""
+        }
+        
+        val filteredMessages = if (filterByLikes) {
+            messages.filter { it.isLiked }
+        } else {
+            messages
+        }
+        
+        if (filteredMessages.isEmpty()) {
+            return ""
+        }
+        
+        val totalMessages = filteredMessages.size
+        
+        // Pre-allocate StringBuilder capacity to avoid re-allocations
+        val estimatedSize = totalMessages * 200
+        val exportBuilder = StringBuilder(estimatedSize)
+        
+        // Build header
+        exportBuilder.appendLine("# Chat Export: ${conversation.title}")
+        exportBuilder.appendLine()
+        exportBuilder.appendLine("**Date:** ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
+        exportBuilder.appendLine("**Model:** ${conversation.model} (${conversation.provider})")
+        if (filterByLikes) {
+            exportBuilder.appendLine("**Filter:** ❤️ Liked messages only ($totalMessages messages)")
+        } else {
+            exportBuilder.appendLine("**Total messages:** $totalMessages")
+        }
+        exportBuilder.appendLine()
+        exportBuilder.appendLine("---")
+        exportBuilder.appendLine()
+        
+        // AGGRESSIVE: Process in very small chunks (25 messages) with yields
+        // This ensures UI stays responsive even for 10,000+ message chats
+        val chunkSize = 25
+        
+        filteredMessages.chunked(chunkSize).forEach { chunk ->
+            // Process this small chunk
+            chunk.forEach { message ->
+                val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                    .format(Date(message.createdAt))
+                val role = when (message.role) {
+                    MessageRole.USER -> "## 👤 User"
+                    MessageRole.ASSISTANT -> "## 🤖 Assistant"
+                    MessageRole.SYSTEM -> "## ⚙️ System"
+                }
+                val likeIndicator = if (message.isLiked) " ❤️" else ""
+                
+                exportBuilder.appendLine("$role$likeIndicator")
+                exportBuilder.appendLine("*$timestamp*")
+                exportBuilder.appendLine()
+                exportBuilder.appendLine(message.content)
+                exportBuilder.appendLine()
+                exportBuilder.appendLine("---")
+                exportBuilder.appendLine()
+            }
+            
+            // CRITICAL: Yield + small delay for maximum responsiveness
+            kotlinx.coroutines.yield()
+            delay(1) // 1ms delay ensures GC and UI get time
         }
         
         return exportBuilder.toString()

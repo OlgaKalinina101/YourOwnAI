@@ -69,7 +69,13 @@ data class SettingsUiState(
     val recalculationProgress: String? = null,
     val recalculationProgressPercent: Float = 0f, // 0.0 to 1.0
     // Sound & Haptics
-    val keyboardSoundVolume: Float = 0f
+    val keyboardSoundVolume: Float = 0f,
+    // Cloud Sync
+    val cloudSyncSettings: CloudSyncSettings = CloudSyncSettings(),
+    val showCloudSyncDialog: Boolean = false,
+    val showSqlSchemaDialog: Boolean = false,
+    val showCloudSyncInstructionsDialog: Boolean = false,
+    val isSyncing: Boolean = false
 )
 
 @HiltViewModel
@@ -84,6 +90,9 @@ class SettingsViewModel @Inject constructor(
     private val personaRepository: PersonaRepository,
     private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager,
     private val keyboardSoundManager: com.yourown.ai.domain.service.KeyboardSoundManager,
+    // Cloud Sync
+    private val cloudSyncPreferences: com.yourown.ai.data.local.preferences.CloudSyncPreferences,
+    private val cloudSyncRepository: CloudSyncRepository,
     // Managers
     private val aiConfigManager: AIConfigManager,
     private val systemPromptManager: SystemPromptManager,
@@ -110,6 +119,7 @@ class SettingsViewModel @Inject constructor(
         observeApiKeys()
         initializeDefaultPrompts()
         observeSoundSettings()
+        observeCloudSyncSettings()
     }
     
     private fun initializeDefaultPrompts() {
@@ -1010,5 +1020,122 @@ class SettingsViewModel @Inject constructor(
     
     fun testKeyboardSound() {
         keyboardSoundManager.playTestSound()
+    }
+    
+    // ===== Cloud Sync =====
+    
+    private fun observeCloudSyncSettings() {
+        viewModelScope.launch {
+            cloudSyncPreferences.cloudSyncSettings.collect { settings ->
+                _uiState.update { it.copy(cloudSyncSettings = settings) }
+            }
+        }
+    }
+    
+    fun showCloudSyncDialog() {
+        _uiState.update { it.copy(showCloudSyncDialog = true) }
+    }
+    
+    fun hideCloudSyncDialog() {
+        _uiState.update { it.copy(showCloudSyncDialog = false) }
+    }
+    
+    fun showSqlSchemaDialog() {
+        _uiState.update { it.copy(showSqlSchemaDialog = true) }
+    }
+    
+    fun hideSqlSchemaDialog() {
+        _uiState.update { it.copy(showSqlSchemaDialog = false) }
+    }
+    
+    fun showCloudSyncInstructionsDialog() {
+        _uiState.update { it.copy(showCloudSyncInstructionsDialog = true) }
+    }
+    
+    fun hideCloudSyncInstructionsDialog() {
+        _uiState.update { it.copy(showCloudSyncInstructionsDialog = false) }
+    }
+    
+    fun saveSupabaseCredentials(url: String, key: String) {
+        viewModelScope.launch {
+            try {
+                cloudSyncPreferences.saveSupabaseCredentials(url, key)
+                _uiState.update { it.copy(showCloudSyncDialog = false) }
+                
+                // Test connection
+                val testResult = cloudSyncRepository.testConnection()
+                if (testResult.isSuccess) {
+                    // Automatically enable sync after successful configuration
+                    cloudSyncPreferences.setEnabled(true)
+                    android.util.Log.i("SettingsViewModel", "Supabase credentials saved, connection tested, sync enabled ✅")
+                } else {
+                    android.util.Log.e("SettingsViewModel", "Connection test failed: ${testResult.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Failed to save Supabase credentials", e)
+            }
+        }
+    }
+    
+    fun toggleCloudSync(enabled: Boolean) {
+        viewModelScope.launch {
+            cloudSyncPreferences.setEnabled(enabled)
+            android.util.Log.i("SettingsViewModel", "Cloud sync ${if (enabled) "enabled" else "disabled"}")
+        }
+    }
+    
+    fun toggleAutoSync(enabled: Boolean) {
+        viewModelScope.launch {
+            cloudSyncPreferences.setAutoSyncEnabled(enabled)
+            android.util.Log.i("SettingsViewModel", "Auto sync ${if (enabled) "enabled" else "disabled"}")
+        }
+    }
+    
+    fun syncNow() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSyncing = true) }
+            
+            try {
+                // Sync to cloud
+                val toCloudResult = cloudSyncRepository.syncToCloud()
+                if (toCloudResult.isFailure) {
+                    throw toCloudResult.exceptionOrNull() ?: Exception("Sync to cloud failed")
+                }
+                
+                // Sync from cloud
+                val fromCloudResult = cloudSyncRepository.syncFromCloud()
+                if (fromCloudResult.isFailure) {
+                    throw fromCloudResult.exceptionOrNull() ?: Exception("Sync from cloud failed")
+                }
+                
+                // Update last sync timestamp
+                val now = System.currentTimeMillis()
+                cloudSyncPreferences.updateLastSyncTimestamp(now)
+                
+                _uiState.update { it.copy(isSyncing = false) }
+                android.util.Log.i("SettingsViewModel", "Sync completed successfully")
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Sync failed", e)
+                _uiState.update { it.copy(isSyncing = false) }
+            }
+        }
+    }
+    
+    fun testSupabaseConnection(url: String, key: String) {
+        viewModelScope.launch {
+            try {
+                // Save temporarily to test
+                cloudSyncPreferences.saveSupabaseCredentials(url, key)
+                
+                val result = cloudSyncRepository.testConnection()
+                if (result.isSuccess) {
+                    android.util.Log.i("SettingsViewModel", "Connection test: SUCCESS ✅")
+                } else {
+                    android.util.Log.e("SettingsViewModel", "Connection test: FAILED - ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Connection test failed", e)
+            }
+        }
     }
 }

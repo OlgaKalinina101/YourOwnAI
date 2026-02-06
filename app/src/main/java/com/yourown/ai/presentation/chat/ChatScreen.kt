@@ -317,7 +317,8 @@ fun ChatScreen(
                     onSearchPrevious = viewModel::navigateToPreviousSearchResult,
                     onSearchClose = viewModel::toggleSearchMode,
                     onSystemPromptClick = viewModel::showSystemPromptDialog,
-                    onExportChatClick = viewModel::exportChat
+                    onExportChatClick = viewModel::exportChat,
+                    isExporting = uiState.isExporting
                 )
             }
             
@@ -621,6 +622,49 @@ fun ChatScreen(
             onDismiss = viewModel::hideSystemPromptDialog,
             onSelectPrompt = viewModel::selectSystemPrompt
         )
+    }
+    
+    // Export Progress Dialog
+    if (uiState.isExporting) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(32.dp)
+                    .widthIn(max = 400.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = "Exporting chat...",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = uiState.exportProgressMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+        }
     }
     
     if (uiState.showExportDialog && uiState.exportedChatText != null) {

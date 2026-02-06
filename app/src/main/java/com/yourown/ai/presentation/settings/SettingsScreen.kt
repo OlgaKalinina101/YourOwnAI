@@ -149,6 +149,18 @@ fun SettingsScreen(
                 onTestSound = viewModel::testKeyboardSound
             )
             
+            // Cloud Sync Section
+            CloudSyncSection(
+                syncSettings = uiState.cloudSyncSettings,
+                onToggleSync = viewModel::toggleCloudSync,
+                onEditConnectionString = viewModel::showCloudSyncDialog,
+                onToggleAutoSync = viewModel::toggleAutoSync,
+                onSyncNow = viewModel::syncNow,
+                onShowSql = viewModel::showSqlSchemaDialog,
+                onShowInstructions = viewModel::showCloudSyncInstructionsDialog,
+                isSyncing = uiState.isSyncing
+            )
+            
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -398,6 +410,31 @@ fun SettingsScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+    
+    // Cloud Sync Dialog
+    if (uiState.showCloudSyncDialog) {
+        com.yourown.ai.presentation.settings.dialogs.CloudSyncDialog(
+            currentUrl = uiState.cloudSyncSettings.supabaseUrl,
+            currentKey = uiState.cloudSyncSettings.supabaseKey,
+            onDismiss = viewModel::hideCloudSyncDialog,
+            onSave = viewModel::saveSupabaseCredentials,
+            onTestConnection = viewModel::testSupabaseConnection
+        )
+    }
+    
+    // SQL Schema Dialog
+    if (uiState.showSqlSchemaDialog) {
+        com.yourown.ai.presentation.settings.dialogs.SqlSchemaDialog(
+            onDismiss = viewModel::hideSqlSchemaDialog
+        )
+    }
+    
+    // Cloud Sync Instructions Dialog
+    if (uiState.showCloudSyncInstructionsDialog) {
+        com.yourown.ai.presentation.settings.dialogs.CloudSyncInstructionsDialog(
+            onDismiss = viewModel::hideCloudSyncInstructionsDialog
         )
     }
 }

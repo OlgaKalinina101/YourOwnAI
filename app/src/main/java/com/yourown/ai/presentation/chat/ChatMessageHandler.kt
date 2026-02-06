@@ -33,9 +33,6 @@ class ChatMessageHandler @Inject constructor(
         swipeMessage: Message? = null,
         personaId: String? = null
     ): Flow<String> = flow {
-        // Add user message to repository
-        messageRepository.addMessage(userMessage)
-        
         Log.d("ChatMessageHandler", "sendMessage: personaId=$personaId")
         
         // Build enhanced context with Deep Empathy, Memory, and RAG
@@ -58,7 +55,7 @@ class ChatMessageHandler @Inject constructor(
         // Generate response using unified AIService
         aiService.generateResponse(
             provider = selectedModel,
-            messages = allMessages + userMessage,
+            messages = allMessages,
             systemPrompt = systemPrompt,
             userContext = enhancedContextResult.fullContext.ifBlank { null },
             config = config

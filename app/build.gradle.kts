@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
 }
@@ -72,6 +73,17 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/license.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+            excludes += "/META-INF/notice.txt"
+            excludes += "/META-INF/ASL2.0"
+            // Netty conflicts from pgjdbc-ng
+            excludes += "/META-INF/INDEX.LIST"
+            excludes += "/META-INF/io.netty.versions.properties"
         }
     }
 }
@@ -101,6 +113,11 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.54")
     ksp("com.google.dagger:hilt-android-compiler:2.54")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.1.0")
+    ksp("androidx.hilt:hilt-compiler:1.1.0")
 
     // Room (Database)
     implementation("androidx.room:room-runtime:2.6.1")
@@ -137,6 +154,17 @@ dependencies {
     
     // Llamatik - Kotlin Multiplatform llama.cpp integration
     implementation("com.llamatik:library:0.13.0")
+    
+    // Supabase Kotlin SDK
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.1.3")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:2.1.3")
+    implementation("io.ktor:ktor-client-android:2.3.7")
+    
+    // Kotlinx Serialization (for Supabase DTOs)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    
+    // WorkManager - Background sync
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

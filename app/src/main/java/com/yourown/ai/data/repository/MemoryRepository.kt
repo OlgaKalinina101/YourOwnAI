@@ -7,12 +7,14 @@ import com.yourown.ai.data.local.entity.toEntity
 import com.yourown.ai.data.util.SemanticSearchUtil
 import com.yourown.ai.domain.model.MemoryEntry
 import com.yourown.ai.domain.service.EmbeddingService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -51,6 +53,13 @@ class MemoryRepository @Inject constructor(
         return memoryDao.getAllMemories().map { entities ->
             entities.map { it.toDomain() }
         }
+    }
+    
+    /**
+     * Get all memory entities (including embeddings) for syncing
+     */
+    suspend fun getAllMemoryEntities(): List<MemoryEntity> = withContext(Dispatchers.IO) {
+        memoryDao.getAllMemoriesEntity()
     }
     
     /**
@@ -458,5 +467,19 @@ class MemoryRepository @Inject constructor(
             
             Result.failure(e)
         }
+    }
+    
+    /**
+     * Upsert memory (for cloud sync)
+     */
+    suspend fun upsertMemory(memory: MemoryEntity): Unit = withContext(Dispatchers.IO) {
+        memoryDao.insertMemory(memory)
+    }
+    
+    /**
+     * Upsert multiple memories (for cloud sync)
+     */
+    suspend fun upsertMemories(memories: List<MemoryEntity>): Unit = withContext(Dispatchers.IO) {
+        memories.forEach { memoryDao.insertMemory(it) }
     }
 }

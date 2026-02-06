@@ -144,6 +144,15 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **Local-first architecture** - all data stored on device with Room Database
 - **Encrypted API keys** - secured with Android Keystore System
 - **Android Auto Backup** - automatic backup of chats and settings (API keys excluded)
+- **Supabase Cloud Sync (NEW!)** - optional multi-device synchronization:
+  - Sync conversations, messages, memories, documents, personas, and settings
+  - Direct app-to-cloud connection (no backend)
+  - Bidirectional sync with conflict resolution (last-write-wins)
+  - Automatic sync on app open/close
+  - Progress tracking and usage monitoring (MB uploaded)
+  - Encrypted credential storage
+  - Setup instructions with screenshots (Russian UI)
+  - Free tier: 500MB storage on Supabase
 - **No backend** - direct communication with AI providers
 - **No tracking** - zero analytics, telemetry, or user profiling
 - **Onboarding customization** - theme, colors, fonts, text size
@@ -201,7 +210,13 @@ The app should feel like a **tool**, not a product with personality. It's your s
   - Inherited messages gradually replaced as new conversation grows
 - **Conversation titles** - auto-generated or manual edit
 - **Context-aware responses** - AI uses Memory, RAG, Deep Empathy, and Swipe context (API models only)
-- **Import/Export chats** - export to text format, import from txt files or clipboard
+- **Import/Export chats (NEW!)** - smart export system with progress tracking:
+  - **Small chats (< 1000 msg)** - fast in-app export with spinner (~0.2-3s)
+  - **Large chats (≥ 1000 msg)** - WorkManager background export with notification
+  - Progress shown in notification panel (can minimize app!)
+  - Markdown format with timestamps, roles, liked messages
+  - Import from text files or clipboard
+  - **No ANR** even on 10,000+ message chats!
 
 #### 🎙️ Voice Chat (NEW!)
 - **Real-time voice conversation** - talk naturally with Grok AI
@@ -358,6 +373,8 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **UI:** Jetpack Compose + Material 3 Dynamic Color
 - **Architecture:** Clean Architecture (MVVM + Repository Pattern)
 - **Local Storage:** Room Database + EncryptedSharedPreferences (Android Keystore)
+- **Cloud Sync:** Supabase SDK (postgrest-kt, realtime-kt) + Ktor client
+- **Background Tasks:** WorkManager (foreground service for large exports)
 - **Async:** Coroutines + Flow (reactive UI updates)
 - **DI:** Hilt (Dagger)
 - **Local AI:** Llamatik (llama.cpp Android wrapper via JNI)
@@ -575,10 +592,42 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
 6. **Edit if needed** - modify transcribed text
 7. **Send** - microphone transforms into send button
 
+### Supabase Cloud Sync (NEW!)
+1. **Setup Supabase** (one-time):
+   - Settings → Cloud Sync → Tap "?" icon for instructions
+   - Follow step-by-step guide with screenshots (Russian)
+   - Create free Supabase account (500MB storage)
+   - Copy Project URL and API Key
+   - Paste into app and test connection
+2. **Automatic Sync**:
+   - Syncs **to cloud** when app opens (foreground)
+   - Syncs **from cloud** when app opens (bidirectional!)
+   - Syncs **to cloud** when app closes (background)
+   - Manual sync available: "Sync Now" button
+3. **What Syncs**:
+   - Conversations and messages
+   - Memories with embeddings
+   - Knowledge documents and chunks
+   - Personas and system prompts
+   - All settings
+4. **Multi-Device**:
+   - Use same credentials on multiple devices
+   - Last-write-wins conflict resolution
+   - Data merges automatically
+5. **Usage Monitoring**:
+   - Progress bar shows MB uploaded (out of 500MB free)
+   - Tracks data sent to cloud (not retrieved)
+
 ### Import/Export Chat
 1. **Export chat**:
    - Tap three-dot menu in chat
    - Select "Save chat" or "Save liked messages"
+   - **Small chats (< 1000 msg)**: Dialog opens in ~0.2-3 seconds
+   - **Large chats (≥ 1000 msg)**: 
+     - Notification appears with progress
+     - Can minimize/close app - export continues!
+     - File saved to `exports/` folder
+     - Dialog opens when complete
    - Share as text or copy to clipboard
 2. **Import chat**:
    - Open drawer (☰ menu)
@@ -792,6 +841,8 @@ YourOwnAI/
 - Long-term memories extracted from conversations
 - Knowledge documents with embeddings and chunks
 - API keys (encrypted with Android Keystore)
+- **Supabase credentials** (encrypted with EncryptedSharedPreferences)
+- **Cloud sync metadata** (uploaded MB, last sync time, device ID)
 - User preferences (theme, colors, fonts, text size)
 - System prompts (default, local, custom)
 - Pinned models preference (DataStore)
@@ -938,6 +989,21 @@ YourOwnAI/
   - [x] Chat sorting by last message time
   - [x] ModelSelector moved to top row (compact)
   - [x] Chat title moved to bottom row (centered)
+- [x] **Cloud Sync (NEW!)** ☁️
+  - [x] Supabase integration (direct app-to-cloud)
+  - [x] Bidirectional sync (to cloud + from cloud)
+  - [x] Automatic sync on app open/close
+  - [x] Sync: conversations, messages, memories, documents, personas, settings
+  - [x] Conflict resolution (last-write-wins)
+  - [x] Usage tracking (MB uploaded out of 500MB free)
+  - [x] Setup instructions with screenshots
+  - [x] Encrypted credential storage
+- [x] **Export Optimization (NEW!)** 📤
+  - [x] Hybrid export: fast for small chats, WorkManager for large
+  - [x] Background export with notification for 1000+ messages
+  - [x] Progress tracking in notification panel
+  - [x] Can minimize/close app during export
+  - [x] No ANR even on 10,000+ message chats
 - [ ] Usage tracking (tokens, cost)
 - [ ] More OpenRouter models (expand selection)
 
@@ -956,7 +1022,7 @@ YourOwnAI/
 - [ ] Documentation and tutorials
 
 ### Future Considerations
-- [ ] Optional Supabase sync
+- [x] ~~Optional Supabase sync~~ ✅ **IMPLEMENTED!**
 - [ ] Import from Character.AI, Replika, etc.
 - [ ] Image generation
 - [ ] Custom voice cloning
@@ -1149,6 +1215,30 @@ A: Yes! When the message field is empty, tap the microphone icon. Speak your mes
 
 **Q: How do I pin my favorite models?**
 A: Tap the star icon next to any model in the model selector dropdown. Pinned models appear at the top of the list for quick access. Your pins are saved across app restarts.
+
+**Q: How does Supabase Cloud Sync work?**
+A: Supabase Cloud Sync lets you sync your data across multiple devices:
+- **Setup**: Create free Supabase account (500MB), copy credentials, paste into app
+- **What syncs**: Conversations, messages, memories, documents, personas, system prompts, settings
+- **When syncs**: Automatically on app open/close, or manually with "Sync Now"
+- **Bidirectional**: Syncs both TO and FROM cloud with conflict resolution (last-write-wins)
+- **Privacy**: Direct app-to-cloud connection (no backend), credentials stored encrypted
+- **Multi-device**: Use same credentials on all your devices
+- **Free tier**: 500MB storage, tracked with progress bar in app
+
+**Q: Why does my large chat take time to export?**
+A: For chats with 1000+ messages, we use WorkManager for stable background export:
+- **Small chats (< 1000 msg)**: Fast in-app export (~0.2-3 seconds)
+- **Large chats (≥ 1000 msg)**: Background export with notification
+  - You can minimize or close the app - export continues!
+  - Progress shown in notification panel
+  - File saved to `exports/` folder
+  - Dialog opens when complete
+  - **No ANR** even on 10,000+ messages!
+This approach ensures your app never freezes, no matter how large your chat is.
+
+**Q: Can I export liked messages only?**
+A: Yes! In the three-dot menu, select "Save liked messages" instead of "Save chat". Only messages you've liked (❤️) will be exported.
 
 **Q: Will this be on Google Play?**
 A: Yes, once we reach stable 1.0. For now, download APK from GitHub Releases.

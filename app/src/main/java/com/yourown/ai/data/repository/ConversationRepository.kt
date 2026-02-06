@@ -6,9 +6,11 @@ import com.yourown.ai.data.local.entity.ConversationEntity
 import com.yourown.ai.data.mapper.toDomain
 import com.yourown.ai.data.mapper.toEntity
 import com.yourown.ai.domain.model.Conversation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -189,5 +191,19 @@ class ConversationRepository @Inject constructor(
         val conversations = conversationDao.getAllConversations()
         // This is a simplified version - in real app would need better logic
         return 1 // TODO: Implement proper numbering
+    }
+    
+    /**
+     * Upsert conversation (for cloud sync)
+     */
+    suspend fun upsertConversation(conversation: ConversationEntity): Unit = withContext(Dispatchers.IO) {
+        conversationDao.insertConversation(conversation)
+    }
+    
+    /**
+     * Upsert multiple conversations (for cloud sync)
+     */
+    suspend fun upsertConversations(conversations: List<ConversationEntity>): Unit = withContext(Dispatchers.IO) {
+        conversations.forEach { conversationDao.insertConversation(it) }
     }
 }

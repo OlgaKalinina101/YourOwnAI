@@ -1,12 +1,15 @@
 package com.yourown.ai.data.repository
 
 import com.yourown.ai.data.local.dao.PersonaDao
+import com.yourown.ai.data.local.entity.PersonaEntity
 import com.yourown.ai.data.mapper.toDomain
 import com.yourown.ai.data.mapper.toEntity
 import com.yourown.ai.domain.model.Persona
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -226,5 +229,26 @@ class PersonaRepository @Inject constructor(
      */
     suspend fun hasPersonas(): Boolean {
         return personaDao.getPersonaCount() > 0
+    }
+    
+    /**
+     * Get all persona entities (for syncing)
+     */
+    suspend fun getAllPersonasEntities(): List<PersonaEntity> = withContext(Dispatchers.IO) {
+        personaDao.getAllPersonasSync()
+    }
+    
+    /**
+     * Upsert persona (for cloud sync)
+     */
+    suspend fun upsertPersona(persona: PersonaEntity): Unit = withContext(Dispatchers.IO) {
+        personaDao.insertPersona(persona)
+    }
+    
+    /**
+     * Upsert multiple personas (for cloud sync)
+     */
+    suspend fun upsertPersonas(personas: List<PersonaEntity>): Unit = withContext(Dispatchers.IO) {
+        personas.forEach { personaDao.insertPersona(it) }
     }
 }
