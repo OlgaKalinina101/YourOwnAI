@@ -236,13 +236,23 @@ fun ChatScreen(
     LaunchedEffect(uiState.shouldScrollToBottom) {
         if (uiState.shouldScrollToBottom && uiState.messages.isNotEmpty()) {
             // Scroll to last item (spacer)
-            val targetIndex = if (uiState.isLoading) {
+            val targetIndex = if (uiState.streamingMessage != null || uiState.isLoading) {
                 uiState.messages.size + 1
             } else {
                 uiState.messages.size
             }
             listState.animateScrollToItem(targetIndex)
             viewModel.onScrolledToBottom()
+        }
+    }
+    
+    // Auto-scroll during streaming
+    LaunchedEffect(uiState.streamingMessage?.content) {
+        if (uiState.streamingMessage != null) {
+            // Скроллим к spacer после streaming message для полной видимости
+            val targetIndex = uiState.messages.size + 1 // messages + streaming + spacer
+            // Используем scrollToItem (без анимации) для мгновенного скролла за стримом
+            listState.scrollToItem(targetIndex)
         }
     }
     
@@ -261,8 +271,8 @@ fun ChatScreen(
         coroutineScope.launch {
             if (uiState.messages.isNotEmpty()) {
                 // Scroll to last item (spacer) to ensure full visibility of last message
-                val targetIndex = if (uiState.isLoading) {
-                    uiState.messages.size + 1 // messages + loading + spacer
+                val targetIndex = if (uiState.streamingMessage != null || uiState.isLoading) {
+                    uiState.messages.size + 1 // messages + streaming/loading + spacer
                 } else {
                     uiState.messages.size // messages + spacer
                 }
@@ -290,6 +300,7 @@ fun ChatScreen(
                     availableModels = uiState.availableModels,
                     localModels = uiState.localModels,
                     pinnedModels = uiState.pinnedModels,
+                    activePersona = uiState.activePersona,
                     isSearchMode = uiState.isSearchMode,
                     searchQuery = uiState.searchQuery,
                     currentSearchIndex = uiState.currentSearchIndex,
@@ -356,8 +367,24 @@ fun ChatScreen(
                                 )
                             }
 
-                            // Loading indicator
-                            if (uiState.isLoading) {
+                            // Streaming message или Loading indicator
+                            if (uiState.streamingMessage != null) {
+                                // Показываем стримящееся сообщение
+                                item(key = "streaming_message") {
+                                    MessageBubble(
+                                        message = uiState.streamingMessage!!,
+                                        onLike = { /* Disabled during streaming */ },
+                                        onRegenerate = { /* Disabled during streaming */ },
+                                        onViewLogs = { /* Disabled during streaming */ },
+                                        onCopy = { /* Disabled during streaming */ },
+                                        onReply = { /* Disabled during streaming */ },
+                                        onDelete = { /* Disabled during streaming */ },
+                                        searchQuery = "",
+                                        isStreaming = true // Флаг чтобы скрыть кнопки
+                                    )
+                                }
+                            } else if (uiState.isLoading) {
+                                // Показываем "Thinking..." только если НЕТ streaming message
                                 item {
                                     Row(
                                         modifier = Modifier
@@ -589,6 +616,7 @@ fun ChatScreen(
     if (uiState.showSystemPromptDialog) {
         SystemPromptDialog(
             systemPrompts = uiState.systemPrompts,
+            personaMap = uiState.personas,
             selectedPromptId = uiState.selectedSystemPromptId,
             onDismiss = viewModel::hideSystemPromptDialog,
             onSelectPrompt = viewModel::selectSystemPrompt
@@ -641,7 +669,10 @@ fun ChatScreen(
         SourceChatSelectionDialog(
             conversations = uiState.conversations,
             selectedSourceChatId = uiState.selectedSourceChatId,
+            personas = uiState.personas.values.toList(),
+            selectedPersonaId = uiState.selectedNewChatPersonaId,
             onSourceChatSelected = viewModel::selectSourceChat,
+            onPersonaSelected = viewModel::selectNewChatPersona,
             onConfirm = {
                 coroutineScope.launch {
                     viewModel.createNewConversation(uiState.selectedSourceChatId)

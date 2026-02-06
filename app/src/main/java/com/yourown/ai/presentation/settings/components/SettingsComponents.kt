@@ -22,8 +22,12 @@ fun SettingsSection(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     subtitle: String,
+    isCollapsible: Boolean = false,
+    initiallyExpanded: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -37,7 +41,12 @@ fun SettingsSection(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = if (isCollapsible) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier
+                }
             ) {
                 Icon(
                     icon,
@@ -45,7 +54,7 @@ fun SettingsSection(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
@@ -57,11 +66,22 @@ fun SettingsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                
+                if (isCollapsible) {
+                    IconButton(onClick = { isExpanded = !isExpanded }) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            content()
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(4.dp))
+                content()
+            }
         }
     }
 }

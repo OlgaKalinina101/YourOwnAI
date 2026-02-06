@@ -87,6 +87,8 @@ class VoiceChatViewModel @Inject constructor(
         observeUserContext()
         // Load previous messages
         loadPreviousMessages()
+        // Load saved voice
+        loadSavedVoice()
     }
     
     private fun loadPreviousMessages() {
@@ -95,6 +97,22 @@ class VoiceChatViewModel @Inject constructor(
             if (savedMessages.isNotEmpty()) {
                 Log.d(TAG, "Loaded ${savedMessages.size} previous voice messages")
                 _uiState.update { it.copy(messages = savedMessages) }
+            }
+        }
+    }
+    
+    private fun loadSavedVoice() {
+        viewModelScope.launch {
+            val savedVoiceId = voiceMessagePreferences.loadSelectedVoice()
+            if (savedVoiceId != null) {
+                // Find matching voice
+                val voice = XAIVoiceClient.Voice.entries.find { it.id == savedVoiceId }
+                if (voice != null) {
+                    Log.d(TAG, "Loaded saved voice: ${voice.displayName} (${voice.id})")
+                    _uiState.update { it.copy(selectedVoice = voice) }
+                } else {
+                    Log.w(TAG, "Saved voice ID not found: $savedVoiceId, using default")
+                }
             }
         }
     }
@@ -522,6 +540,12 @@ class VoiceChatViewModel @Inject constructor(
         // Update voice first
         _uiState.update { it.copy(selectedVoice = voice) }
         Log.i(TAG, "Voice updated in state: ${_uiState.value.selectedVoice.displayName}")
+        
+        // Save selected voice
+        viewModelScope.launch {
+            voiceMessagePreferences.saveSelectedVoice(voice.id)
+            Log.d(TAG, "Saved voice preference: ${voice.id}")
+        }
         
         if (wasConnected) {
             // Reconnect with new voice

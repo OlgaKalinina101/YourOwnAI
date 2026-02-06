@@ -164,6 +164,141 @@ object DatabaseModule {
         }
     }
     
+    /**
+     * Migration from version 10 to 11
+     * Add Persona system:
+     * 1. Create personas table
+     * 2. Add personaId to conversations
+     * 3. Add persona_id to memories
+     * 4. Add linkedPersonaIds to knowledge_documents
+     */
+    private val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // 1. Add personaId to conversations
+            database.execSQL(
+                "ALTER TABLE conversations ADD COLUMN personaId TEXT DEFAULT NULL"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_conversations_personaId ON conversations(personaId)"
+            )
+            
+            // 2. Add persona_id to memories
+            database.execSQL(
+                "ALTER TABLE memories ADD COLUMN persona_id TEXT DEFAULT NULL"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_memories_persona_id ON memories(persona_id)"
+            )
+            
+            // 3. Add linkedPersonaIds to knowledge_documents
+            database.execSQL(
+                "ALTER TABLE knowledge_documents ADD COLUMN linkedPersonaIds TEXT NOT NULL DEFAULT '[]'"
+            )
+            
+            // 4. Create personas table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS personas (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    name TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    systemPromptId TEXT NOT NULL,
+                    systemPrompt TEXT NOT NULL,
+                    isForApi INTEGER NOT NULL,
+                    temperature REAL NOT NULL,
+                    topP REAL NOT NULL,
+                    maxTokens INTEGER NOT NULL,
+                    deepEmpathy INTEGER NOT NULL,
+                    memoryEnabled INTEGER NOT NULL,
+                    ragEnabled INTEGER NOT NULL,
+                    messageHistoryLimit INTEGER NOT NULL,
+                    deepEmpathyPrompt TEXT NOT NULL,
+                    deepEmpathyAnalysisPrompt TEXT NOT NULL,
+                    memoryExtractionPrompt TEXT NOT NULL,
+                    contextInstructions TEXT NOT NULL,
+                    memoryInstructions TEXT NOT NULL,
+                    ragInstructions TEXT NOT NULL,
+                    swipeMessagePrompt TEXT NOT NULL,
+                    memoryLimit INTEGER NOT NULL,
+                    memoryMinAgeDays INTEGER NOT NULL,
+                    memoryTitle TEXT NOT NULL,
+                    ragChunkSize INTEGER NOT NULL,
+                    ragChunkOverlap INTEGER NOT NULL,
+                    ragChunkLimit INTEGER NOT NULL,
+                    ragTitle TEXT NOT NULL,
+                    preferredModelId TEXT,
+                    preferredProvider TEXT,
+                    linkedDocumentIds TEXT NOT NULL,
+                    useOnlyPersonaMemories INTEGER NOT NULL,
+                    shareMemoriesGlobally INTEGER NOT NULL,
+                    createdAt INTEGER NOT NULL,
+                    updatedAt INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_personas_createdAt ON personas(createdAt)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_personas_name ON personas(name)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_personas_isForApi ON personas(isForApi)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_personas_systemPromptId ON personas(systemPromptId)"
+            )
+        }
+    }
+    
+    private val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // No schema changes needed, just clean up
+            // This migration was initially empty but kept to maintain version number consistency
+        }
+    }
+    
+    private val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Clean up any personas that were created without systemPromptId
+            database.execSQL("DELETE FROM personas WHERE systemPromptId = '' OR systemPromptId IS NULL")
+        }
+    }
+    
+    private val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Удаляем старый индекс
+            database.execSQL("DROP INDEX IF EXISTS index_personas_systemPromptId")
+            
+            // Удаляем дубликаты персон с одинаковым systemPromptId
+            // Оставляем только самую новую (с максимальным updatedAt)
+            database.execSQL("""
+                DELETE FROM personas 
+                WHERE rowid NOT IN (
+                    SELECT MAX(rowid)
+                    FROM personas
+                    GROUP BY systemPromptId
+                )
+            """.trimIndent())
+            
+            // Создаем уникальный индекс на systemPromptId
+            database.execSQL(
+                "CREATE UNIQUE INDEX index_personas_systemPromptId ON personas(systemPromptId)"
+            )
+        }
+    }
+    
+    private val MIGRATION_14_15 = object : Migration(14, 15) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Просто очищаем таблицу personas от всех старых/дублированных записей
+            // Пользователи смогут пересоздать personas через UI
+            database.execSQL("DELETE FROM personas")
+            
+            // Пересоздаем индексы с правильными настройками
+            database.execSQL("DROP INDEX IF EXISTS index_personas_systemPromptId")
+            database.execSQL("CREATE UNIQUE INDEX index_personas_systemPromptId ON personas(systemPromptId)")
+        }
+    }
+    
     @Provides
     @Singleton
     fun provideDatabase(
@@ -174,7 +309,19 @@ object DatabaseModule {
             YourOwnAIDatabase::class.java,
             YourOwnAIDatabase.DATABASE_NAME
         )
-            .addMigrations(MIGRATION_2_3, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addMigrations(
+                MIGRATION_2_3, 
+                MIGRATION_5_6, 
+                MIGRATION_6_7, 
+                MIGRATION_7_8, 
+                MIGRATION_8_9, 
+                MIGRATION_9_10,
+                MIGRATION_10_11,
+                MIGRATION_11_12,
+                MIGRATION_12_13,
+                MIGRATION_13_14,
+                MIGRATION_14_15
+            )
             .fallbackToDestructiveMigration() // Keep for future migrations
             .build()
     }
@@ -225,5 +372,17 @@ object DatabaseModule {
     @Singleton
     fun provideSystemPromptDao(database: YourOwnAIDatabase): SystemPromptDao {
         return database.systemPromptDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideKnowledgeDocumentDao(database: YourOwnAIDatabase): KnowledgeDocumentDao {
+        return database.knowledgeDocumentDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun providePersonaDao(database: YourOwnAIDatabase): PersonaDao {
+        return database.personaDao()
     }
 }

@@ -576,11 +576,15 @@ fun ImportChatDialog(
 fun SourceChatSelectionDialog(
     conversations: List<com.yourown.ai.domain.model.Conversation>,
     selectedSourceChatId: String?,
+    personas: List<com.yourown.ai.domain.model.Persona> = emptyList(),
+    selectedPersonaId: String? = null,
     onSourceChatSelected: (String?) -> Unit,
+    onPersonaSelected: (String?) -> Unit = {},
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expandedChat by remember { mutableStateOf(false) }
+    var expandedPersona by remember { mutableStateOf(false) }
     
     // Filter out archived conversations and sort by most recent
     val availableChats = remember(conversations) {
@@ -595,6 +599,15 @@ fun SourceChatSelectionDialog(
             "None (start fresh)"
         } else {
             availableChats.find { it.id == selectedSourceChatId }?.title ?: "None (start fresh)"
+        }
+    }
+    
+    // Find selected persona name
+    val selectedPersonaName = remember(selectedPersonaId, personas) {
+        if (selectedPersonaId == null) {
+            "None (Default)"
+        } else {
+            personas.find { it.id == selectedPersonaId }?.name ?: "None (Default)"
         }
     }
     
@@ -613,17 +626,17 @@ fun SourceChatSelectionDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                // Dropdown for source chat selection
+                // Dropdown for Persona selection
                 ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
+                    expanded = expandedPersona,
+                    onExpandedChange = { expandedPersona = !expandedPersona }
                 ) {
                     OutlinedTextField(
-                        value = selectedChatTitle,
+                        value = selectedPersonaName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Source Chat") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        label = { Text("Persona") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPersona) },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
                             .menuAnchor()
@@ -631,8 +644,95 @@ fun SourceChatSelectionDialog(
                     )
                     
                     ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        expanded = expandedPersona,
+                        onDismissRequest = { expandedPersona = false }
+                    ) {
+                        // Option: None (Default)
+                        DropdownMenuItem(
+                            text = { 
+                                Column {
+                                    Text(
+                                        "None (Default)",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        "Use global settings",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onPersonaSelected(null)
+                                expandedPersona = false
+                            },
+                            leadingIcon = {
+                                if (selectedPersonaId == null) {
+                                    Icon(Icons.Default.Check, contentDescription = null)
+                                }
+                            }
+                        )
+                        
+                        if (personas.isNotEmpty()) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            
+                            // Available personas
+                            personas.forEach { persona ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(
+                                                persona.name,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            if (persona.description.isNotEmpty()) {
+                                                Text(
+                                                    persona.description,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        onPersonaSelected(persona.id)
+                                        expandedPersona = false
+                                    },
+                                    leadingIcon = {
+                                        if (selectedPersonaId == persona.id) {
+                                            Icon(Icons.Default.Check, contentDescription = null)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Dropdown for source chat selection
+                ExposedDropdownMenuBox(
+                    expanded = expandedChat,
+                    onExpandedChange = { expandedChat = !expandedChat }
+                ) {
+                    OutlinedTextField(
+                        value = selectedChatTitle,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Source Chat") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedChat) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    
+                    ExposedDropdownMenu(
+                        expanded = expandedChat,
+                        onDismissRequest = { expandedChat = false }
                     ) {
                         // Option: None (start fresh)
                         DropdownMenuItem(
@@ -651,7 +751,7 @@ fun SourceChatSelectionDialog(
                             },
                             onClick = {
                                 onSourceChatSelected(null)
-                                expanded = false
+                                expandedChat = false
                             },
                             leadingIcon = {
                                 if (selectedSourceChatId == null) {
@@ -682,7 +782,7 @@ fun SourceChatSelectionDialog(
                                 },
                                 onClick = {
                                     onSourceChatSelected(chat.id)
-                                    expanded = false
+                                    expandedChat = false
                                 },
                                 leadingIcon = {
                                     if (selectedSourceChatId == chat.id) {

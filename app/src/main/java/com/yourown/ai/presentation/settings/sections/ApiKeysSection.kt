@@ -26,7 +26,9 @@ fun ApiKeysSection(
     SettingsSection(
         title = "API Keys",
         icon = Icons.Default.Key,
-        subtitle = "Configure your AI providers"
+        subtitle = "Configure your AI providers",
+        isCollapsible = true,
+        initiallyExpanded = false
     ) {
         apiKeys.forEach { keyInfo ->
             ApiKeyItem(

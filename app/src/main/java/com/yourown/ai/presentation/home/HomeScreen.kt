@@ -155,10 +155,8 @@ fun HomeScreen(
                     // New Chat FAB
                     ExtendedFloatingActionButton(
                         onClick = {
-                            scope.launch {
-                                val newId = viewModel.createNewConversation()
-                                onNavigateToChat(newId)
-                            }
+                            scope.launch { drawerState.close() }
+                            viewModel.showSourceChatDialog()
                         },
                         icon = {
                             Icon(Icons.Default.Add, "New Chat")
@@ -273,7 +271,10 @@ fun HomeScreen(
         com.yourown.ai.presentation.chat.components.dialogs.SourceChatSelectionDialog(
             conversations = uiState.conversations,
             selectedSourceChatId = uiState.selectedSourceChatId,
+            personas = uiState.personas.values.toList(),
+            selectedPersonaId = uiState.selectedNewChatPersonaId,
             onSourceChatSelected = viewModel::selectSourceChat,
+            onPersonaSelected = viewModel::selectNewChatPersona,
             onConfirm = {
                 scope.launch {
                     val newId = viewModel.createNewConversation(uiState.selectedSourceChatId)

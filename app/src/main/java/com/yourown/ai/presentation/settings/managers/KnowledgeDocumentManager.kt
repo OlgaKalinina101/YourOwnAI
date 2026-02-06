@@ -15,10 +15,15 @@ class KnowledgeDocumentManager @Inject constructor(
     /**
      * Create new knowledge document
      */
-    suspend fun createDocument(name: String, content: String): Result<String> {
+    suspend fun createDocument(
+        name: String, 
+        content: String, 
+        linkedPersonaIds: List<String> = emptyList()
+    ): Result<String> {
         return knowledgeDocumentRepository.createDocument(
             name = name,
-            content = content
+            content = content,
+            linkedPersonaIds = linkedPersonaIds
         )
     }
     
@@ -29,7 +34,8 @@ class KnowledgeDocumentManager @Inject constructor(
         id: String,
         name: String,
         content: String,
-        createdAt: Long
+        createdAt: Long,
+        linkedPersonaIds: List<String> = emptyList()
     ): Result<Unit> {
         val document = KnowledgeDocument(
             id = id,
@@ -37,7 +43,8 @@ class KnowledgeDocumentManager @Inject constructor(
             content = content,
             createdAt = createdAt,
             updatedAt = System.currentTimeMillis(),
-            sizeBytes = content.toByteArray().size
+            sizeBytes = content.toByteArray().size,
+            linkedPersonaIds = linkedPersonaIds
         )
         return knowledgeDocumentRepository.updateDocument(document)
     }

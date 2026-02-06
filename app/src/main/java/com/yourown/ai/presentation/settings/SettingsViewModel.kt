@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
+    val personas: List<Persona> = emptyList(),
     val apiKeys: List<ApiKeyInfo> = listOf(
         ApiKeyInfo(AIProvider.DEEPSEEK),
         ApiKeyInfo(AIProvider.OPENAI),
@@ -30,6 +31,7 @@ data class SettingsUiState(
     val knowledgeDocuments: List<KnowledgeDocument> = emptyList(),
     val documentProcessingStatus: DocumentProcessingStatus = DocumentProcessingStatus.Idle,
     val memories: List<MemoryEntry> = emptyList(),
+    val memoryProcessingStatus: com.yourown.ai.data.repository.MemoryProcessingStatus = com.yourown.ai.data.repository.MemoryProcessingStatus.Idle,
     val showSystemPromptDialog: Boolean = false,
     val showLocalSystemPromptDialog: Boolean = false,
     val showSystemPromptsListDialog: Boolean = false,
@@ -79,6 +81,7 @@ class SettingsViewModel @Inject constructor(
     private val systemPromptRepository: SystemPromptRepository,
     private val knowledgeDocumentRepository: KnowledgeDocumentRepository,
     private val memoryRepository: MemoryRepository,
+    private val personaRepository: PersonaRepository,
     private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager,
     private val keyboardSoundManager: com.yourown.ai.domain.service.KeyboardSoundManager,
     // Managers
@@ -96,11 +99,13 @@ class SettingsViewModel @Inject constructor(
     
     init {
         loadSettings()
+        observePersonas()
         observeLocalModels()
         observeEmbeddingModels()
         observeSystemPrompts()
         observeKnowledgeDocuments()
         observeDocumentProcessing()
+        observeMemoryProcessing()
         observeMemories()
         observeApiKeys()
         initializeDefaultPrompts()
@@ -110,6 +115,24 @@ class SettingsViewModel @Inject constructor(
     private fun initializeDefaultPrompts() {
         viewModelScope.launch {
             systemPromptRepository.initializeDefaultPrompts()
+        }
+    }
+    
+    private fun observePersonas() {
+        viewModelScope.launch {
+            personaRepository.getAllPersonas().collect { personas ->
+                // Дедупликация по systemPromptId - оставляем только уникальные
+                val uniquePersonas = personas
+                    .groupBy { it.systemPromptId }
+                    .mapValues { (_, duplicates) -> 
+                        // Если есть дубликаты - берем самую новую (по updatedAt)
+                        duplicates.maxByOrNull { it.updatedAt } ?: duplicates.first()
+                    }
+                    .values
+                    .toList()
+                    
+                _uiState.update { it.copy(personas = uniquePersonas) }
+            }
         }
     }
     
@@ -186,6 +209,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             knowledgeDocumentRepository.getProcessingStatus().collect { status ->
                 _uiState.update { it.copy(documentProcessingStatus = status) }
+            }
+        }
+    }
+    
+    private fun observeMemoryProcessing() {
+        viewModelScope.launch {
+            memoryRepository.processingStatus.collect { status ->
+                _uiState.update { it.copy(memoryProcessingStatus = status) }
             }
         }
     }
@@ -704,6 +735,15 @@ class SettingsViewModel @Inject constructor(
     
     fun deletePrompt(id: String) {
         viewModelScope.launch {
+            // Сначала проверяем, есть ли связанная Persona
+            val linkedPersona = personaRepository.getPersonaBySystemPromptId(id)
+            
+            // Если есть - удаляем Persona перед удалением System Prompt
+            if (linkedPersona != null) {
+                personaRepository.deletePersona(linkedPersona.id)
+            }
+            
+            // Удаляем System Prompt
             systemPromptManager.deletePrompt(id)
         }
     }
@@ -730,7 +770,7 @@ class SettingsViewModel @Inject constructor(
         )
     }
     
-    fun saveDocument(id: String, name: String, content: String) {
+    fun saveDocument(id: String, name: String, content: String, linkedPersonaIds: List<String> = emptyList()) {
         viewModelScope.launch {
             try {
                 hideEditDocumentDialog()
@@ -740,14 +780,14 @@ class SettingsViewModel @Inject constructor(
                 }
                 
                 if (id.isEmpty()) {
-                    val result = knowledgeDocumentManager.createDocument(name, content)
+                    val result = knowledgeDocumentManager.createDocument(name, content, linkedPersonaIds)
                     if (result.isFailure) {
                         android.util.Log.e("SettingsViewModel", "Failed to create document", result.exceptionOrNull())
                     }
                 } else {
-                    val createdAt = _uiState.value.knowledgeDocuments.find { it.id == id }?.createdAt 
-                        ?: System.currentTimeMillis()
-                    val result = knowledgeDocumentManager.updateDocument(id, name, content, createdAt)
+                    val existingDoc = _uiState.value.knowledgeDocuments.find { it.id == id }
+                    val createdAt = existingDoc?.createdAt ?: System.currentTimeMillis()
+                    val result = knowledgeDocumentManager.updateDocument(id, name, content, createdAt, linkedPersonaIds)
                     if (result.isFailure) {
                         android.util.Log.e("SettingsViewModel", "Failed to update document", result.exceptionOrNull())
                     }
@@ -773,11 +813,11 @@ class SettingsViewModel @Inject constructor(
     
     // ===== Memory Methods =====
     
-    fun saveMemory(fact: String) {
+    fun saveMemory(fact: String, personaId: String? = null) {
         viewModelScope.launch {
             val memory = _uiState.value.selectedMemoryForEdit
             if (memory != null) {
-                memoryManager.updateMemory(memory, fact)
+                memoryManager.updateMemory(memory, fact, personaId)
             }
             hideEditMemoryDialog()
         }
@@ -827,6 +867,22 @@ class SettingsViewModel @Inject constructor(
     fun deleteEmbeddingModel(model: LocalEmbeddingModel) {
         viewModelScope.launch {
             embeddingModelManager.deleteModel(model)
+        }
+    }
+    
+    fun recalculateMemoryEmbeddings() {
+        viewModelScope.launch {
+            try {
+                val result = memoryRepository.recalculateAllEmbeddings()
+                
+                if (result.isSuccess) {
+                    android.util.Log.i("SettingsViewModel", "Memory embeddings recalculated successfully")
+                } else {
+                    android.util.Log.e("SettingsViewModel", "Failed to recalculate memory embeddings", result.exceptionOrNull())
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Error recalculating memory embeddings", e)
+            }
         }
     }
     

@@ -4,6 +4,7 @@ import android.util.Log
 import com.yourown.ai.data.local.entity.DocumentChunkEntity
 import com.yourown.ai.data.repository.DocumentEmbeddingRepository
 import com.yourown.ai.data.repository.MemoryRepository
+import com.yourown.ai.data.repository.PersonaRepository
 import com.yourown.ai.domain.model.*
 import com.yourown.ai.domain.service.AIService
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +27,8 @@ data class EnhancedContextResult(
 class ChatContextBuilder @Inject constructor(
     private val memoryRepository: MemoryRepository,
     private val documentEmbeddingRepository: DocumentEmbeddingRepository,
-    private val aiService: AIService
+    private val aiService: AIService,
+    private val personaRepository: PersonaRepository
 ) {
     
     /**
@@ -49,12 +51,22 @@ class ChatContextBuilder @Inject constructor(
         config: AIConfig,
         selectedModel: ModelProvider,
         conversationId: String,
-        swipeMessage: Message? = null
+        swipeMessage: Message? = null,
+        personaId: String? = null
     ): EnhancedContextResult {
         val parts = mutableListOf<String>()
         
         // Deep Empathy, Memory and RAG work ONLY with API models
         val isApiModel = selectedModel is ModelProvider.API
+        
+        // Получаем настройки Persona если она активна
+        val persona = personaId?.let { personaRepository.getPersonaById(it) }
+        
+        android.util.Log.d("ChatContextBuilder", "Building context: personaId=$personaId, persona loaded=${persona?.name}, useOnlyPersonaMemories=${persona?.useOnlyPersonaMemories}")
+        
+        // Определяем, включены ли Memory и RAG (с учетом настроек Persona)
+        val isMemoryEnabled = persona?.memoryEnabled ?: config.memoryEnabled
+        val isRagEnabled = persona?.ragEnabled ?: config.ragEnabled
         
         // Analyze Deep Empathy focus points if enabled (ONLY for API models)
         val deepEmpathyFocusPrompt = if (config.deepEmpathy && isApiModel) {
@@ -80,28 +92,99 @@ class ChatContextBuilder @Inject constructor(
         }
         
         // Get relevant memories if Memory is enabled (ONLY for API models)
-        val relevantMemories = if (config.memoryEnabled && isApiModel) {
-            memoryRepository.findSimilarMemories(
-                query = userMessage, 
-                limit = config.memoryLimit,
-                minAgeDays = config.memoryMinAgeDays
-            )
+        val relevantMemories = if (isMemoryEnabled && isApiModel) {
+            val memoryLimit = persona?.memoryLimit ?: config.memoryLimit
+            val memoryMinAgeDays = persona?.memoryMinAgeDays ?: config.memoryMinAgeDays
+            
+            android.util.Log.d("ChatContextBuilder", "Building memory context: personaId=$personaId, persona=${persona?.name}, useOnlyPersonaMemories=${persona?.useOnlyPersonaMemories}")
+            
+            if (personaId != null && persona != null) {
+                // Если активна Persona - загружаем память с учетом её настроек
+                if (persona.useOnlyPersonaMemories) {
+                    // Изолированные воспоминания - только память персоны
+                    memoryRepository.findSimilarMemoriesByPersona(
+                        query = userMessage,
+                        personaId = personaId,
+                        limit = memoryLimit,
+                        minAgeDays = memoryMinAgeDays
+                    )
+                } else {
+                    // Загружаем память персоны + глобальную
+                    val personaMemories = memoryRepository.findSimilarMemoriesByPersona(
+                        query = userMessage,
+                        personaId = personaId,
+                        limit = memoryLimit,
+                        minAgeDays = memoryMinAgeDays
+                    )
+                    android.util.Log.d("ChatContextBuilder", "Found ${personaMemories.size} persona memories for personaId=$personaId")
+                    
+                    val globalMemories = memoryRepository.findSimilarGlobalMemories(
+                        query = userMessage,
+                        limit = memoryLimit,
+                        minAgeDays = memoryMinAgeDays
+                    )
+                    android.util.Log.d("ChatContextBuilder", "Found ${globalMemories.size} global memories")
+                    
+                    val combined = (personaMemories + globalMemories)
+                        .distinctBy { it.id }
+                        .take(memoryLimit)
+                    android.util.Log.d("ChatContextBuilder", "Combined to ${combined.size} total memories")
+                    combined
+                }
+            } else {
+                // Нет Persona - загружаем только глобальную память
+                memoryRepository.findSimilarGlobalMemories(
+                    query = userMessage,
+                    limit = memoryLimit,
+                    minAgeDays = memoryMinAgeDays
+                )
+            }
         } else {
             emptyList()
         }
         
         // Get relevant RAG chunks if RAG is enabled (ONLY for API models)
-        val relevantChunks = if (config.ragEnabled && isApiModel) {
-            documentEmbeddingRepository.searchSimilarChunks(userMessage, topK = config.ragChunkLimit)
-                .map { it.first } // Extract DocumentChunkEntity from Pair
+        val relevantChunks = if (isRagEnabled && isApiModel) {
+            val ragChunkLimit = persona?.ragChunkLimit ?: config.ragChunkLimit
+            
+            if (personaId != null) {
+                // Если активна Persona - загружаем документы Persona + глобальные
+                val personaChunks = documentEmbeddingRepository.searchSimilarChunksByPersona(
+                    query = userMessage,
+                    personaId = personaId,
+                    topK = ragChunkLimit
+                ).map { it.first }
+                
+                val globalChunks = documentEmbeddingRepository.searchSimilarGlobalChunks(
+                    query = userMessage,
+                    topK = ragChunkLimit
+                ).map { it.first }
+                
+                (personaChunks + globalChunks)
+                    .distinctBy { it.id }
+                    .take(ragChunkLimit)
+            } else {
+                // Нет Persona - загружаем только глобальные документы
+                documentEmbeddingRepository.searchSimilarGlobalChunks(
+                    query = userMessage,
+                    topK = ragChunkLimit
+                ).map { it.first }
+            }
         } else {
             emptyList()
         }
         
+        // Получаем настройки для форматирования из Persona или config
+        val contextInstructions = persona?.contextInstructions ?: config.contextInstructions
+        val memoryTitle = persona?.memoryTitle ?: config.memoryTitle
+        val ragTitle = persona?.ragTitle ?: config.ragTitle
+        val memoryInstructions = persona?.memoryInstructions ?: config.memoryInstructions
+        val ragInstructions = persona?.ragInstructions ?: config.ragInstructions
+        
         // Add context instructions ONLY if Memory OR RAG are enabled and have content
         if ((relevantMemories.isNotEmpty() || relevantChunks.isNotEmpty()) 
-            && config.contextInstructions.isNotBlank()) {
-            parts.add(config.contextInstructions.trim())
+            && contextInstructions.isNotBlank()) {
+            parts.add(contextInstructions.trim())
         }
         
         // Base context (персона, настройки и т.п.)
@@ -111,13 +194,13 @@ class ChatContextBuilder @Inject constructor(
         
         // Memories (grouped by time)
         if (relevantMemories.isNotEmpty()) {
-            val memoriesText = buildMemoriesText(relevantMemories, config)
+            val memoriesText = buildMemoriesText(relevantMemories, memoryTitle, memoryInstructions)
             parts.add(memoriesText)
         }
         
         // RAG chunks
         if (relevantChunks.isNotEmpty()) {
-            val ragText = buildRAGText(relevantChunks, config)
+            val ragText = buildRAGText(relevantChunks, ragTitle, ragInstructions)
             parts.add(ragText)
         }
         
@@ -254,16 +337,17 @@ class ChatContextBuilder @Inject constructor(
      */
     private fun buildMemoriesText(
         memories: List<com.yourown.ai.domain.model.MemoryEntry>,
-        config: AIConfig
+        memoryTitle: String,
+        memoryInstructions: String
     ): String {
         return buildString {
             // Add title only if not blank
-            if (config.memoryTitle.isNotBlank()) {
-                appendLine("${config.memoryTitle}:")
+            if (memoryTitle.isNotBlank()) {
+                appendLine("${memoryTitle}:")
             }
             // Add instructions only if not blank
-            if (config.memoryInstructions.isNotBlank()) {
-                appendLine(config.memoryInstructions)
+            if (memoryInstructions.isNotBlank()) {
+                appendLine(memoryInstructions)
                 appendLine()
             }
             
@@ -362,16 +446,17 @@ class ChatContextBuilder @Inject constructor(
      */
     private fun buildRAGText(
         ragChunks: List<DocumentChunkEntity>,
-        config: AIConfig
+        ragTitle: String,
+        ragInstructions: String
     ): String {
         return buildString {
             // Add title only if not blank
-            if (config.ragTitle.isNotBlank()) {
-                appendLine("${config.ragTitle}:")
+            if (ragTitle.isNotBlank()) {
+                appendLine("${ragTitle}:")
             }
             // Add instructions only if not blank
-            if (config.ragInstructions.isNotBlank()) {
-                appendLine(config.ragInstructions)
+            if (ragInstructions.isNotBlank()) {
+                appendLine(ragInstructions)
                 appendLine()
             }
             ragChunks.forEachIndexed { index, chunk ->

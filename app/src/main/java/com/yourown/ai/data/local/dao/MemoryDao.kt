@@ -28,6 +28,18 @@ interface MemoryDao {
     fun getAllMemories(): Flow<List<MemoryEntity>>
     
     /**
+     * Get memories for a specific persona
+     */
+    @Query("SELECT * FROM memories WHERE persona_id = :personaId AND is_archived = 0 ORDER BY created_at DESC")
+    fun getMemoriesByPersonaId(personaId: String): Flow<List<MemoryEntity>>
+    
+    /**
+     * Get global memories (not tied to any persona)
+     */
+    @Query("SELECT * FROM memories WHERE persona_id IS NULL AND is_archived = 0 ORDER BY created_at DESC")
+    fun getGlobalMemories(): Flow<List<MemoryEntity>>
+    
+    /**
      * Get memory by ID
      */
     @Query("SELECT * FROM memories WHERE id = :id")

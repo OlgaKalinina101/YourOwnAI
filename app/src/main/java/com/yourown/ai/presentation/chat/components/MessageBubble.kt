@@ -2,9 +2,14 @@ package com.yourown.ai.presentation.chat.components
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
@@ -19,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.platform.LocalContext
@@ -29,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.compose.runtime.LaunchedEffect
 import coil.compose.AsyncImage
 import com.yourown.ai.domain.model.Message
 import com.yourown.ai.domain.model.MessageRole
@@ -48,9 +56,11 @@ fun MessageBubble(
     onDelete: () -> Unit,
     onReply: () -> Unit = {},
     modifier: Modifier = Modifier,
-    searchQuery: String = ""
+    searchQuery: String = "",
+    isStreaming: Boolean = false
 ) {
     var showRegenerateDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val isUser = message.role == MessageRole.USER
     val isDark = isSystemInDarkTheme()
     
@@ -61,7 +71,7 @@ fun MessageBubble(
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         Column(
-            modifier = Modifier.widthIn(max = 300.dp),
+            modifier = Modifier.widthIn(max = 340.dp),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
         ) {
             // Message bubble
@@ -243,133 +253,114 @@ fun MessageBubble(
                         Spacer(modifier = Modifier.height(4.dp))
                     }
                     
-                    // Markdown-aware text with clickable links
-                    val context = LocalContext.current
-                    var annotatedText = parseMarkdown(message.content, isUser)
-                    
-                    // Apply search highlighting if search is active
-                    if (searchQuery.isNotBlank() && message.content.contains(searchQuery, ignoreCase = true)) {
-                        annotatedText = highlightSearchQuery(annotatedText, searchQuery)
-                    }
-                    
-                    ClickableText(
-                        text = annotatedText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        onClick = { offset ->
-                            annotatedText.getStringAnnotations(
-                                tag = "URL",
-                                start = offset,
-                                end = offset
-                            ).firstOrNull()?.let { annotation ->
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    // Handle invalid URL
-                                }
-                            }
-                        }
+                    // Markdown-aware text with clickable links and code blocks
+                    RenderMessageContent(
+                        content = message.content,
+                        isUser = isUser,
+                        searchQuery = searchQuery
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            // Message metadata and actions
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Timestamp
-                Text(
-                    text = formatTimestamp(message.createdAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            // Message metadata and actions - показываем только если НЕ стримится
+            if (!isStreaming) {
+                Spacer(modifier = Modifier.height(4.dp))
                 
-                // Copy button - for both user and assistant
-                IconButton(
-                    onClick = onCopy,
-                    modifier = Modifier.size(24.dp)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.ContentCopy,
-                        contentDescription = "Copy",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    // Timestamp
+                    Text(
+                        text = formatTimestamp(message.createdAt),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                
-                // Reply button - for both user and assistant
-                IconButton(
-                    onClick = onReply,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Reply,
-                        contentDescription = "Reply",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                // Delete button - for both user and assistant
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                // Assistant message actions
-                if (!isUser) {
-                    // Like button
-                    IconButton(
-                        onClick = onLike,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            if (message.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Like",
-                            modifier = Modifier.size(16.dp),
-                            tint = if (message.isLiked) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
                     
-                    // Regenerate button
+                    // Copy button - for both user and assistant
                     IconButton(
-                        onClick = { showRegenerateDialog = true },
+                        onClick = onCopy,
                         modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Regenerate",
+                            Icons.Default.ContentCopy,
+                            contentDescription = "Copy",
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     
-                    // View logs button
-                    if (message.requestLogs != null) {
+                    // Reply button - for both user and assistant
+                    IconButton(
+                        onClick = onReply,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Reply,
+                            contentDescription = "Reply",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    // Delete button - for both user and assistant
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    // Assistant message actions
+                    if (!isUser) {
+                        // Like button
                         IconButton(
-                            onClick = onViewLogs,
+                            onClick = onLike,
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
-                                Icons.Default.Code,
-                                contentDescription = "View Request Logs",
+                                if (message.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Like",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (message.isLiked) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                        }
+                        
+                        // Regenerate button
+                        IconButton(
+                            onClick = { showRegenerateDialog = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Regenerate",
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                        
+                        // View logs button
+                        if (message.requestLogs != null) {
+                            IconButton(
+                                onClick = onViewLogs,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Code,
+                                    contentDescription = "View Request Logs",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -400,6 +391,35 @@ fun MessageBubble(
             },
             dismissButton = {
                 TextButton(onClick = { showRegenerateDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Message?") },
+            text = { 
+                Text("This will permanently delete this message. This action cannot be undone.") 
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancel")
                 }
             }
@@ -447,17 +467,241 @@ private fun formatTimestamp(timestamp: Long): String {
 }
 
 /**
+ * Render message content with separate code blocks
+ */
+@Composable
+private fun RenderMessageContent(
+    content: String,
+    isUser: Boolean,
+    searchQuery: String = ""
+) {
+    val context = LocalContext.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+    
+    // Split content into text and code blocks
+    data class ContentBlock(val content: String, val isCodeBlock: Boolean, val language: String = "")
+    val blocks = mutableListOf<ContentBlock>()
+    
+    val lines = content.split("\n")
+    var i = 0
+    val currentTextBlock = StringBuilder()
+    
+    while (i < lines.size) {
+        val line = lines[i]
+        
+        if (line.trimStart().startsWith("```")) {
+            // Save accumulated text
+            if (currentTextBlock.isNotEmpty()) {
+                blocks.add(ContentBlock(currentTextBlock.toString(), false))
+                currentTextBlock.clear()
+            }
+            
+            // Extract language
+            val language = line.trimStart().removePrefix("```").trim()
+            Log.d("MessageBubble", "Found code block start, language: '$language'")
+            i++
+            
+            // Collect code lines
+            val codeLines = mutableListOf<String>()
+            while (i < lines.size && !lines[i].trimStart().startsWith("```")) {
+                codeLines.add(lines[i])
+                i++
+            }
+            
+            val codeContent = codeLines.joinToString("\n")
+            Log.d("MessageBubble", "Code block content length: ${codeContent.length}, language: '$language'")
+            
+            // Add code block
+            blocks.add(ContentBlock(codeContent, true, language))
+            i++ // Skip closing ```
+        } else {
+            currentTextBlock.append(line)
+            if (i < lines.size - 1) {
+                currentTextBlock.append("\n")
+            }
+            i++
+        }
+    }
+    
+    // Add remaining text
+    if (currentTextBlock.isNotEmpty()) {
+        blocks.add(ContentBlock(currentTextBlock.toString(), false))
+    }
+    
+    // Render blocks
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        blocks.forEach { block ->
+            if (block.isCodeBlock) {
+                // Render code block with copy button
+                CodeBlock(
+                    code = block.content,
+                    language = block.language,
+                    isUser = isUser,
+                    onCopy = {
+                        clipboardManager.setText(AnnotatedString(block.content))
+                    }
+                )
+            } else {
+                // Render text with markdown
+                var annotatedText = parseMarkdownWithoutCodeBlocks(block.content, isUser)
+                
+                // Apply search highlighting if search is active
+                if (searchQuery.isNotBlank() && block.content.contains(searchQuery, ignoreCase = true)) {
+                    annotatedText = highlightSearchQuery(annotatedText, searchQuery)
+                }
+                
+                ClickableText(
+                    text = annotatedText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    onClick = { offset ->
+                        annotatedText.getStringAnnotations(
+                            tag = "URL",
+                            start = offset,
+                            end = offset
+                        ).firstOrNull()?.let { annotation ->
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                // Handle invalid URL
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Code block with copy button
+ */
+@Composable
+private fun CodeBlock(
+    code: String,
+    language: String,
+    isUser: Boolean,
+    onCopy: () -> Unit
+) {
+    var showCopied by remember { mutableStateOf(false) }
+    
+    val backgroundColor = if (isUser) {
+        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    
+    val codeTextColor = if (isUser) {
+        MaterialTheme.colorScheme.tertiary
+    } else {
+        MaterialTheme.colorScheme.secondary
+    }
+    
+    // Reset copied state
+    if (showCopied) {
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(2000)
+            showCopied = false
+        }
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        // Header: language + copy button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (language.isNotEmpty()) language else "code",
+                style = MaterialTheme.typography.labelMedium,
+                color = codeTextColor.copy(alpha = 0.7f),
+                fontWeight = FontWeight.Medium
+            )
+            
+            // Copy button with pointerInput - bypasses parent touch interception
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = codeTextColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .pointerInput(code) {
+                        detectTapGestures(
+                            onTap = {
+                                Log.d("CodeBlock", "TAP DETECTED! code length: ${code.length}")
+                                onCopy()
+                                showCopied = true
+                            }
+                        )
+                    }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (showCopied) Icons.Default.Check else Icons.Default.ContentCopy,
+                        contentDescription = "Copy code",
+                        modifier = Modifier.size(14.dp),
+                        tint = if (showCopied) MaterialTheme.colorScheme.primary 
+                               else codeTextColor
+                    )
+                    Text(
+                        text = if (showCopied) "Copied!" else "Copy",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (showCopied) MaterialTheme.colorScheme.primary 
+                               else codeTextColor
+                    )
+                }
+            }
+        }
+        
+        HorizontalDivider(
+            color = codeTextColor.copy(alpha = 0.1f),
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+        
+        // Code content - wrap text
+        Text(
+            text = code,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                color = codeTextColor,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize
+            ),
+            softWrap = true
+        )
+    }
+}
+
+/**
  * Parse markdown to AnnotatedString with support for:
  * - **bold text**
  * - *italic*
+ * - `inline code`
  * - [text](url)
  * - **[bold link](url)**
  * - > blockquote
- * - # Heading 1, ## Heading 2, ### Heading 3
+ * - # Heading 1-6
  * - --- horizontal divider
+ * (Code blocks are handled separately)
  */
 @Composable
-private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
+private fun parseMarkdownWithoutCodeBlocks(text: String, isUser: Boolean): AnnotatedString {
     val linkColor = if (isUser) {
         MaterialTheme.colorScheme.tertiary
     } else {
@@ -482,6 +726,18 @@ private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
     }
     
+    val codeBackgroundColor = if (isUser) {
+        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    
+    val codeTextColor = if (isUser) {
+        MaterialTheme.colorScheme.tertiary
+    } else {
+        MaterialTheme.colorScheme.secondary
+    }
+    
     return buildAnnotatedString {
         val lines = text.split("\n")
 
@@ -499,8 +755,8 @@ private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
                 return@forEachIndexed
             }
             
-            // Check for headings (# H1, ## H2, ### H3)
-            val headingMatch = Regex("^(#{1,3})\\s+(.+)$").find(trimmedLine)
+            // Check for headings (# H1-H6)
+            val headingMatch = Regex("^(#{1,6})\\s+(.+)$").find(trimmedLine)
             if (headingMatch != null) {
                 val level = headingMatch.groupValues[1].length
                 var headingText = headingMatch.groupValues[2]
@@ -509,12 +765,16 @@ private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
                 headingText = headingText
                     .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")  // Remove **bold**
                     .replace(Regex("\\*(.+?)\\*"), "$1")        // Remove *italic*
+                    .replace(Regex("`(.+?)`"), "$1")            // Remove `code`
                     .replace(Regex("\\[(.+?)\\]\\(.+?\\)"), "$1") // Remove [link](url) - keep text only
                 
                 val headingSize = when (level) {
-                    1 -> 1.5f // H1
-                    2 -> 1.3f // H2
-                    else -> 1.15f // H3
+                    1 -> 1.5f  // H1
+                    2 -> 1.3f  // H2
+                    3 -> 1.15f // H3
+                    4 -> 1.1f  // H4
+                    5 -> 1.05f // H5
+                    else -> 1.0f // H6
                 }
                 
                 withStyle(SpanStyle(
@@ -551,16 +811,20 @@ private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
             val linkRegex = """\[([^\]]+)\]\(([^\)]+)\)""".toRegex()  // [text](url)
             val boldRegex = """\*\*(.+?)\*\*""".toRegex()  // **text**
             val italicRegex = """\*([^*]+?)\*""".toRegex()  // *text*
+            val inlineCodeRegex = """`([^`]+?)`""".toRegex()  // `code`
 
             // Find all matches
             val matches = mutableListOf<Triple<IntRange, String, MatchResult>>()
 
-            // Important: first bold+link, then links, then bold, then italic
+            // Important: first bold+link, then links, then inline code, then bold, then italic
             boldLinkRegex.findAll(processLine).forEach {
                 matches.add(Triple(it.range, "boldlink", it))
             }
             linkRegex.findAll(processLine).forEach {
                 matches.add(Triple(it.range, "link", it))
+            }
+            inlineCodeRegex.findAll(processLine).forEach {
+                matches.add(Triple(it.range, "inlinecode", it))
             }
             boldRegex.findAll(processLine).forEach { matches.add(Triple(it.range, "bold", it)) }
             italicRegex.findAll(processLine).forEach { matches.add(Triple(it.range, "italic", it)) }
@@ -606,6 +870,18 @@ private fun parseMarkdown(text: String, isUser: Boolean): AnnotatedString {
                             start = start,
                             end = start + label.length
                         )
+                    }
+                    "inlinecode" -> {
+                        // `code` - inline code
+                        val codeText = match.groupValues[1]
+                        withStyle(SpanStyle(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = codeTextColor,
+                            background = codeBackgroundColor,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize
+                        )) {
+                            append(codeText)
+                        }
                     }
                     "bold" -> {
                         val innerText = match.groupValues[1]

@@ -30,8 +30,11 @@ data class ChatUiState(
     val aiConfig: AIConfig = AIConfig(),
     val userContext: com.yourown.ai.domain.model.UserContext = com.yourown.ai.domain.model.UserContext(),
     val systemPrompts: List<com.yourown.ai.domain.model.SystemPrompt> = emptyList(),
+    val personas: Map<String, Persona> = emptyMap(), // Map<systemPromptId, Persona>
     val selectedSystemPromptId: String? = null,
+    val activePersona: Persona? = null, // Активная Persona для текущего чата
     val isLoading: Boolean = false,
+    val streamingMessage: Message? = null,
     val shouldScrollToBottom: Boolean = false,
     val isDrawerOpen: Boolean = false,
     val showEditTitleDialog: Boolean = false,
@@ -56,6 +59,7 @@ data class ChatUiState(
     val isInitialConversationsLoad: Boolean = true,
     val showSourceChatDialog: Boolean = false,
     val selectedSourceChatId: String? = null,
+    val selectedNewChatPersonaId: String? = null,
     val isListening: Boolean = false,
     val attachedImages: List<android.net.Uri> = emptyList(),
     val attachedFiles: List<android.net.Uri> = emptyList()
@@ -81,6 +85,7 @@ class ChatViewModel @Inject constructor(
     private val apiKeyRepository: ApiKeyRepository,
     private val aiConfigRepository: com.yourown.ai.data.repository.AIConfigRepository,
     private val systemPromptRepository: com.yourown.ai.data.repository.SystemPromptRepository,
+    private val personaRepository: com.yourown.ai.data.repository.PersonaRepository,
     private val settingsManager: SettingsManager,
     private val llamaService: LlamaService,
     private val keyboardSoundManager: com.yourown.ai.domain.service.KeyboardSoundManager,
@@ -100,6 +105,7 @@ class ChatViewModel @Inject constructor(
         observeSettings()
         loadSavedModel()
         observeSystemPrompts()
+        observePersonas()
         initializeDefaultPrompts()
         observePinnedModels()
         observeKeyboardSoundSettings()
@@ -115,6 +121,26 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             systemPromptRepository.getAllPrompts().collect { prompts ->
                 _uiState.update { it.copy(systemPrompts = prompts) }
+            }
+        }
+    }
+    
+    private fun observePersonas() {
+        viewModelScope.launch {
+            personaRepository.getAllPersonas().collect { personas ->
+                // Дедупликация по systemPromptId
+                val uniquePersonas = personas
+                    .groupBy { it.systemPromptId }
+                    .mapValues { (_, duplicates) -> 
+                        // Если есть дубликаты - берем самую новую (по updatedAt)
+                        duplicates.maxByOrNull { it.updatedAt } ?: duplicates.first()
+                    }
+                    .values
+                    .toList()
+                
+                // Создаем Map<systemPromptId, Persona> для быстрого поиска
+                val personaMap = uniquePersonas.associateBy { it.systemPromptId }
+                _uiState.update { it.copy(personas = personaMap) }
             }
         }
     }
@@ -263,6 +289,46 @@ class ChatViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Получить эффективный AIConfig:
+     * - Если активна Persona - использовать её настройки
+     * - Иначе - использовать глобальный конфиг
+     */
+    private fun getEffectiveConfig(): AIConfig {
+        val activePersona = _uiState.value.activePersona
+        val globalConfig = _uiState.value.aiConfig
+        
+        return if (activePersona != null) {
+            // Создаем AIConfig из настроек Persona
+            AIConfig(
+                temperature = activePersona.temperature,
+                topP = activePersona.topP,
+                maxTokens = activePersona.maxTokens,
+                deepEmpathy = activePersona.deepEmpathy,
+                memoryEnabled = activePersona.memoryEnabled,
+                ragEnabled = activePersona.ragEnabled,
+                messageHistoryLimit = activePersona.messageHistoryLimit,
+                systemPrompt = activePersona.systemPrompt,
+                deepEmpathyPrompt = activePersona.deepEmpathyPrompt,
+                deepEmpathyAnalysisPrompt = activePersona.deepEmpathyAnalysisPrompt,
+                memoryExtractionPrompt = activePersona.memoryExtractionPrompt,
+                contextInstructions = activePersona.contextInstructions,
+                memoryInstructions = activePersona.memoryInstructions,
+                ragInstructions = activePersona.ragInstructions,
+                swipeMessagePrompt = activePersona.swipeMessagePrompt,
+                memoryLimit = activePersona.memoryLimit,
+                memoryMinAgeDays = activePersona.memoryMinAgeDays,
+                memoryTitle = activePersona.memoryTitle,
+                ragChunkSize = activePersona.ragChunkSize,
+                ragChunkOverlap = activePersona.ragChunkOverlap,
+                ragChunkLimit = activePersona.ragChunkLimit,
+                ragTitle = activePersona.ragTitle
+            )
+        } else {
+            globalConfig
+        }
+    }
+    
     fun togglePinnedModel(model: ModelProvider) {
         viewModelScope.launch {
             settingsManager.togglePinnedModel(model.getModelKey())
@@ -272,25 +338,90 @@ class ChatViewModel @Inject constructor(
     // ===== CONVERSATION MANAGEMENT =====
     
     fun showSourceChatDialog() {
-        _uiState.update { it.copy(showSourceChatDialog = true, selectedSourceChatId = null) }
+        _uiState.update { it.copy(showSourceChatDialog = true, selectedSourceChatId = null, selectedNewChatPersonaId = null) }
     }
     
     fun hideSourceChatDialog() {
-        _uiState.update { it.copy(showSourceChatDialog = false, selectedSourceChatId = null) }
+        _uiState.update { it.copy(showSourceChatDialog = false, selectedSourceChatId = null, selectedNewChatPersonaId = null) }
     }
     
     fun selectSourceChat(chatId: String?) {
         _uiState.update { it.copy(selectedSourceChatId = chatId) }
     }
     
+    fun selectNewChatPersona(personaId: String?) {
+        _uiState.update { it.copy(selectedNewChatPersonaId = personaId) }
+    }
+    
     suspend fun createNewConversation(sourceConversationId: String? = null): String {
+        val selectedPersonaId = _uiState.value.selectedNewChatPersonaId
+        
         val id = conversationManager.createNewConversation(
             conversationCount = _uiState.value.conversations.size,
             sourceConversationId = sourceConversationId
         )
         
+        // If persona selected, apply it to the new conversation
+        var personaModel: ModelProvider? = null
+        if (selectedPersonaId != null) {
+            val persona = personaRepository.getPersonaById(selectedPersonaId)
+            if (persona != null) {
+                conversationManager.updateConversationWithPersona(
+                    conversationId = id,
+                    systemPromptId = persona.systemPromptId,
+                    systemPrompt = persona.systemPrompt,
+                    personaId = persona.id
+                )
+                Log.d("ChatViewModel", "Applied persona '${persona.name}' to new conversation")
+                
+                // Restore preferred model from persona if set
+                if (persona.preferredModelId != null && persona.preferredProvider != null) {
+                    Log.d("ChatViewModel", "Attempting to restore model: modelId=${persona.preferredModelId}, provider=${persona.preferredProvider}")
+                    Log.d("ChatViewModel", "Provider string length: ${persona.preferredProvider!!.length}, exact value: '${persona.preferredProvider}'")
+                    
+                    personaModel = conversationManager.restoreModelFromConversation(
+                        persona.preferredModelId!!,
+                        persona.preferredProvider!!
+                    )
+                    
+                    if (personaModel != null) {
+                        Log.d("ChatViewModel", "Successfully restored model from persona: ${persona.preferredModelId}")
+                        
+                        // Save model to conversation immediately
+                        val modelName = when (personaModel) {
+                            is ModelProvider.Local -> personaModel.model.modelName
+                            is ModelProvider.API -> personaModel.modelId
+                        }
+                        val providerName = when (personaModel) {
+                            is ModelProvider.Local -> "local"
+                            is ModelProvider.API -> personaModel.provider.displayName
+                        }
+                        
+                        conversationManager.updateConversationModel(
+                            conversationId = id,
+                            modelName = modelName,
+                            providerName = providerName
+                        )
+                        Log.d("ChatViewModel", "Saved model to conversation: model=$modelName, provider=$providerName")
+                    } else {
+                        Log.w("ChatViewModel", "Failed to restore model from persona: modelId=${persona.preferredModelId}, provider='${persona.preferredProvider}'")
+                    }
+                } else {
+                    Log.d("ChatViewModel", "Persona has no preferred model: modelId=${persona.preferredModelId}, provider=${persona.preferredProvider}")
+                }
+            }
+        }
+        
         selectConversation(id)
-        _uiState.update { it.copy(selectedModel = null) }
+        
+        // Set model from persona if available, otherwise clear selection
+        _uiState.update { it.copy(selectedModel = personaModel) }
+        
+        // If it's a local model, load it in background
+        if (personaModel is ModelProvider.Local) {
+            loadModelInBackground(personaModel.model)
+        }
+        
         closeDrawer()
         return id
     }
@@ -323,6 +454,15 @@ class ChatViewModel @Inject constructor(
                             }
                         } else {
                             _uiState.update { it.copy(selectedModel = null) }
+                        }
+                        
+                        // Restore active Persona from conversation
+                        if (conv.personaId != null) {
+                            val persona = personaRepository.getPersonaById(conv.personaId!!)
+                            _uiState.update { it.copy(activePersona = persona) }
+                            Log.i("ChatViewModel", "Restored Persona: ${persona?.name}")
+                        } else {
+                            _uiState.update { it.copy(activePersona = null) }
                         }
                     }
                 }
@@ -545,7 +685,6 @@ class ChatViewModel @Inject constructor(
 
             // Объявляем переменные ДО блока try
             val aiMessageId = UUID.randomUUID().toString()
-            var aiMessageCreated = false
 
             try {
                 // Process images
@@ -599,17 +738,24 @@ class ChatViewModel @Inject constructor(
                 kotlinx.coroutines.delay(50)
 
                 // 5. Строим историю и context
-                val config = _uiState.value.aiConfig
+                val config = getEffectiveConfig() // Используем настройки Persona, если она активна
                 val currentMessages = _uiState.value.messages
                 val sourceConvId = _uiState.value.currentConversation?.sourceConversationId
 
+                // Добавляем текущее user сообщение в список (Flow еще не обновился)
+                val messagesWithCurrent = currentMessages + finalUserMessage
+
                 val allMessages = messageHandler.buildMessageHistoryWithInheritance(
-                    currentMessages = currentMessages,
+                    currentMessages = messagesWithCurrent,
                     sourceConversationId = sourceConvId,
                     messageHistoryLimit = config.messageHistoryLimit
                 )
 
                 val userContextContent = _uiState.value.userContext.content
+                val activePersonaId = _uiState.value.activePersona?.id
+                val activePersonaName = _uiState.value.activePersona?.name
+                
+                Log.d("ChatViewModel", "Building context for logs: activePersonaId=$activePersonaId, activePersonaName=$activePersonaName")
 
                 val enhancedContextResult = messageHandler.buildEnhancedContextForLogs(
                     baseContext = userContextContent,
@@ -617,7 +763,8 @@ class ChatViewModel @Inject constructor(
                     config = config,
                     selectedModel = selectedModel,
                     conversationId = conversationId,
-                    swipeMessage = replyMessage
+                    swipeMessage = replyMessage,
+                    personaId = activePersonaId
                 )
 
                 val requestLogs = messageHandler.buildRequestLogs(
@@ -630,7 +777,7 @@ class ChatViewModel @Inject constructor(
                     ragChunksUsed = enhancedContextResult.ragChunksUsed
                 )
 
-                // 6. Создаём placeholder для AI ответа
+                // 6. Создаём структуру AI сообщения (БЕЗ сохранения в БД!)
                 val modelName = when (selectedModel) {
                     is ModelProvider.Local -> selectedModel.model.modelName
                     is ModelProvider.API -> selectedModel.modelId
@@ -652,14 +799,10 @@ class ChatViewModel @Inject constructor(
                     requestLogs = requestLogs
                 )
 
-                messageRepository.addMessage(aiMessage)
-                aiMessageCreated = true
-
-                // Задержка для AI сообщения
-                kotlinx.coroutines.delay(50)
-
-                // 7. Генерируем ответ со streaming
+                // 7. Генерируем ответ со streaming (ТОЛЬКО в UI state!)
                 val responseBuilder = StringBuilder()
+                
+                Log.d("ChatViewModel", "Calling sendMessage with personaId=$activePersonaId")
 
                 messageHandler.sendMessage(
                     userMessage = finalUserMessage,
@@ -667,36 +810,55 @@ class ChatViewModel @Inject constructor(
                     config = config,
                     userContext = userContextContent,
                     allMessages = allMessages,
-                    swipeMessage = replyMessage
+                    swipeMessage = replyMessage,
+                    personaId = activePersonaId
                 ).collect { chunk ->
                     responseBuilder.append(chunk)
 
                     keyboardSoundManager.playTypingForToken(chunk)
 
+                    // Обновляем ТОЛЬКО UI state, НЕ БД
                     val updatedMessage = aiMessage.copy(
                         content = responseBuilder.toString().trim()
                     )
 
-                    messageRepository.updateMessage(updatedMessage)
+                    _uiState.update { it.copy(streamingMessage = updatedMessage) }
                 }
 
-                // Сохраняем финальное сообщение
+                // 8. После завершения стрима - сохраняем в БД ОДИН РАЗ
                 val finalMessage = aiMessage.copy(
                     content = responseBuilder.toString().trim()
                 )
-                messageRepository.updateMessage(finalMessage)
+                
+                // Очищаем streaming message И isLoading для плавного перехода
+                _uiState.update { 
+                    it.copy(
+                        streamingMessage = null,
+                        isLoading = false
+                    ) 
+                }
+                
+                // Небольшая задержка для плавной анимации появления кнопок
+                kotlinx.coroutines.delay(50)
+                
+                // Сохраняем в БД - это вызовет появление кнопок
+                messageRepository.addMessage(finalMessage)
+                
+                _uiState.update { it.copy(shouldScrollToBottom = true) }
 
                 // Извлекаем memory если включено
                 if (config.memoryEnabled) {
+                    val memoryPersonaId = _uiState.value.activePersona?.id
+                    Log.d("ChatViewModel", "Extracting memory with personaId=$memoryPersonaId")
+                    
                     messageHandler.extractAndSaveMemory(
                         userMessage = finalUserMessage,
                         selectedModel = selectedModel,
                         config = config,
-                        conversationId = conversationId
+                        conversationId = conversationId,
+                        personaId = memoryPersonaId
                     )
                 }
-
-                _uiState.update { it.copy(shouldScrollToBottom = true) }
 
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error generating response", e)
@@ -709,17 +871,20 @@ class ChatViewModel @Inject constructor(
 
                 _uiState.update {
                     it.copy(
+                        streamingMessage = null,
+                        isLoading = false,
                         showErrorDialog = true,
                         errorDetails = ErrorDetails(
                             errorMessage = e.message ?: "Unknown error",
                             userMessageId = userMessage.id,
                             userMessageContent = userMessage.content,
-                            assistantMessageId = if (aiMessageCreated) aiMessageId else "",
+                            assistantMessageId = "",
                             modelName = errorModelName
                         )
                     )
                 }
             } finally {
+                // Гарантируем что isLoading выключен (на случай неожиданных ошибок)
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
@@ -924,8 +1089,38 @@ class ChatViewModel @Inject constructor(
             val conversationId = _uiState.value.currentConversationId
             
             if (prompt != null && conversationId != null) {
-                conversationManager.updateConversationSystemPrompt(conversationId, promptId, prompt.content)
-                _uiState.update { it.copy(selectedSystemPromptId = promptId) }
+                // Проверяем, есть ли Persona, связанная с этим SystemPrompt
+                val linkedPersona = personaRepository.getPersonaBySystemPromptId(promptId)
+                
+                Log.d("ChatViewModel", "selectSystemPrompt: promptId=$promptId, linkedPersona=${linkedPersona?.name}")
+                
+                if (linkedPersona != null) {
+                    // Есть Persona - применяем её настройки
+                    conversationManager.updateConversationWithPersona(conversationId, promptId, prompt.content, linkedPersona.id)
+                    
+                    // Устанавливаем активную Persona
+                    _uiState.update { 
+                        it.copy(
+                            selectedSystemPromptId = promptId,
+                            activePersona = linkedPersona
+                        ) 
+                    }
+                    
+                    Log.d("ChatViewModel", "Active persona set to: ${linkedPersona.name}")
+                    
+                    Log.i("ChatViewModel", "Applied Persona settings: ${linkedPersona.name}")
+                } else {
+                    // Нет Persona - используем обычный SystemPrompt
+                    conversationManager.updateConversationSystemPrompt(conversationId, promptId, prompt.content)
+                    
+                    // Сбрасываем активную Persona
+                    _uiState.update { 
+                        it.copy(
+                            selectedSystemPromptId = promptId,
+                            activePersona = null
+                        ) 
+                    }
+                }
             }
             
             hideSystemPromptDialog()

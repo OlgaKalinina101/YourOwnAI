@@ -15,8 +15,8 @@ class MemoryManager @Inject constructor(
     /**
      * Update existing memory
      */
-    suspend fun updateMemory(memory: MemoryEntry, fact: String) {
-        val updated = memory.copy(fact = fact)
+    suspend fun updateMemory(memory: MemoryEntry, fact: String, personaId: String? = null) {
+        val updated = memory.copy(fact = fact, personaId = personaId)
         memoryRepository.updateMemory(updated)
     }
     

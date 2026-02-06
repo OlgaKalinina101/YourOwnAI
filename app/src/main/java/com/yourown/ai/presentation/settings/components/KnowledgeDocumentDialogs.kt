@@ -331,11 +331,43 @@ private fun DocumentListItem(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = document.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = document.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        
+                        // Badge for persona linking
+                        if (document.linkedPersonaIds.isEmpty()) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = "For all",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        } else {
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = "${document.linkedPersonaIds.size} persona${if (document.linkedPersonaIds.size > 1) "s" else ""}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "${document.sizeBytes / 1024} KB • ${formatDate(document.createdAt)}",
@@ -405,8 +437,9 @@ private fun DocumentListItem(
 @Composable
 fun EditDocumentDialog(
     document: KnowledgeDocument?,
+    personas: List<com.yourown.ai.domain.model.Persona>,
     onDismiss: () -> Unit,
-    onSave: (id: String, name: String, content: String) -> Unit
+    onSave: (id: String, name: String, content: String, linkedPersonaIds: List<String>) -> Unit
 ) {
     val context = LocalContext.current
     var name by remember(document) { mutableStateOf(document?.name ?: "") }
@@ -494,6 +527,36 @@ fun EditDocumentDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
+                // Note about persona linking
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Link documents to Personas in Settings → Personas",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 // Content field
                 OutlinedTextField(
                     value = content,
@@ -531,7 +594,7 @@ fun EditDocumentDialog(
                     }
                     Button(
                         onClick = {
-                            onSave(document?.id ?: "", name, content)
+                            onSave(document?.id ?: "", name, content, document?.linkedPersonaIds ?: emptyList())
                         },
                         modifier = Modifier.weight(1f),
                         enabled = name.isNotBlank() && content.isNotBlank()

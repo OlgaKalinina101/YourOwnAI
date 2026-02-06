@@ -181,6 +181,7 @@ private fun SearchResultItem(
 @Composable
 fun SystemPromptDialog(
     systemPrompts: List<com.yourown.ai.domain.model.SystemPrompt>,
+    personaMap: Map<String, com.yourown.ai.domain.model.Persona>,
     selectedPromptId: String?,
     onDismiss: () -> Unit,
     onSelectPrompt: (String) -> Unit
@@ -231,6 +232,7 @@ fun SystemPromptDialog(
                     items(systemPrompts) { prompt ->
                         SystemPromptItem(
                             prompt = prompt,
+                            persona = personaMap[prompt.id],
                             isSelected = prompt.id == selectedPromptId,
                             onClick = {
                                 onSelectPrompt(prompt.id)
@@ -246,6 +248,7 @@ fun SystemPromptDialog(
 @Composable
 private fun SystemPromptItem(
     prompt: com.yourown.ai.domain.model.SystemPrompt,
+    persona: com.yourown.ai.domain.model.Persona?,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -292,6 +295,20 @@ private fun SystemPromptItem(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    
+                    if (persona != null) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.tertiary,
+                            shape = MaterialTheme.shapes.extraSmall
+                        ) {
+                            Text(
+                                text = "Persona",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiary
                             )
                         }
                     }

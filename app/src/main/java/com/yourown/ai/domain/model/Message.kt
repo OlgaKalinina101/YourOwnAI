@@ -60,6 +60,7 @@ data class Conversation(
     val title: String,
     val systemPrompt: String,
     val systemPromptId: String? = null,
+    val personaId: String? = null,  // ID активной Persona
     val model: String,
     val provider: String,
     val createdAt: Long,

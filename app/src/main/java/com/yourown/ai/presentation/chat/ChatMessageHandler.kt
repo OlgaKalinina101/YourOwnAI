@@ -30,10 +30,13 @@ class ChatMessageHandler @Inject constructor(
         config: AIConfig,
         userContext: String,
         allMessages: List<Message>,
-        swipeMessage: Message? = null
+        swipeMessage: Message? = null,
+        personaId: String? = null
     ): Flow<String> = flow {
         // Add user message to repository
         messageRepository.addMessage(userMessage)
+        
+        Log.d("ChatMessageHandler", "sendMessage: personaId=$personaId")
         
         // Build enhanced context with Deep Empathy, Memory, and RAG
         val enhancedContextResult = contextBuilder.buildEnhancedContext(
@@ -42,7 +45,8 @@ class ChatMessageHandler @Inject constructor(
             config = config,
             selectedModel = selectedModel,
             conversationId = userMessage.conversationId,
-            swipeMessage = swipeMessage
+            swipeMessage = swipeMessage,
+            personaId = personaId
         )
         
         // Choose system prompt based on model type
@@ -72,7 +76,8 @@ class ChatMessageHandler @Inject constructor(
         config: AIConfig,
         selectedModel: ModelProvider,
         conversationId: String,
-        swipeMessage: Message? = null
+        swipeMessage: Message? = null,
+        personaId: String? = null
     ): EnhancedContextResult {
         return contextBuilder.buildEnhancedContext(
             baseContext = baseContext,
@@ -80,7 +85,8 @@ class ChatMessageHandler @Inject constructor(
             config = config,
             selectedModel = selectedModel,
             conversationId = conversationId,
-            swipeMessage = swipeMessage
+            swipeMessage = swipeMessage,
+            personaId = personaId
         )
     }
     
@@ -91,10 +97,11 @@ class ChatMessageHandler @Inject constructor(
         userMessage: Message,
         selectedModel: ModelProvider,
         config: AIConfig,
-        conversationId: String
+        conversationId: String,
+        personaId: String? = null
     ) {
         try {
-            Log.d("ChatMessageHandler", "Starting memory extraction for message: ${userMessage.id}")
+            Log.d("ChatMessageHandler", "Starting memory extraction for message: ${userMessage.id}, personaId=$personaId")
             
             // Get memory extraction prompt from config (user can customize it)
             val memoryPrompt = config.memoryExtractionPrompt
@@ -133,12 +140,14 @@ class ChatMessageHandler @Inject constructor(
             val memoryEntry = com.yourown.ai.domain.model.MemoryEntry.parseFromResponse(
                 response = memoryResponse,
                 conversationId = conversationId,
-                messageId = userMessage.id
+                messageId = userMessage.id,
+                personaId = personaId
             )
             
             if (memoryEntry != null) {
+                Log.d("ChatMessageHandler", "Parsed memory entry: personaId=${memoryEntry.personaId}, fact=${memoryEntry.fact}")
                 memoryRepository.insertMemory(memoryEntry)
-                Log.i("ChatMessageHandler", "Memory saved: ${memoryEntry.fact}")
+                Log.i("ChatMessageHandler", "Memory saved with personaId=${memoryEntry.personaId}: ${memoryEntry.fact}")
             } else {
                 Log.d("ChatMessageHandler", "No key information extracted")
             }

@@ -22,6 +22,7 @@ import com.yourown.ai.presentation.settings.sections.*
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
+    onNavigateToPersonaDetail: (systemPromptId: String) -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -46,6 +47,21 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Persona Section
+            PersonaSection(
+                systemPrompts = uiState.systemPrompts,
+                personas = uiState.personas
+                    .filter { persona ->
+                        // Исключаем personas, связанные с default prompts
+                        val linkedPrompt = uiState.systemPrompts.find { it.id == persona.systemPromptId }
+                        linkedPrompt?.isDefault == false
+                    }
+                    .associateBy { it.systemPromptId },
+                onSelectSystemPrompt = { systemPromptId ->
+                    onNavigateToPersonaDetail(systemPromptId)
+                }
+            )
+            
             // API Keys Section
             ApiKeysSection(
                 apiKeys = uiState.apiKeys,
@@ -91,7 +107,8 @@ fun SettingsScreen(
                 onRecalculateEmbeddings = viewModel::recalculateAllEmbeddings,
                 isRecalculating = uiState.isRecalculatingEmbeddings,
                 recalculationProgress = uiState.recalculationProgress,
-                recalculationProgressPercent = uiState.recalculationProgressPercent
+                recalculationProgressPercent = uiState.recalculationProgressPercent,
+                memoryProcessingStatus = uiState.memoryProcessingStatus
             )
             
             // Memory Section
@@ -149,6 +166,13 @@ fun SettingsScreen(
         com.yourown.ai.presentation.settings.components.SystemPromptsListDialog(
             prompts = promptsList,
             promptType = uiState.promptTypeFilter!!,
+            personas = uiState.personas
+                .filter { persona ->
+                    // Исключаем personas, связанные с default prompts
+                    val linkedPrompt = uiState.systemPrompts.find { it.id == persona.systemPromptId }
+                    linkedPrompt?.isDefault == false
+                }
+                .associateBy { it.systemPromptId },
             onDismiss = viewModel::hideSystemPromptsListDialog,
             onAddNew = { viewModel.showEditPromptDialog(null) },
             onEdit = { viewModel.showEditPromptDialog(it) },
@@ -192,9 +216,10 @@ fun SettingsScreen(
     if (uiState.showEditDocumentDialog) {
         com.yourown.ai.presentation.settings.components.EditDocumentDialog(
             document = uiState.selectedDocumentForEdit,
+            personas = uiState.personas,
             onDismiss = viewModel::hideEditDocumentDialog,
-            onSave = { id, name, content ->
-                viewModel.saveDocument(id, name, content)
+            onSave = { id, name, content, linkedPersonaIds ->
+                viewModel.saveDocument(id, name, content, linkedPersonaIds)
             }
         )
     }
@@ -248,6 +273,8 @@ fun SettingsScreen(
     if (uiState.showMemoriesDialog) {
         com.yourown.ai.presentation.settings.components.MemoriesDialog(
             memories = uiState.memories,
+            personas = uiState.personas,
+            processingStatus = uiState.memoryProcessingStatus,
             onDismiss = viewModel::hideMemoriesDialog,
             onEditMemory = viewModel::showEditMemoryDialog,
             onDeleteMemory = viewModel::deleteMemory
@@ -258,8 +285,12 @@ fun SettingsScreen(
     if (uiState.showEditMemoryDialog && uiState.selectedMemoryForEdit != null) {
         com.yourown.ai.presentation.settings.components.EditMemoryDialog(
             memory = uiState.selectedMemoryForEdit!!,
+            personas = uiState.personas,
+            processingStatus = uiState.memoryProcessingStatus,
             onDismiss = viewModel::hideEditMemoryDialog,
-            onSave = viewModel::saveMemory
+            onSave = { fact, personaId ->
+                viewModel.saveMemory(fact, personaId)
+            }
         )
     }
     

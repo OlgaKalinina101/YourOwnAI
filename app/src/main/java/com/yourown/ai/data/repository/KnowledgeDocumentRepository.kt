@@ -39,7 +39,11 @@ class KnowledgeDocumentRepository @Inject constructor(
     /**
      * Create new document and process it for RAG
      */
-    suspend fun createDocument(name: String, content: String): Result<String> {
+    suspend fun createDocument(
+        name: String, 
+        content: String, 
+        linkedPersonaIds: List<String> = emptyList()
+    ): Result<String> {
         return try {
             val now = System.currentTimeMillis()
             val documentId = UUID.randomUUID().toString()
@@ -49,7 +53,8 @@ class KnowledgeDocumentRepository @Inject constructor(
                 content = content,
                 createdAt = now,
                 updatedAt = now,
-                sizeBytes = content.toByteArray().size
+                sizeBytes = content.toByteArray().size,
+                linkedPersonaIds = com.google.gson.Gson().toJson(linkedPersonaIds)
             )
             dao.insertDocument(entity)
             

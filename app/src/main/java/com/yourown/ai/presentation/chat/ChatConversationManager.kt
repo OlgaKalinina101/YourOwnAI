@@ -93,9 +93,27 @@ class ChatConversationManager @Inject constructor(
     }
     
     /**
+     * Update conversation with Persona (includes SystemPrompt + personaId)
+     */
+    suspend fun updateConversationWithPersona(
+        conversationId: String,
+        systemPromptId: String,
+        systemPrompt: String,
+        personaId: String
+    ) {
+        conversationRepository.updateConversationSystemPrompt(conversationId, systemPromptId, systemPrompt)
+        conversationRepository.updateConversationPersona(conversationId, personaId)
+        // Increment usage count for both SystemPrompt and Persona
+        systemPromptRepository.incrementUsageCount(systemPromptId)
+        Log.i("ChatConversationManager", "Updated conversation with persona: $conversationId, persona: $personaId")
+    }
+    
+    /**
      * Restore model from conversation metadata
      */
     fun restoreModelFromConversation(modelName: String, providerName: String): ModelProvider? {
+        Log.d("ChatConversationManager", "Attempting to restore model: modelName=$modelName, providerName=$providerName")
+        
         return when (providerName) {
             "local" -> {
                 // Find local model by name
@@ -103,23 +121,26 @@ class ChatConversationManager @Inject constructor(
                     ModelProvider.Local(it)
                 }
             }
-            "Deepseek" -> {
+            "Deepseek", "DEEPSEEK" -> {
                 // Find Deepseek model
                 DeepseekModel.entries.find { it.modelId == modelName }?.toModelProvider()
             }
-            "OpenAI" -> {
+            "OpenAI", "OPENAI" -> {
                 // Find OpenAI model
                 OpenAIModel.entries.find { it.modelId == modelName }?.toModelProvider()
             }
-            "OpenRouter" -> {
+            "OpenRouter", "OPENROUTER" -> {
                 // Find OpenRouter model
                 OpenRouterModel.entries.find { it.modelId == modelName }?.toModelProvider()
             }
-            "x.ai (Grok)" -> {
+            "x.ai (Grok)", "XAI" -> {
                 // Find x.ai model
                 XAIModel.entries.find { it.modelId == modelName }?.toModelProvider()
             }
-            else -> null
+            else -> {
+                Log.w("ChatConversationManager", "Unknown provider: $providerName")
+                null
+            }
         }
     }
     

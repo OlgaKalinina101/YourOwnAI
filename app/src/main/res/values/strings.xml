@@ -25,4 +25,41 @@
     
     <!-- Privacy -->
     <string name="privacy_note">All settings are stored locally on your device. No data is sent to any server.</string>
+
+    <!-- Home Screen -->
+    <string name="home_import_success">Chat imported successfully!</string>
+    <string name="home_file_loaded">File loaded: %d characters</string>
+    <string name="home_file_error">Error loading file</string>
+    <string name="home_file_picker_cancelled">File picker cancelled or returned null</string>
+    <string name="home_no_conversations_title">No conversations yet</string>
+    <string name="home_no_conversations_subtitle">Start a new chat to begin talking with your AI</string>
+    <string name="home_getting_started_title">Getting Started</string>
+    <string name="home_step1_api_key">Add your API key in Settings</string>
+    <string name="home_step2_create_conversation">Create a new conversation</string>
+    <string name="home_step3_customize_prompts">Customize system prompts</string>
+    <string name="home_fab_new_chat">New Chat</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_api_keys_title">API Keys</string>
+    <string name="settings_api_keys_subtitle">Configure your AI providers</string>
+
+    <string name="api_key_dialog_title">Add %s API Key</string>
+    <string name="api_key_dialog_text">Enter your API key to use %s</string>
+    <string name="api_key_help_hint">Your key is stored encrypted on your device</string>
+    <string name="api_key_confirm">Save</string>
+    <string name="api_key_dismiss">Cancel</string>
+
+    <string name="api_key_item_edit">Edit</string>
+    <string name="api_key_item_delete">Delete</string>
+    <string name="api_key_item_add">Add</string>
+    <string name="add_custom_provider">Add custom provider</string>
+    <string name="download_local_model">Download Local Model</string>
+
+    <string name="local_models_dialog_header">Local AI Models</string>
+    <string name="local_models_dialog_text">Run AI on your device, no internet needed</string>
+    <string name="local_models_info_card">Models are downloaded from Hugging Face and stored locally</string>
+
+    <string name="model_qwen_1_7b">Fast and efficient, good for quick responses</string>
+    <string name="model_llama_3_2_3b">More capable, better quality responses</string>
 </resources>

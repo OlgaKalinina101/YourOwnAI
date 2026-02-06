@@ -192,6 +192,14 @@ interface KnowledgeDocumentDao {
     @Query("SELECT * FROM knowledge_documents WHERE id = :id")
     suspend fun getDocumentById(id: String): KnowledgeDocumentEntity?
     
+    // Документы, привязанные к конкретной persona
+    @Query("SELECT * FROM knowledge_documents WHERE linkedPersonaIds LIKE '%\"' || :personaId || '\"%' ORDER BY createdAt DESC")
+    fun getDocumentsByPersonaId(personaId: String): Flow<List<KnowledgeDocumentEntity>>
+    
+    // Глобальные документы (не привязанные ни к одной persona)
+    @Query("SELECT * FROM knowledge_documents WHERE linkedPersonaIds = '[]' ORDER BY createdAt DESC")
+    fun getGlobalDocuments(): Flow<List<KnowledgeDocumentEntity>>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDocument(document: KnowledgeDocumentEntity)
     
@@ -203,4 +211,37 @@ interface KnowledgeDocumentDao {
     
     @Query("DELETE FROM knowledge_documents WHERE id = :id")
     suspend fun deleteById(id: String)
+}
+
+@Dao
+interface PersonaDao {
+    @Query("SELECT * FROM personas ORDER BY createdAt DESC")
+    fun getAllPersonas(): Flow<List<PersonaEntity>>
+    
+    @Query("SELECT * FROM personas WHERE id = :id")
+    suspend fun getPersonaById(id: String): PersonaEntity?
+    
+    @Query("SELECT * FROM personas WHERE id = :id")
+    fun observePersonaById(id: String): Flow<PersonaEntity?>
+    
+    @Query("SELECT * FROM personas WHERE isForApi = :isForApi ORDER BY name ASC")
+    fun getPersonasByType(isForApi: Boolean): Flow<List<PersonaEntity>>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPersona(persona: PersonaEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPersonas(personas: List<PersonaEntity>)
+    
+    @Update
+    suspend fun updatePersona(persona: PersonaEntity)
+    
+    @Delete
+    suspend fun deletePersona(persona: PersonaEntity)
+    
+    @Query("DELETE FROM personas WHERE id = :id")
+    suspend fun deletePersonaById(id: String)
+    
+    @Query("SELECT COUNT(*) FROM personas")
+    suspend fun getPersonaCount(): Int
 }

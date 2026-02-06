@@ -20,6 +20,7 @@ class VoiceMessagePreferences @Inject constructor(
     
     companion object {
         private const val KEY_MESSAGES = "messages"
+        private const val KEY_SELECTED_VOICE = "selected_voice"
         private const val MAX_MESSAGES = 100 // Limit history to 100 messages
     }
     
@@ -56,5 +57,19 @@ class VoiceMessagePreferences @Inject constructor(
      */
     fun clearMessages() {
         prefs.edit().remove(KEY_MESSAGES).apply()
+    }
+    
+    /**
+     * Save selected voice ID
+     */
+    fun saveSelectedVoice(voiceId: String) {
+        prefs.edit().putString(KEY_SELECTED_VOICE, voiceId).apply()
+    }
+    
+    /**
+     * Load selected voice ID (returns null if not set)
+     */
+    fun loadSelectedVoice(): String? {
+        return prefs.getString(KEY_SELECTED_VOICE, null)
     }
 }

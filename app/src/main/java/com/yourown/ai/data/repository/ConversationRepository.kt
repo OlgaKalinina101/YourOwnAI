@@ -131,6 +131,18 @@ class ConversationRepository @Inject constructor(
         }
     }
     
+    suspend fun updateConversationPersona(id: String, personaId: String) {
+        val conversation = conversationDao.getConversationById(id)
+        conversation?.let {
+            conversationDao.updateConversation(
+                it.copy(
+                    personaId = personaId,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+    
     /**
      * Update conversation's updatedAt timestamp
      * Called when a new message is added to keep conversations sorted by last activity

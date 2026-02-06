@@ -20,7 +20,8 @@ fun EmbeddingModelsSection(
     onRecalculateEmbeddings: () -> Unit,
     isRecalculating: Boolean,
     recalculationProgress: String?,
-    recalculationProgressPercent: Float
+    recalculationProgressPercent: Float,
+    memoryProcessingStatus: com.yourown.ai.data.repository.MemoryProcessingStatus = com.yourown.ai.data.repository.MemoryProcessingStatus.Idle
 ) {
     SettingsSection(
         title = "Embedding Models",
@@ -55,6 +56,57 @@ fun EmbeddingModelsSection(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text("Recalculate All Embeddings")
+        }
+        
+        // Memory processing status (during recalculation)
+        if (memoryProcessingStatus is com.yourown.ai.data.repository.MemoryProcessingStatus.Recalculating) {
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Memory Embeddings",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = memoryProcessingStatus.currentStep,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            text = "${memoryProcessingStatus.progress}%",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = memoryProcessingStatus.progress / 100f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
         
         // Show progress bar and text

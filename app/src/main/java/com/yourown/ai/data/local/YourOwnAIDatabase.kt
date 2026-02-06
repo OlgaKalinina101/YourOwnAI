@@ -18,6 +18,7 @@ import com.yourown.ai.data.local.entity.*
  * - UsageStats (статистика использования)
  * - SystemPrompts (системные промпты)
  * - KnowledgeDocuments (текстовые документы для контекста)
+ * - Personas (профили с настройками AI)
  */
 @Database(
     entities = [
@@ -30,8 +31,9 @@ import com.yourown.ai.data.local.entity.*
         UsageStatsEntity::class,
         SystemPromptEntity::class,
         KnowledgeDocumentEntity::class,
+        PersonaEntity::class,
     ],
-    version = 10,  // Increased: added fileAttachments to MessageEntity
+    version = 15,  // Increased: updated Conversation with personaId mapping
     exportSchema = true
 )
 abstract class YourOwnAIDatabase : RoomDatabase() {
@@ -44,6 +46,7 @@ abstract class YourOwnAIDatabase : RoomDatabase() {
     abstract fun usageStatsDao(): UsageStatsDao
     abstract fun systemPromptDao(): SystemPromptDao
     abstract fun knowledgeDocumentDao(): KnowledgeDocumentDao
+    abstract fun personaDao(): PersonaDao
     
     companion object {
         const val DATABASE_NAME = "yourown_ai_database"

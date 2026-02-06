@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -44,6 +45,7 @@ sealed class DocumentProcessingStatus {
 class DocumentEmbeddingRepository @Inject constructor(
     private val documentDao: DocumentDao,
     private val documentChunkDao: DocumentChunkDao,
+    private val knowledgeDocumentDao: com.yourown.ai.data.local.dao.KnowledgeDocumentDao,
     private val embeddingService: EmbeddingService,
     private val gson: Gson
 ) {
@@ -289,6 +291,105 @@ class DocumentEmbeddingRepository @Inject constructor(
             results.map { it.item.first to it.score }
         } catch (e: Exception) {
             Log.e(TAG, "Error searching similar chunks", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * Search similar chunks for a specific Persona
+     */
+    suspend fun searchSimilarChunksByPersona(
+        query: String,
+        personaId: String,
+        topK: Int = 5
+    ): List<Pair<DocumentChunkEntity, Float>> = withContext(Dispatchers.IO) {
+        try {
+            val queryEmbeddingResult = embeddingService.generateEmbedding(query)
+            if (queryEmbeddingResult.isFailure) return@withContext emptyList()
+            val queryEmbedding = queryEmbeddingResult.getOrNull() ?: return@withContext emptyList()
+            
+            // Get documents linked to this persona
+            val personaDocuments = knowledgeDocumentDao.getDocumentsByPersonaId(personaId).first()
+            val personaDocumentIds = personaDocuments.map { it.id }.toSet()
+            
+            // Get chunks only from persona documents
+            val personaChunks = documentChunkDao.getAllChunks()
+                .filter { it.documentId in personaDocumentIds && it.embedding != null }
+            
+            if (personaChunks.isEmpty()) return@withContext emptyList()
+            
+            val chunksWithEmbeddings = personaChunks.mapNotNull { chunk ->
+                try {
+                    val embeddingList = gson.fromJson(chunk.embedding, List::class.java) as List<Double>
+                    val embedding = embeddingList.map { it.toFloat() }.toFloatArray()
+                    chunk to embedding
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            
+            val results = SemanticSearchUtil.findSimilar(
+                query = query,
+                queryEmbedding = queryEmbedding,
+                items = chunksWithEmbeddings,
+                getText = { it.first.content },
+                getEmbedding = { it.second },
+                k = topK
+            )
+            
+            Log.d(TAG, "Found ${results.size} persona chunks")
+            results.map { it.item.first to it.score }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error searching persona chunks", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * Search similar chunks from global documents (not linked to any Persona)
+     */
+    suspend fun searchSimilarGlobalChunks(
+        query: String,
+        topK: Int = 5
+    ): List<Pair<DocumentChunkEntity, Float>> = withContext(Dispatchers.IO) {
+        try {
+            val queryEmbeddingResult = embeddingService.generateEmbedding(query)
+            if (queryEmbeddingResult.isFailure) return@withContext emptyList()
+            val queryEmbedding = queryEmbeddingResult.getOrNull() ?: return@withContext emptyList()
+            
+            // Get global documents (not linked to any persona)
+            val globalDocuments = knowledgeDocumentDao.getGlobalDocuments().first()
+            val globalDocumentIds = globalDocuments.map { it.id }.toSet()
+            
+            // Get chunks only from global documents
+            val globalChunks = documentChunkDao.getAllChunks()
+                .filter { it.documentId in globalDocumentIds && it.embedding != null }
+            
+            if (globalChunks.isEmpty()) return@withContext emptyList()
+            
+            val chunksWithEmbeddings = globalChunks.mapNotNull { chunk ->
+                try {
+                    val embeddingList = gson.fromJson(chunk.embedding, List::class.java) as List<Double>
+                    val embedding = embeddingList.map { it.toFloat() }.toFloatArray()
+                    chunk to embedding
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            
+            val results = SemanticSearchUtil.findSimilar(
+                query = query,
+                queryEmbedding = queryEmbedding,
+                items = chunksWithEmbeddings,
+                getText = { it.first.content },
+                getEmbedding = { it.second },
+                k = topK
+            )
+            
+            Log.d(TAG, "Found ${results.size} global chunks")
+            results.map { it.item.first to it.score }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error searching global chunks", e)
             emptyList()
         }
     }

@@ -180,8 +180,11 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **Rich markdown rendering**:
   - **bold**, *italic*, [clickable links](url)
   - > blockquotes for emphasis
-  - # Headings (H1, H2, H3)
+  - # Headings (H1, H2, H3, H4, H5, H6)
   - Horizontal rules (---, ***, ___)
+  - ` ```language\ncode\n``` ` code blocks with syntax highlighting
+  - `inline code` formatting
+  - Copy button for code blocks (one-click copy to clipboard)
 - **Message reply (swipe)** - Telegram-style message replies
   - Reply to any message with visual preview
   - Replied message shown in context above input
@@ -246,6 +249,25 @@ The app should feel like a **tool**, not a product with personality. It's your s
     - Thread-safe loading and generation (Mutex)
 
 **Total: 26 models with multimodal support (images/documents)!**
+
+#### 🎭 Persona System (NEW!)
+- **Persona-based AI** - create multiple AI personalities with unique settings
+- **Per-Persona configuration**:
+  - Linked System Prompt - each persona uses a specific prompt
+  - AI Settings - temperature, top-P, max tokens (inherits global by default)
+  - Preferred Model - link a specific AI model to each persona
+  - Memory Settings - persona-specific or shared memories
+  - RAG Documents - link knowledge documents to personas
+  - Flags - Memory enabled, RAG enabled, Deep Empathy
+- **Memory Isolation**:
+  - `useOnlyPersonaMemories` - isolate memories to specific persona
+  - `shareMemoriesGlobally` - control if persona's memories visible to others
+  - Persona-specific memory management and viewing
+- **Persona Selector** - choose persona when creating new chat or within existing chat
+- **Backward Compatible** - no persona selected = default system (global settings)
+- **Auto-save** - persona settings auto-save on any change
+- **Model Restoration** - persona's preferred model automatically selected in new chat
+- **RAG & Memory per Persona** - work even if global RAG/Memory is disabled
 
 #### ⚙️ AI Configuration
 - **System prompt editor** - customize AI personality
@@ -457,8 +479,33 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
 - Rich markdown rendering:
   - **bold**, *italic*, [links](url)
   - > blockquotes
-  - # Headings (H1, H2, H3)
+  - # Headings (H1-H6)
   - Horizontal rules (---, ***, ___)
+  - ` ```language\ncode\n``` ` code blocks with copy button
+  - `inline code` formatting
+
+### Using Personas (NEW!)
+1. **Create a Persona**:
+   - Settings → Personas → "+" button
+   - Link to existing System Prompt (or create new)
+   - Configure AI settings (or inherit from global)
+   - Select preferred model (optional)
+   - Enable Memory/RAG/Deep Empathy per persona
+2. **Memory Settings**:
+   - **Use Only Persona Memories** - isolate memories to this persona
+   - **Share Memories Globally** - let other personas see this persona's memories
+3. **Link Documents**:
+   - In Persona Detail screen, tap "Linked Documents"
+   - Select which RAG documents are available to this persona
+4. **Start Chat with Persona**:
+   - Tap "+ New Chat" on home screen
+   - Select Persona from dropdown (or "None" for default)
+   - Persona's preferred model automatically selected
+   - Chat uses persona's settings and linked documents
+5. **Switch Persona** (within chat):
+   - Tap persona selector at top-left (next to back button)
+   - Choose different persona
+   - Settings update immediately
 
 ### Switching Models
 - Tap model selector at top-left of chat (next to back button)
@@ -668,7 +715,8 @@ YourOwnAI/
 │   │   │   │   │   ├── KnowledgeDocumentRepository.kt
 │   │   │   │   │   ├── DocumentEmbeddingRepository.kt # RAG chunks + embeddings
 │   │   │   │   │   ├── LocalModelRepository.kt
-│   │   │   │   │   └── SystemPromptRepository.kt
+│   │   │   │   │   ├── SystemPromptRepository.kt
+│   │   │   │   │   └── PersonaRepository.kt               # Persona with linked prompts
 │   │   │   │   ├── service/
 │   │   │   │   │   ├── AIServiceImpl.kt              # Unified API service + multimodal routing
 │   │   │   │   │   ├── LlamaServiceImpl.kt           # Local model service
@@ -707,6 +755,10 @@ YourOwnAI/
 │   │   │   │   │   ├── SettingsViewModel.kt
 │   │   │   │   │   ├── SettingsDialogs.kt
 │   │   │   │   │   └── components/       # Advanced settings dialogs
+│   │   │   │   ├── persona/              # Persona management (NEW!)
+│   │   │   │   │   ├── PersonaDetailScreen.kt      # Edit persona settings
+│   │   │   │   │   ├── PersonaViewModel.kt         # Persona state management
+│   │   │   │   │   └── PersonaManagementScreen.kt  # List of personas
 │   │   │   │   ├── home/                 # Conversations list (sorted by time)
 │   │   │   │   └── theme/                # Material 3 theming
 │   │   │   ├── di/                       # Hilt modules
@@ -869,6 +921,16 @@ YourOwnAI/
   - [x] Smart detection of sentence endings
   - [x] File picker and image picker integration
   - [x] Base64 encoding and compression
+- [x] **Persona System** 🎭
+  - [x] Create multiple AI personalities
+  - [x] Per-persona system prompts
+  - [x] Per-persona AI settings and models
+  - [x] Memory isolation (useOnlyPersonaMemories, shareMemoriesGlobally)
+  - [x] RAG document linking per persona
+  - [x] Persona selector in new chat dialog
+  - [x] Auto-save persona settings
+  - [x] Model restoration from persona
+  - [x] Persona-specific memory management
 - [x] **UI improvements**
   - [x] Pin favorite models to top of list
   - [x] Grok-style message input (mic/send dynamic switching)
@@ -1021,6 +1083,36 @@ A: Yes! Use the three-dot menu in chat to export as text. To import, open the dr
 **Q: What is Context Inheritance and how do I use it?**
 A: Context Inheritance lets you "fork" a conversation - create a new chat that inherits message history from an existing chat. When you tap "+ New Chat", a dialog appears where you can select a source chat (or choose "None" for a fresh start). If you select a source, the last N message pairs (based on your Message History Limit setting, default 10) are automatically loaded into context. As you continue the new conversation, inherited messages are gradually replaced by new ones. This is useful for continuing a topic in a new context, switching AI models while keeping history, or branching off from a specific point in a conversation.
 
+**Q: What is the Persona system?**
+A: Personas let you create multiple AI personalities with unique settings. Each persona can have:
+- Its own system prompt (defining personality/behavior)
+- Specific AI settings (temperature, model, etc.)
+- Preferred AI model (auto-selected when creating chat)
+- Separate or shared memories
+- Linked knowledge documents (RAG)
+- Individual Memory/RAG/Deep Empathy flags
+
+When you create a new chat, select a persona from the dropdown. The chat will use that persona's settings. You can switch personas within existing chats. If no persona is selected, the app uses global settings (backward compatible).
+
+**Q: How do Persona memories work?**
+A: Each persona can have its own memory scope:
+- **`useOnlyPersonaMemories=true`** - Persona only sees its own memories (isolated)
+- **`useOnlyPersonaMemories=false`** - Persona sees its own + global memories (shared)
+- **`shareMemoriesGlobally=true`** - Persona's memories visible to other personas
+- **`shareMemoriesGlobally=false`** - Persona's memories private (not shared)
+
+This allows you to create personas with completely separate knowledge bases, or let them share information.
+
+**Q: Can I link specific documents to a Persona?**
+A: Yes! In Persona Detail screen, you can link RAG documents to specific personas. Documents can be:
+- Linked to one or more personas (persona-specific knowledge)
+- Not linked to any persona (global, available to all)
+
+When a persona is active, only its linked documents (+ global documents) are used for RAG context.
+
+**Q: Do I need to use Personas?**
+A: No! Personas are completely optional. If you don't select a persona when creating a chat, the app works exactly as before - using global system prompt and settings. Personas are for users who want to manage multiple AI personalities (e.g., work assistant, creative writer, companion).
+
 **Q: Can I contribute?**
 A: Absolutely! Fork the repo, make changes, and submit a PR. All contributions welcome.
 
@@ -1088,8 +1180,6 @@ The developers assume no liability for how this software is used.
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture and design patterns
 - [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute to the project
 - [SECURITY.md](SECURITY.md) - Security best practices and compliance
-- [CHANGELOG.md](CHANGELOG.md) - Version history and changes
-- [CHAT_IMPLEMENTATION_PLAN.md](CHAT_IMPLEMENTATION_PLAN.md) - Chat feature specifications
 - [LLAMA_CPP_INTEGRATION.md](LLAMA_CPP_INTEGRATION.md) - Local model integration details
 
 ---

@@ -36,7 +36,8 @@ data class MemoryEntry(
     val messageId: String,
     val fact: String,
     val createdAt: Long = System.currentTimeMillis(),
-    val isArchived: Boolean = false
+    val isArchived: Boolean = false,
+    val personaId: String? = null  // ID persona, в рамках которой создано воспоминание
 ) {
     companion object {
         /**
@@ -46,7 +47,8 @@ data class MemoryEntry(
         fun parseFromResponse(
             response: String,
             conversationId: String,
-            messageId: String
+            messageId: String,
+            personaId: String? = null
         ): MemoryEntry? {
             val trimmed = response.trim()
             
@@ -84,7 +86,8 @@ data class MemoryEntry(
                 id = generateId(),
                 conversationId = conversationId,
                 messageId = messageId,
-                fact = trimmed
+                fact = trimmed,
+                personaId = personaId
             )
         }
         

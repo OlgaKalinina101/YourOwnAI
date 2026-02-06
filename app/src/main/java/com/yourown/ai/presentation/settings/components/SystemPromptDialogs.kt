@@ -22,6 +22,7 @@ import com.yourown.ai.domain.model.SystemPrompt
 fun SystemPromptsListDialog(
     prompts: List<SystemPrompt>,
     promptType: PromptType,
+    personas: Map<String, com.yourown.ai.domain.model.Persona> = emptyMap(), // Map<systemPromptId, Persona>
     onDismiss: () -> Unit,
     onAddNew: () -> Unit,
     onEdit: (SystemPrompt) -> Unit,
@@ -105,6 +106,7 @@ fun SystemPromptsListDialog(
                         items(prompts, key = { it.id }) { prompt ->
                             PromptListItem(
                                 prompt = prompt,
+                                hasLinkedPersona = personas.containsKey(prompt.id),
                                 onEdit = { onEdit(prompt) },
                                 onDelete = { onDelete(prompt.id) },
                                 onSetDefault = { onSetDefault(prompt.id) }
@@ -120,6 +122,7 @@ fun SystemPromptsListDialog(
 @Composable
 private fun PromptListItem(
     prompt: SystemPrompt,
+    hasLinkedPersona: Boolean = false,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onSetDefault: () -> Unit
@@ -168,6 +171,20 @@ private fun PromptListItem(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    
+                    if (hasLinkedPersona) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            shape = MaterialTheme.shapes.extraSmall
+                        ) {
+                            Text(
+                                text = "Persona",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                         }
                     }
@@ -234,7 +251,15 @@ private fun PromptListItem(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("Delete prompt?") },
-            text = { Text("This action cannot be undone.") },
+            text = { 
+                Text(
+                    if (hasLinkedPersona) {
+                        "This will also delete the linked Persona and all its settings. This action cannot be undone."
+                    } else {
+                        "This action cannot be undone."
+                    }
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {

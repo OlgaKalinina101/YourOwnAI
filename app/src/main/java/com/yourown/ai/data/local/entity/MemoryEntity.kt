@@ -30,7 +30,8 @@ import com.yourown.ai.domain.prompt.AIPrompts
     indices = [
         Index("conversation_id"),
         Index("message_id"),
-        Index("created_at")
+        Index("created_at"),
+        Index("persona_id")
     ]
 )
 data class MemoryEntity(
@@ -53,7 +54,10 @@ data class MemoryEntity(
     val isArchived: Boolean = false,
     
     @ColumnInfo(name = "embedding")
-    val embedding: String? = null // Stored as comma-separated floats
+    val embedding: String? = null, // Stored as comma-separated floats
+    
+    @ColumnInfo(name = "persona_id")
+    val personaId: String? = null // ID persona, в рамках которой создано воспоминание
 )
 
 /**
@@ -66,7 +70,8 @@ fun MemoryEntity.toDomain(): MemoryEntry {
         messageId = messageId,
         fact = fact,
         createdAt = createdAt,
-        isArchived = isArchived
+        isArchived = isArchived,
+        personaId = personaId
     )
 }
 
@@ -78,6 +83,7 @@ fun MemoryEntry.toEntity(embedding: String? = null): MemoryEntity {
         fact = fact,
         createdAt = createdAt,
         isArchived = isArchived,
-        embedding = embedding
+        embedding = embedding,
+        personaId = personaId
     )
 }

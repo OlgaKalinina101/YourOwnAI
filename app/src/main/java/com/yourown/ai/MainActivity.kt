@@ -13,6 +13,8 @@ import com.yourown.ai.data.local.preferences.SettingsManager
 import com.yourown.ai.presentation.chat.ChatScreen
 import com.yourown.ai.presentation.home.HomeScreen
 import com.yourown.ai.presentation.onboarding.OnboardingScreen
+import com.yourown.ai.presentation.persona.PersonaDetailScreen
+import com.yourown.ai.presentation.persona.PersonaManagementScreen
 import com.yourown.ai.presentation.settings.SettingsScreen
 import com.yourown.ai.presentation.voice.VoiceChatScreen
 import com.yourown.ai.presentation.theme.YourOwnAITheme
@@ -41,7 +43,9 @@ enum class Screen {
     HOME,
     CHAT,
     VOICE_CHAT,
-    SETTINGS
+    SETTINGS,
+    PERSONA_MANAGEMENT,
+    PERSONA_DETAIL
 }
 
 @Composable
@@ -55,6 +59,7 @@ fun YourOwnAIApp(settingsManager: SettingsManager) {
     var currentScreen by remember { mutableStateOf(if (hasCompletedOnboarding) Screen.HOME else Screen.ONBOARDING) }
     var previousScreen by remember { mutableStateOf<Screen?>(null) }
     var currentChatId by remember { mutableStateOf<String?>(null) }
+    var currentPersonaId by remember { mutableStateOf<String?>(null) }
     
     // Update screen when onboarding completes
     LaunchedEffect(hasCompletedOnboarding) {
@@ -130,8 +135,39 @@ fun YourOwnAIApp(settingsManager: SettingsManager) {
                             // Return to previous screen, default to HOME if null
                             currentScreen = previousScreen ?: Screen.HOME
                             previousScreen = null
+                        },
+                        onNavigateToPersonaDetail = { systemPromptId ->
+                            currentPersonaId = systemPromptId // Используем systemPromptId как идентификатор
+                            previousScreen = Screen.SETTINGS
+                            currentScreen = Screen.PERSONA_DETAIL
                         }
                     )
+                }
+                
+                Screen.PERSONA_MANAGEMENT -> {
+                    PersonaManagementScreen(
+                        onNavigateBack = {
+                            currentScreen = previousScreen ?: Screen.SETTINGS
+                            previousScreen = null
+                        },
+                        onEditPersona = { persona ->
+                            currentPersonaId = persona.id
+                            previousScreen = Screen.PERSONA_MANAGEMENT
+                            currentScreen = Screen.PERSONA_DETAIL
+                        }
+                    )
+                }
+                
+                Screen.PERSONA_DETAIL -> {
+                    currentPersonaId?.let { personaId ->
+                        PersonaDetailScreen(
+                            personaId = personaId,
+                            onNavigateBack = {
+                                currentScreen = Screen.PERSONA_MANAGEMENT
+                                previousScreen = null
+                            }
+                        )
+                    }
                 }
             }
         }

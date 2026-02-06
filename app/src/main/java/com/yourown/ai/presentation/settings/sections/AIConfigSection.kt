@@ -38,14 +38,7 @@ fun AIConfigurationSection(
         SettingItemClickable(
             title = "System Prompt (API)",
             subtitle = "For cloud models (Deepseek, OpenAI, Grok) • Total: ${apiPrompts.size}",
-            onClick = { viewModel.showSystemPromptsListDialog(com.yourown.ai.data.repository.PromptType.API) },
-            trailing = {
-                Row {
-                    IconButton(onClick = { viewModel.createNewPrompt(com.yourown.ai.data.repository.PromptType.API) }) {
-                        Icon(Icons.Default.Add, "Add API prompt", modifier = Modifier.size(20.dp))
-                    }
-                }
-            }
+            onClick = { viewModel.showSystemPromptsListDialog(com.yourown.ai.data.repository.PromptType.API) }
         )
         
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
@@ -54,14 +47,7 @@ fun AIConfigurationSection(
         SettingItemClickable(
             title = "System Prompt (Local)",
             subtitle = "For local models (Qwen, Llama) • Total: ${localPrompts.size}",
-            onClick = { viewModel.showSystemPromptsListDialog(com.yourown.ai.data.repository.PromptType.LOCAL) },
-            trailing = {
-                Row {
-                    IconButton(onClick = { viewModel.createNewPrompt(com.yourown.ai.data.repository.PromptType.LOCAL) }) {
-                        Icon(Icons.Default.Add, "Add Local prompt", modifier = Modifier.size(20.dp))
-                    }
-                }
-            }
+            onClick = { viewModel.showSystemPromptsListDialog(com.yourown.ai.data.repository.PromptType.LOCAL) }
         )
         
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))

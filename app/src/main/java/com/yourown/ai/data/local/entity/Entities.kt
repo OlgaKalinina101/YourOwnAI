@@ -14,7 +14,8 @@ import androidx.room.PrimaryKey
         Index(value = ["createdAt"]),
         Index(value = ["updatedAt"]),
         Index(value = ["systemPromptId"]),
-        Index(value = ["sourceConversationId"])
+        Index(value = ["sourceConversationId"]),
+        Index(value = ["personaId"])
     ]
 )
 data class ConversationEntity(
@@ -23,7 +24,8 @@ data class ConversationEntity(
     
     val title: String,                    // Название беседы
     val systemPrompt: String,             // Системный промпт для этой беседы (legacy)
-    val systemPromptId: String? = null,   // ID системного промпта из таблицы system_prompts
+    val systemPromptId: String? = null,   // ID системного промпта из таблицы system_prompts (legacy)
+    val personaId: String? = null,        // ID persona (если null - используем глобальные настройки)
     val model: String,                    // Используемая модель (gpt-4, claude-3, etc)
     val provider: String,                 // Провайдер (openai, anthropic, etc)
     
@@ -246,4 +248,72 @@ data class KnowledgeDocumentEntity(
     val updatedAt: Long,                  // Последнее обновление
     
     val sizeBytes: Int = 0,               // Размер в байтах
+    val linkedPersonaIds: String = "[]",  // JSON array of persona IDs
+)
+
+/**
+ * Persona Entity
+ * Профили с настройками AI, документами и memory scope
+ */
+@Entity(
+    tableName = "personas",
+    indices = [
+        Index(value = ["createdAt"]),
+        Index(value = ["name"]),
+        Index(value = ["isForApi"]),
+        Index(value = ["systemPromptId"], unique = true)
+    ]
+)
+data class PersonaEntity(
+    @PrimaryKey
+    val id: String,
+    
+    val name: String,                     // Название persona
+    val description: String = "",         // Описание
+    val systemPromptId: String,           // Ссылка на SystemPrompt
+    val systemPrompt: String,             // Кеш текста промпта
+    val isForApi: Boolean = true,         // Для API или Local модели
+    
+    // AI Configuration
+    val temperature: Float = 0.7f,
+    val topP: Float = 0.9f,
+    val maxTokens: Int = 4096,
+    val deepEmpathy: Boolean = false,
+    val memoryEnabled: Boolean = false,
+    val ragEnabled: Boolean = false,
+    val messageHistoryLimit: Int = 10,
+    
+    // Prompts
+    val deepEmpathyPrompt: String,
+    val deepEmpathyAnalysisPrompt: String,
+    val memoryExtractionPrompt: String,
+    val contextInstructions: String,
+    val memoryInstructions: String,
+    val ragInstructions: String,
+    val swipeMessagePrompt: String,
+    
+    // Memory Configuration
+    val memoryLimit: Int = 5,
+    val memoryMinAgeDays: Int = 2,
+    val memoryTitle: String = "Твои воспоминания",
+    
+    // RAG Configuration
+    val ragChunkSize: Int = 512,
+    val ragChunkOverlap: Int = 64,
+    val ragChunkLimit: Int = 5,
+    val ragTitle: String = "Твоя библиотека текстов",
+    
+    // Model Preference
+    val preferredModelId: String? = null,
+    val preferredProvider: String? = null,
+    
+    // Document Links
+    val linkedDocumentIds: String = "[]", // JSON array of document IDs
+    
+    // Memory Scope
+    val useOnlyPersonaMemories: Boolean = false,
+    val shareMemoriesGlobally: Boolean = true,
+    
+    val createdAt: Long,
+    val updatedAt: Long
 )

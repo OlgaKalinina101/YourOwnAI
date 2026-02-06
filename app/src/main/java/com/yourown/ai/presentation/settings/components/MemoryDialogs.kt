@@ -24,6 +24,8 @@ import java.util.*
 @Composable
 fun MemoriesDialog(
     memories: List<MemoryEntry>,
+    personas: List<com.yourown.ai.domain.model.Persona> = emptyList(),
+    processingStatus: com.yourown.ai.data.repository.MemoryProcessingStatus = com.yourown.ai.data.repository.MemoryProcessingStatus.Idle,
     onDismiss: () -> Unit,
     onEditMemory: (MemoryEntry) -> Unit,
     onDeleteMemory: (String) -> Unit
@@ -74,6 +76,126 @@ fun MemoriesDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
+                // Processing status indicator
+                when (processingStatus) {
+                    is com.yourown.ai.data.repository.MemoryProcessingStatus.Recalculating -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Recalculating embeddings...",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = processingStatus.currentStep,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        text = "${processingStatus.progress}%",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                LinearProgressIndicator(
+                                    progress = processingStatus.progress / 100f,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    is com.yourown.ai.data.repository.MemoryProcessingStatus.Completed -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "✓ Embeddings recalculated!",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    is com.yourown.ai.data.repository.MemoryProcessingStatus.Failed -> {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Recalculation failed",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                    Text(
+                                        text = processingStatus.error,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    else -> {}
+                }
+                
                 if (memories.isEmpty()) {
                     // Empty state
                     Box(
@@ -113,8 +235,15 @@ fun MemoriesDialog(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(memories) { memory ->
+                            val linkedPersona = memory.personaId?.let { personaId ->
+                                personas.find { it.id == personaId }
+                            }
+                            val isBeingProcessed = processingStatus is com.yourown.ai.data.repository.MemoryProcessingStatus.SavingMemory &&
+                                                    (processingStatus as? com.yourown.ai.data.repository.MemoryProcessingStatus.SavingMemory)?.memoryId == memory.id
                             MemoryItem(
                                 memory = memory,
+                                linkedPersona = linkedPersona,
+                                isProcessing = isBeingProcessed,
                                 onEdit = { onEditMemory(memory) },
                                 onDelete = { onDeleteMemory(memory.id) }
                             )
@@ -132,6 +261,8 @@ fun MemoriesDialog(
 @Composable
 fun MemoryItem(
     memory: MemoryEntry,
+    linkedPersona: com.yourown.ai.domain.model.Persona? = null,
+    isProcessing: Boolean = false,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -140,7 +271,11 @@ fun MemoryItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = if (isProcessing) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            }
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -149,17 +284,64 @@ fun MemoryItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Date
+            // Processing indicator
+            if (isProcessing) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Text(
+                        text = "Generating embedding...",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            // Date and Persona Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = formatDate(memory.createdAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = formatDate(memory.createdAt),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    // Persona Badge
+                    Surface(
+                        color = if (linkedPersona != null) {
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.secondaryContainer
+                        },
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = linkedPersona?.name ?: "For all",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = if (linkedPersona != null) {
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            }
+                        )
+                    }
+                }
                 
                 // Actions
                 Row(
@@ -167,24 +349,34 @@ fun MemoryItem(
                 ) {
                     IconButton(
                         onClick = onEdit,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
+                        enabled = !isProcessing
                     ) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "Edit",
                             modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = if (isProcessing) {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
                         )
                     }
                     IconButton(
                         onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
+                        enabled = !isProcessing
                     ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Delete",
                             modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.error
+                            tint = if (isProcessing) {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            }
                         )
                     }
                 }
@@ -235,22 +427,55 @@ fun MemoryItem(
 @Composable
 fun EditMemoryDialog(
     memory: MemoryEntry,
+    personas: List<com.yourown.ai.domain.model.Persona> = emptyList(),
+    processingStatus: com.yourown.ai.data.repository.MemoryProcessingStatus = com.yourown.ai.data.repository.MemoryProcessingStatus.Idle,
     onDismiss: () -> Unit,
-    onSave: (String) -> Unit
+    onSave: (fact: String, personaId: String?) -> Unit
 ) {
     var editedFact by remember { mutableStateOf(memory.fact) }
+    var selectedPersonaId by remember { mutableStateOf(memory.personaId) }
+    var showPersonaMenu by remember { mutableStateOf(false) }
     
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Memory") },
-        text = {
-            Column {
+    val isSaving = processingStatus is com.yourown.ai.data.repository.MemoryProcessingStatus.SavingMemory &&
+                   (processingStatus as? com.yourown.ai.data.repository.MemoryProcessingStatus.SavingMemory)?.memoryId == memory.id
+    
+    // Auto-close on completion
+    LaunchedEffect(processingStatus) {
+        if (processingStatus is com.yourown.ai.data.repository.MemoryProcessingStatus.Completed) {
+            kotlinx.coroutines.delay(500) // Короткая задержка чтобы пользователь увидел успех
+            onDismiss()
+        }
+    }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "Edit Memory",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
                 Text(
                     text = "Created: ${formatDate(memory.createdAt)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Memory text
                 OutlinedTextField(
                     value = editedFact,
                     onValueChange = { editedFact = it },
@@ -259,22 +484,135 @@ fun EditMemoryDialog(
                     minLines = 3,
                     maxLines = 8
                 )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onSave(editedFact) },
-                enabled = editedFact.isNotBlank() && editedFact != memory.fact
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Persona selection
+                if (personas.isNotEmpty()) {
+                    Text(
+                        text = "Link to Persona",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Box {
+                        OutlinedButton(
+                            onClick = { showPersonaMenu = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            val selectedPersona = personas.find { it.id == selectedPersonaId }
+                            Text(
+                                text = selectedPersona?.name ?: "For all (no persona)",
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(Icons.Default.ArrowDropDown, null)
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showPersonaMenu,
+                            onDismissRequest = { showPersonaMenu = false }
+                        ) {
+                            // "For all" option
+                            DropdownMenuItem(
+                                text = { Text("For all (no persona)") },
+                                onClick = {
+                                    selectedPersonaId = null
+                                    showPersonaMenu = false
+                                },
+                                leadingIcon = {
+                                    if (selectedPersonaId == null) {
+                                        Icon(Icons.Default.Check, null)
+                                    }
+                                }
+                            )
+                            
+                            Divider()
+                            
+                            // Personas
+                            personas.forEach { persona ->
+                                DropdownMenuItem(
+                                    text = { Text(persona.name) },
+                                    onClick = {
+                                        selectedPersonaId = persona.id
+                                        showPersonaMenu = false
+                                    },
+                                    leadingIcon = {
+                                        if (selectedPersonaId == persona.id) {
+                                            Icon(Icons.Default.Check, null)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                
+                // Processing indicator
+                if (isSaving) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Text(
+                                text = "Generating embedding...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                
+                // Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        enabled = !isSaving
+                    ) {
+                        Text("Cancel")
+                    }
+                    
+                    Button(
+                        onClick = { onSave(editedFact, selectedPersonaId) },
+                        enabled = editedFact.isNotBlank() && !isSaving,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text("Save")
+                        }
+                    }
+                }
             }
         }
-    )
+    }
 }
 
 /**
