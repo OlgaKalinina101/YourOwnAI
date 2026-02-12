@@ -36,6 +36,9 @@ data class ConversationEntity(
     val isArchived: Boolean = false,      // Архивирована ли
     
     val sourceConversationId: String? = null,  // ID чата, из которого подтянута история для контекста
+    
+    val webSearchEnabled: Boolean = false,     // Включен ли web search для этого чата (OpenRouter :online)
+    val xSearchEnabled: Boolean = false,       // Включен ли X search для Grok (только xAI)
 )
 
 /**
@@ -313,6 +316,11 @@ data class PersonaEntity(
     // Memory Scope
     val useOnlyPersonaMemories: Boolean = false,
     val shareMemoriesGlobally: Boolean = true,
+    
+    // API Embeddings Configuration
+    val useApiEmbeddings: Boolean = false,
+    val apiEmbeddingsProvider: String = "openai",
+    val apiEmbeddingsModel: String = "text-embedding-3-small",
     
     val createdAt: Long,
     val updatedAt: Long

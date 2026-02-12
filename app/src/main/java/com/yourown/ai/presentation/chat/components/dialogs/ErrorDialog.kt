@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for handling errors during message generation
@@ -39,7 +41,7 @@ fun ErrorDialog(
         },
         title = {
             Text(
-                text = "Message Generation Error",
+                text = stringResource(R.string.error_dialog_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -50,7 +52,7 @@ fun ErrorDialog(
             ) {
                 // Error details
                 Text(
-                    text = "Failed to generate response from $modelName:",
+                    text = stringResource(R.string.error_dialog_failed_from, modelName),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -71,7 +73,7 @@ fun ErrorDialog(
                 
                 // User message preview
                 Text(
-                    text = "Your message:",
+                    text = stringResource(R.string.error_dialog_your_message),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -93,7 +95,7 @@ fun ErrorDialog(
                 
                 // Options explanation
                 Text(
-                    text = "Choose an action:",
+                    text = stringResource(R.string.error_dialog_choose_action),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -112,7 +114,7 @@ fun ErrorDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Retry: Will delete this attempt and try again",
+                            text = stringResource(R.string.error_dialog_retry_explanation),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -127,7 +129,7 @@ fun ErrorDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Cancel: Will copy your message to clipboard and delete the failed attempt",
+                            text = stringResource(R.string.error_dialog_cancel_explanation),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -148,7 +150,7 @@ fun ErrorDialog(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Retry")
+                Text(stringResource(R.string.error_dialog_retry))
             }
         },
         dismissButton = {
@@ -159,7 +161,7 @@ fun ErrorDialog(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Cancel & Copy")
+                Text(stringResource(R.string.error_dialog_cancel_copy))
             }
         }
     )

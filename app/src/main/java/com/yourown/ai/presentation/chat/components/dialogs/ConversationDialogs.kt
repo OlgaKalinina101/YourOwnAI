@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for editing conversation title
@@ -32,14 +34,14 @@ fun EditTitleDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Chat Title") },
+        title = { Text(stringResource(R.string.edit_title_dialog_title)) },
         text = {
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Title") },
-                placeholder = { Text("Chat 1") },
+                label = { Text(stringResource(R.string.edit_title_label)) },
+                placeholder = { Text(stringResource(R.string.edit_title_placeholder)) },
                 singleLine = true
             )
         },
@@ -48,12 +50,12 @@ fun EditTitleDialog(
                 onClick = { onSave(title) },
                 enabled = title.isNotBlank()
             ) {
-                Text("Save")
+                Text(stringResource(R.string.edit_title_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.edit_title_cancel))
             }
         }
     )
@@ -90,12 +92,12 @@ fun RequestLogsDialog(
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Request Logs",
+                        text = stringResource(R.string.request_logs_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, "Close")
+                        Icon(Icons.Default.Close, stringResource(R.string.request_logs_close))
                     }
                 }
                 
@@ -143,14 +145,14 @@ fun RequestLogsDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Copy")
+                        Text(stringResource(R.string.request_logs_copy))
                     }
                     
                     FilledTonalButton(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Close")
+                        Text(stringResource(R.string.request_logs_close))
                     }
                 }
                 
@@ -162,7 +164,7 @@ fun RequestLogsDialog(
                     }
                     
                     Text(
-                        text = "✓ Copied to clipboard",
+                        text = stringResource(R.string.request_logs_copied),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,

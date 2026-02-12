@@ -68,5 +68,7 @@ data class Conversation(
     val isPinned: Boolean = false,
     val isArchived: Boolean = false,
     val sourceConversationId: String? = null,  // ID чата-источника для наследования контекста
+    val webSearchEnabled: Boolean = false,  // Включен ли web search (OpenRouter :online)
+    val xSearchEnabled: Boolean = false,  // Включен ли X search (только xAI/Grok)
     val messages: List<Message> = emptyList()
 )

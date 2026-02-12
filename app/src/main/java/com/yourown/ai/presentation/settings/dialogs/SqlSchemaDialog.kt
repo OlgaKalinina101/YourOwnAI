@@ -83,6 +83,53 @@ CREATE TABLE IF NOT EXISTS personas (
     system_prompt_id TEXT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
+    is_for_api BOOLEAN DEFAULT TRUE,
+    
+    -- AI Configuration
+    temperature REAL DEFAULT 0.7,
+    top_p REAL DEFAULT 0.9,
+    max_tokens INTEGER DEFAULT 4096,
+    deep_empathy BOOLEAN DEFAULT FALSE,
+    memory_enabled BOOLEAN DEFAULT FALSE,
+    rag_enabled BOOLEAN DEFAULT FALSE,
+    message_history_limit INTEGER DEFAULT 10,
+    
+    -- Prompts
+    deep_empathy_prompt TEXT,
+    deep_empathy_analysis_prompt TEXT,
+    memory_extraction_prompt TEXT,
+    context_instructions TEXT,
+    memory_instructions TEXT,
+    rag_instructions TEXT,
+    swipe_message_prompt TEXT,
+    
+    -- Memory Configuration
+    memory_limit INTEGER DEFAULT 5,
+    memory_min_age_days INTEGER DEFAULT 2,
+    memory_title TEXT,
+    
+    -- RAG Configuration
+    rag_chunk_size INTEGER DEFAULT 512,
+    rag_chunk_overlap INTEGER DEFAULT 64,
+    rag_chunk_limit INTEGER DEFAULT 5,
+    rag_title TEXT,
+    
+    -- Model Preference
+    preferred_model_id TEXT,
+    preferred_provider TEXT,
+    
+    -- Document Links
+    linked_document_ids TEXT,
+    
+    -- Memory Scope
+    use_only_persona_memories BOOLEAN DEFAULT FALSE,
+    share_memories_globally BOOLEAN DEFAULT TRUE,
+    
+    -- API Embeddings Configuration
+    use_api_embeddings BOOLEAN DEFAULT FALSE,
+    api_embeddings_provider TEXT DEFAULT 'openai',
+    api_embeddings_model TEXT DEFAULT 'text-embedding-3-small',
+    
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
     device_id TEXT,

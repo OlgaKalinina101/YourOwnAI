@@ -51,6 +51,9 @@ class AIConfigRepository @Inject constructor(
         private val RAG_CHUNK_LIMIT = intPreferencesKey("rag_chunk_limit")
         private val RAG_TITLE = stringPreferencesKey("rag_title")
         private val RAG_INSTRUCTIONS = stringPreferencesKey("rag_instructions")
+        private val USE_API_EMBEDDINGS = booleanPreferencesKey("use_api_embeddings")
+        private val API_EMBEDDINGS_PROVIDER = stringPreferencesKey("api_embeddings_provider")
+        private val API_EMBEDDINGS_MODEL = stringPreferencesKey("api_embeddings_model")
         private val CONTEXT_INSTRUCTIONS = stringPreferencesKey("context_instructions")
         private val SWIPE_MESSAGE_PROMPT = stringPreferencesKey("swipe_message_prompt")
         private val MESSAGE_HISTORY_LIMIT = intPreferencesKey("message_history_limit")
@@ -84,6 +87,9 @@ class AIConfigRepository @Inject constructor(
             ragChunkLimit = preferences[RAG_CHUNK_LIMIT] ?: 5,
             ragTitle = preferences[RAG_TITLE] ?: "Твоя библиотека текстов",
             ragInstructions = preferences[RAG_INSTRUCTIONS] ?: AIConfig.DEFAULT_RAG_INSTRUCTIONS,
+            useApiEmbeddings = preferences[USE_API_EMBEDDINGS] ?: false,
+            apiEmbeddingsProvider = preferences[API_EMBEDDINGS_PROVIDER] ?: "openai",
+            apiEmbeddingsModel = preferences[API_EMBEDDINGS_MODEL] ?: "text-embedding-3-small",
             contextInstructions = preferences[CONTEXT_INSTRUCTIONS] ?: AIConfig.DEFAULT_CONTEXT_INSTRUCTIONS,
             swipeMessagePrompt = preferences[SWIPE_MESSAGE_PROMPT] ?: AIConfig.DEFAULT_SWIPE_MESSAGE_PROMPT,
             messageHistoryLimit = preferences[MESSAGE_HISTORY_LIMIT] ?: 10
@@ -429,10 +435,40 @@ class AIConfigRepository @Inject constructor(
             ragChunkLimit = preferences[RAG_CHUNK_LIMIT] ?: 5,
             ragTitle = preferences[RAG_TITLE] ?: "Твоя библиотека текстов",
             ragInstructions = preferences[RAG_INSTRUCTIONS] ?: AIConfig.DEFAULT_RAG_INSTRUCTIONS,
+            useApiEmbeddings = preferences[USE_API_EMBEDDINGS] ?: false,
+            apiEmbeddingsProvider = preferences[API_EMBEDDINGS_PROVIDER] ?: "openai",
+            apiEmbeddingsModel = preferences[API_EMBEDDINGS_MODEL] ?: "text-embedding-3-small",
             contextInstructions = preferences[CONTEXT_INSTRUCTIONS] ?: AIConfig.DEFAULT_CONTEXT_INSTRUCTIONS,
             swipeMessagePrompt = preferences[SWIPE_MESSAGE_PROMPT] ?: AIConfig.DEFAULT_SWIPE_MESSAGE_PROMPT,
             messageHistoryLimit = preferences[MESSAGE_HISTORY_LIMIT] ?: 10
         )
+    }
+    
+    /**
+     * Set use API embeddings flag
+     */
+    suspend fun setUseApiEmbeddings(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[USE_API_EMBEDDINGS] = enabled
+        }
+    }
+    
+    /**
+     * Set API embeddings provider
+     */
+    suspend fun setApiEmbeddingsProvider(provider: String) {
+        dataStore.edit { preferences ->
+            preferences[API_EMBEDDINGS_PROVIDER] = provider
+        }
+    }
+    
+    /**
+     * Set API embeddings model
+     */
+    suspend fun setApiEmbeddingsModel(model: String) {
+        dataStore.edit { preferences ->
+            preferences[API_EMBEDDINGS_MODEL] = model
+        }
     }
     
     /**

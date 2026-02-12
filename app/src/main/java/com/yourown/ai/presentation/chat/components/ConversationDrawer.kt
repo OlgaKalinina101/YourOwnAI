@@ -18,6 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.Conversation
 import java.text.SimpleDateFormat
 import java.util.*
@@ -55,7 +58,7 @@ fun ConversationDrawer(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "YourOwnAI",
+                        text = stringResource(R.string.chat_app_name),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -66,7 +69,7 @@ fun ConversationDrawer(
                     ) {
                         Icon(
                             Icons.Default.CloudUpload,
-                            contentDescription = "Import Chat",
+                            contentDescription = stringResource(R.string.drawer_import_chat),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -82,7 +85,7 @@ fun ConversationDrawer(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("New Chat")
+                    Text(stringResource(R.string.drawer_new_chat))
                 }
                 
                 OutlinedButton(
@@ -95,7 +98,7 @@ fun ConversationDrawer(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Voice Chat")
+                    Text(stringResource(R.string.drawer_voice_chat))
                 }
             }
         }
@@ -122,7 +125,7 @@ fun ConversationDrawer(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
-                        text = "No conversations yet",
+                        text = stringResource(R.string.drawer_no_conversations),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -155,6 +158,7 @@ private fun ConversationItem(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val localContext = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     
     val backgroundColor = if (isSelected) {
@@ -200,7 +204,7 @@ private fun ConversationItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = formatDate(conversation.updatedAt),
+                        text = formatDate(localContext, conversation.updatedAt),
                         style = MaterialTheme.typography.bodySmall,
                         color = contentColor.copy(alpha = 0.7f)
                     )
@@ -208,7 +212,7 @@ private fun ConversationItem(
                     if (conversation.isPinned) {
                         Icon(
                             Icons.Default.PushPin,
-                            contentDescription = "Pinned",
+                            contentDescription = stringResource(R.string.drawer_pinned),
                             modifier = Modifier.size(12.dp),
                             tint = contentColor.copy(alpha = 0.7f)
                         )
@@ -222,7 +226,7 @@ private fun ConversationItem(
             ) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.message_delete),
                     modifier = Modifier.size(18.dp),
                     tint = contentColor.copy(alpha = 0.7f)
                 )
@@ -242,18 +246,18 @@ private fun ConversationItem(
                 )
             },
             title = {
-                Text("Delete Chat?")
+                Text(stringResource(R.string.drawer_delete_chat_title))
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Are you sure you want to delete this chat?")
+                    Text(stringResource(R.string.drawer_delete_chat_message))
                     Text(
                         text = "\"${conversation.title}\"",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "This action cannot be undone.",
+                        text = stringResource(R.string.drawer_delete_chat_warning),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -269,27 +273,27 @@ private fun ConversationItem(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.drawer_delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )
     }
 }
 
-private fun formatDate(timestamp: Long): String {
+private fun formatDate(context: android.content.Context, timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
     
     return when {
-        diff < 60_000 -> "Just now"
-        diff < 3600_000 -> "${diff / 60_000}m ago"
-        diff < 86400_000 -> "${diff / 3600_000}h ago"
-        diff < 604800_000 -> "${diff / 86400_000}d ago"
+        diff < 60_000 -> context.getString(R.string.drawer_just_now)
+        diff < 3600_000 -> context.getString(R.string.drawer_time_minutes_ago, diff / 60_000)
+        diff < 86400_000 -> context.getString(R.string.drawer_time_hours_ago, diff / 3600_000)
+        diff < 604800_000 -> context.getString(R.string.drawer_time_days_ago, diff / 86400_000)
         else -> SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date(timestamp))
     }
 }

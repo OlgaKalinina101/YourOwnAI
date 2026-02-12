@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.presentation.settings.SettingsUiState
 import com.yourown.ai.presentation.settings.SettingsViewModel
@@ -253,7 +255,7 @@ fun RAGSection(
                 OutlinedTextField(
                     value = config.ragTitle,
                     onValueChange = { viewModel.updateRAGTitle(it) },
-                    label = { Text("RAG Title") },
+                    label = { Text(stringResource(R.string.rag_title_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )

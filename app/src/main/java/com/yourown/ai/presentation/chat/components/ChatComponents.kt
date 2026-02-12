@@ -1,5 +1,6 @@
 package com.yourown.ai.presentation.chat.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,6 +12,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Top bar for chat screen with title editing and model selector
@@ -28,6 +31,10 @@ fun ChatTopBar(
     searchQuery: String,
     currentSearchIndex: Int,
     searchMatchCount: Int,
+    webSearchEnabled: Boolean = false,
+    supportsWebSearch: Boolean = false,
+    xSearchEnabled: Boolean = false,
+    supportsXSearch: Boolean = false,
     onBackClick: () -> Unit,
     onEditTitle: () -> Unit,
     onModelSelect: (com.yourown.ai.domain.model.ModelProvider) -> Unit,
@@ -41,6 +48,8 @@ fun ChatTopBar(
     onSearchClose: () -> Unit = {},
     onSystemPromptClick: () -> Unit = {},
     onExportChatClick: () -> Unit = {},
+    onToggleWebSearch: () -> Unit = {},
+    onToggleXSearch: () -> Unit = {},
     isExporting: Boolean = false
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -71,7 +80,7 @@ fun ChatTopBar(
                         value = searchQuery,
                         onValueChange = onSearchQueryChange,
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Search in chat...") },
+                        placeholder = { Text(stringResource(R.string.topbar_search_placeholder)) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -96,7 +105,7 @@ fun ChatTopBar(
                         onClick = onSearchPrevious,
                         enabled = searchMatchCount > 0
                     ) {
-                        Icon(Icons.Default.KeyboardArrowUp, "Previous match")
+                        Icon(Icons.Default.KeyboardArrowUp, stringResource(R.string.topbar_previous_match))
                     }
                     
                     // Navigate down button
@@ -104,21 +113,21 @@ fun ChatTopBar(
                         onClick = onSearchNext,
                         enabled = searchMatchCount > 0
                     ) {
-                        Icon(Icons.Default.KeyboardArrowDown, "Next match")
+                        Icon(Icons.Default.KeyboardArrowDown, stringResource(R.string.topbar_next_match))
                     }
                     
                     // Close search button
                     IconButton(onClick = onSearchClose) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close search",
+                            stringResource(R.string.topbar_close_search),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
             } else {
-                // Normal mode: Two rows
-                // Row 1: Back, ModelSelector (compact, left-aligned), More Menu, Settings
+                // Normal mode
+                // Row 1: Back, ModelSelector (left), WebSearch, More Menu, Settings (right)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -133,7 +142,7 @@ fun ChatTopBar(
                     ) {
                         // Back button
                         IconButton(onClick = onBackClick) {
-                            Icon(Icons.Default.ArrowBack, "Back")
+                            Icon(Icons.Default.ArrowBack, stringResource(R.string.topbar_back))
                         }
                         
                         // Model selector (compact, not stretched)
@@ -156,7 +165,7 @@ fun ChatTopBar(
                         // More menu button
                         Box {
                             IconButton(onClick = { showMenu = true }) {
-                                Icon(Icons.Default.MoreVert, "More options")
+                                Icon(Icons.Default.MoreVert, stringResource(R.string.topbar_more_options))
                             }
                         
                             DropdownMenu(
@@ -164,7 +173,7 @@ fun ChatTopBar(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Search") },
+                                    text = { Text(stringResource(R.string.topbar_search)) },
                                     onClick = {
                                         showMenu = false
                                         onSearchClick()
@@ -175,7 +184,7 @@ fun ChatTopBar(
                                 )
                                 
                                 DropdownMenuItem(
-                                    text = { Text("Persona") },
+                                    text = { Text(stringResource(R.string.topbar_persona)) },
                                     onClick = {
                                         showMenu = false
                                         onSystemPromptClick()
@@ -186,7 +195,7 @@ fun ChatTopBar(
                                 )
                                 
                                 DropdownMenuItem(
-                                    text = { Text(if (isExporting) "Exporting..." else "Save chat") },
+                                    text = { Text(if (isExporting) stringResource(R.string.topbar_exporting) else stringResource(R.string.topbar_save_chat)) },
                                     onClick = {
                                         showMenu = false
                                         onExportChatClick()
@@ -213,18 +222,19 @@ fun ChatTopBar(
                     }
                 }
                 
-                // Row 2: Title + Edit button (centered)
+                // Row 2: Title (left) + Search buttons (right)
                 androidx.compose.runtime.key(conversationTitle) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        // Left: Title + Edit + Persona
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            modifier = Modifier.weight(1f, fill = false)
                         ) {
                             Text(
                                 text = conversationTitle,
@@ -244,25 +254,175 @@ fun ChatTopBar(
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
+                            
+                            // Persona indicator (inline)
+                            if (activePersona != null) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                                    shape = MaterialTheme.shapes.small
+                                ) {
+                                    Text(
+                                        text = activePersona.name,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
                         }
                         
-                        // Persona indicator
-                        if (activePersona != null) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.tertiaryContainer,
-                                shape = MaterialTheme.shapes.small,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            ) {
-                                Text(
-                                    text = " ${activePersona.name}",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                                )
+                        // Right: Search buttons
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            // Web Search button (only show if model supports it)
+                            if (supportsWebSearch) {
+                                Button(
+                                    onClick = onToggleWebSearch,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (webSearchEnabled) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        },
+                                        contentColor = if (webSearchEnabled) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                    ),
+                                    modifier = Modifier.height(36.dp),
+                                    elevation = if (webSearchEnabled) {
+                                        ButtonDefaults.buttonElevation(
+                                            defaultElevation = 4.dp,
+                                            pressedElevation = 8.dp
+                                        )
+                                    } else {
+                                        ButtonDefaults.buttonElevation(
+                                            defaultElevation = 0.dp
+                                        )
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Language,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Web",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (webSearchEnabled) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            
+                            // X Search button (only show for xAI/Grok models)
+                            if (supportsXSearch) {
+                                Button(
+                                    onClick = onToggleXSearch,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (xSearchEnabled) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        },
+                                        contentColor = if (xSearchEnabled) {
+                                            MaterialTheme.colorScheme.onPrimary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                    ),
+                                    modifier = Modifier.height(36.dp),
+                                    elevation = if (xSearchEnabled) {
+                                        ButtonDefaults.buttonElevation(
+                                            defaultElevation = 4.dp,
+                                            pressedElevation = 8.dp
+                                        )
+                                    } else {
+                                        ButtonDefaults.buttonElevation(
+                                            defaultElevation = 0.dp
+                                        )
+                                    }
+                                ) {
+                                    Text(
+                                        text = "𝕏",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Search",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (xSearchEnabled) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Search status banner (temporary overlay, shown below header with animation)
+ */
+@Composable
+fun BoxScope.SearchStatusBanner(
+    message: String?,
+    onDismiss: () -> Unit
+) {
+    // Auto-dismiss after 3 seconds
+    LaunchedEffect(message) {
+        if (message != null) {
+            kotlinx.coroutines.delay(3000)
+            onDismiss()
+        }
+    }
+    
+    AnimatedVisibility(
+        visible = message != null,
+        enter = androidx.compose.animation.slideInVertically(
+            initialOffsetY = { -it }
+        ) + androidx.compose.animation.fadeIn(),
+        exit = androidx.compose.animation.slideOutVertically(
+            targetOffsetY = { -it }
+        ) + androidx.compose.animation.fadeOut(),
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .fillMaxWidth()
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.fillMaxWidth(),
+            shadowElevation = 4.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Text(
+                    text = message ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

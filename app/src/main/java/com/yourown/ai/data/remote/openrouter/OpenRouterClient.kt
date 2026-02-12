@@ -197,4 +197,50 @@ class OpenRouterClient(
         
         awaitClose()
     }.flowOn(Dispatchers.IO)
+    
+    /**
+     * Create embeddings for text(s) via OpenRouter
+     * https://openrouter.ai/docs/api-reference#embeddings
+     */
+    suspend fun createEmbeddings(
+        apiKey: String,
+        input: Any, // String or List<String>
+        model: String
+    ): Result<OpenRouterEmbeddingResponse> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val requestBody = OpenRouterEmbeddingRequest(
+                input = input,
+                model = model
+            )
+            
+            val json = gson.toJson(requestBody)
+            Log.d(TAG, "OpenRouter embedding request: model=$model, input type=${input::class.simpleName}")
+            val body = json.toRequestBody("application/json".toMediaType())
+            
+            val request = Request.Builder()
+                .url("$BASE_URL/embeddings")
+                .header("Authorization", "Bearer $apiKey")
+                .header("HTTP-Referer", "https://github.com/yourown/ai")
+                .header("X-Title", "YourOwnAI")
+                .post(body)
+                .build()
+            
+            val response = httpClient.newCall(request).execute()
+            
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string() ?: return@withContext Result.failure(
+                    Exception("Empty response body")
+                )
+                val embeddingResponse = gson.fromJson(responseBody, OpenRouterEmbeddingResponse::class.java)
+                Result.success(embeddingResponse)
+            } else {
+                val errorBody = response.body?.string() ?: "Unknown error"
+                Log.e(TAG, "OpenRouter embedding error: HTTP ${response.code}: $errorBody")
+                Result.failure(Exception("HTTP ${response.code}: $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating OpenRouter embeddings", e)
+            Result.failure(e)
+        }
+    }
 }

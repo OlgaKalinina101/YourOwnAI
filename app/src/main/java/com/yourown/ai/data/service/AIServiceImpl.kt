@@ -50,14 +50,16 @@ class AIServiceImpl @Inject constructor(
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        webSearchEnabled: Boolean,
+        xSearchEnabled: Boolean
     ): Flow<String> {
         return when (provider) {
             is ModelProvider.Local -> {
                 generateLocalResponse(provider, messages, systemPrompt, userContext, config)
             }
             is ModelProvider.API -> {
-                generateAPIResponse(provider, messages, systemPrompt, userContext, config)
+                generateAPIResponse(provider, messages, systemPrompt, userContext, config, webSearchEnabled, xSearchEnabled)
             }
         }
     }
@@ -78,7 +80,9 @@ class AIServiceImpl @Inject constructor(
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        webSearchEnabled: Boolean,
+        xSearchEnabled: Boolean
     ): Flow<String> = flow {
         when (provider.provider) {
             AIProvider.DEEPSEEK -> {
@@ -86,15 +90,15 @@ class AIServiceImpl @Inject constructor(
                     .collect { emit(it) }
             }
             AIProvider.OPENAI -> {
-                generateOpenAIResponse(provider, messages, systemPrompt, userContext, config)
+                generateOpenAIResponse(provider, messages, systemPrompt, userContext, config, webSearchEnabled)
                     .collect { emit(it) }
             }
             AIProvider.OPENROUTER -> {
-                generateOpenRouterResponse(provider, messages, systemPrompt, userContext, config)
+                generateOpenRouterResponse(provider, messages, systemPrompt, userContext, config, webSearchEnabled)
                     .collect { emit(it) }
             }
             AIProvider.XAI -> {
-                generateXAIResponse(provider, messages, systemPrompt, userContext, config)
+                generateXAIResponse(provider, messages, systemPrompt, userContext, config, webSearchEnabled, xSearchEnabled)
                     .collect { emit(it) }
             }
             AIProvider.CUSTOM -> {
@@ -136,9 +140,10 @@ class AIServiceImpl @Inject constructor(
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        webSearchEnabled: Boolean
     ): Flow<String> = flow {
-        Log.d(TAG, "Generating OpenAI response with ${provider.modelId}")
+        Log.d(TAG, "Generating OpenAI response with ${provider.modelId} (webSearch: $webSearchEnabled)")
         
         val apiKey = apiKeyRepository.getApiKey(provider.provider)
             ?: throw IllegalStateException("API key not set for ${provider.provider.displayName}")
@@ -147,13 +152,18 @@ class AIServiceImpl @Inject constructor(
         val hasImages = messages.any { !it.imageAttachments.isNullOrBlank() }
         val hasFiles = messages.any { !it.fileAttachments.isNullOrBlank() }
         
-        if (hasImages || hasFiles) {
-            // Use multimodal API
-            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
-            openAIClient.chatCompletionStreamMultimodal(
+        // If web search enabled, use Responses API
+        // Always use text-only format for Responses API (matches documented format exactly)
+        // Images from history are not critical for search queries
+        if (webSearchEnabled) {
+            val tools = listOf(com.yourown.ai.data.remote.openai.Tool(type = "web_search"))
+            val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+            
+            openAIClient.responsesApiStream(
                 apiKey = apiKey,
                 model = provider.modelId,
-                messages = multimodalMessages,
+                messages = chatMessages,
+                tools = tools,
                 temperature = config.temperature,
                 topP = config.topP,
                 maxTokens = config.maxTokens
@@ -161,17 +171,33 @@ class AIServiceImpl @Inject constructor(
                 emit(chunk)
             }
         } else {
-            // Use simple text API
-            val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
-            openAIClient.chatCompletionStream(
-                apiKey = apiKey,
-                model = provider.modelId,
-                messages = chatMessages,
-                temperature = config.temperature,
-                topP = config.topP,
-                maxTokens = config.maxTokens
-            ).collect { chunk ->
-                emit(chunk)
+            // Use regular Chat Completions API
+            if (hasImages || hasFiles) {
+                // Use multimodal API
+                val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+                openAIClient.chatCompletionStreamMultimodal(
+                    apiKey = apiKey,
+                    model = provider.modelId,
+                    messages = multimodalMessages,
+                    temperature = config.temperature,
+                    topP = config.topP,
+                    maxTokens = config.maxTokens
+                ).collect { chunk ->
+                    emit(chunk)
+                }
+            } else {
+                // Use simple text API
+                val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+                openAIClient.chatCompletionStream(
+                    apiKey = apiKey,
+                    model = provider.modelId,
+                    messages = chatMessages,
+                    temperature = config.temperature,
+                    topP = config.topP,
+                    maxTokens = config.maxTokens
+                ).collect { chunk ->
+                    emit(chunk)
+                }
             }
         }
     }
@@ -181,9 +207,11 @@ class AIServiceImpl @Inject constructor(
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        webSearchEnabled: Boolean,
+        xSearchEnabled: Boolean
     ): Flow<String> = flow {
-        Log.d(TAG, "Generating x.ai response with ${provider.modelId}")
+        Log.d(TAG, "Generating x.ai response with ${provider.modelId} (webSearch: $webSearchEnabled, xSearch: $xSearchEnabled)")
         
         val apiKey = apiKeyRepository.getApiKey(provider.provider)
             ?: throw IllegalStateException("API key not set for ${provider.provider.displayName}")
@@ -192,13 +220,25 @@ class AIServiceImpl @Inject constructor(
         val hasImages = messages.any { !it.imageAttachments.isNullOrBlank() }
         val hasFiles = messages.any { !it.fileAttachments.isNullOrBlank() }
         
-        if (hasImages || hasFiles) {
-            // Use multimodal API (x.ai Grok supports images like OpenAI)
-            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
-            xaiClient.chatCompletionStreamMultimodal(
+        // Determine if we need to use Responses API (for web_search/x_search tools)
+        val useResponsesApi = xSearchEnabled || webSearchEnabled
+        
+        if (useResponsesApi) {
+            // Use Responses API for web_search/x_search
+            // Always use text-only format for Responses API (matches documented curl format exactly)
+            // Images from history are not critical for search queries
+            val tools = when {
+                xSearchEnabled -> listOf(com.yourown.ai.data.remote.xai.XAITool(type = "x_search"))
+                webSearchEnabled -> listOf(com.yourown.ai.data.remote.xai.XAITool(type = "web_search"))
+                else -> emptyList()
+            }
+            
+            val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+            xaiClient.responsesApiStream(
                 apiKey = apiKey,
                 model = provider.modelId,
-                messages = multimodalMessages,
+                messages = chatMessages,
+                tools = tools,
                 temperature = config.temperature,
                 topP = config.topP,
                 maxTokens = config.maxTokens
@@ -206,17 +246,31 @@ class AIServiceImpl @Inject constructor(
                 emit(chunk)
             }
         } else {
-            // Use simple text API
-            val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
-            xaiClient.chatCompletionStream(
-                apiKey = apiKey,
-                model = provider.modelId,
-                messages = chatMessages,
-                temperature = config.temperature,
-                topP = config.topP,
-                maxTokens = config.maxTokens
-            ).collect { chunk ->
-                emit(chunk)
+            // Use regular Chat Completions API (no tools)
+            if (hasImages || hasFiles) {
+                val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+                xaiClient.chatCompletionStreamMultimodal(
+                    apiKey = apiKey,
+                    model = provider.modelId,
+                    messages = multimodalMessages,
+                    temperature = config.temperature,
+                    topP = config.topP,
+                    maxTokens = config.maxTokens
+                ).collect { chunk ->
+                    emit(chunk)
+                }
+            } else {
+                val chatMessages = buildChatMessages(messages, systemPrompt, userContext, config)
+                xaiClient.chatCompletionStream(
+                    apiKey = apiKey,
+                    model = provider.modelId,
+                    messages = chatMessages,
+                    temperature = config.temperature,
+                    topP = config.topP,
+                    maxTokens = config.maxTokens
+                ).collect { chunk ->
+                    emit(chunk)
+                }
             }
         }
     }
@@ -226,9 +280,17 @@ class AIServiceImpl @Inject constructor(
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        webSearchEnabled: Boolean
     ): Flow<String> = flow {
-        Log.d(TAG, "Generating OpenRouter response with ${provider.modelId}")
+        // Add :online suffix if web search is enabled
+        val modelId = if (webSearchEnabled) {
+            "${provider.modelId}:online"
+        } else {
+            provider.modelId
+        }
+        
+        Log.d(TAG, "Generating OpenRouter response with $modelId (webSearch: $webSearchEnabled)")
         
         val apiKey = apiKeyRepository.getApiKey(provider.provider)
             ?: throw IllegalStateException("API key not set for ${provider.provider.displayName}")
@@ -242,7 +304,7 @@ class AIServiceImpl @Inject constructor(
             val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
             openRouterClient.chatCompletionStreamMultimodal(
                 apiKey = apiKey,
-                model = provider.modelId,
+                model = modelId,
                 messages = multimodalMessages,
                 temperature = config.temperature,
                 topP = config.topP,
@@ -255,7 +317,7 @@ class AIServiceImpl @Inject constructor(
             val openRouterMessages = buildOpenRouterMessages(messages, systemPrompt, userContext, config)
             openRouterClient.chatCompletionStream(
                 apiKey = apiKey,
-                model = provider.modelId,
+                model = modelId,
                 messages = openRouterMessages,
                 temperature = config.temperature,
                 topP = config.topP,

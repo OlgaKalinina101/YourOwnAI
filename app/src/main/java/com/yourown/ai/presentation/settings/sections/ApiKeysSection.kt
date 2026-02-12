@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIProvider
 import com.yourown.ai.domain.model.ApiKeyInfo
 import com.yourown.ai.presentation.settings.components.SettingsSection
@@ -24,9 +26,9 @@ fun ApiKeysSection(
     onShowLocalModels: () -> Unit
 ) {
     SettingsSection(
-        title = "API Keys",
+        title = stringResource(R.string.settings_api_keys_title),
         icon = Icons.Default.Key,
-        subtitle = "Configure your AI providers",
+        subtitle = stringResource(R.string.settings_api_keys_subtitle),
         isCollapsible = true,
         initiallyExpanded = false
     ) {
@@ -50,7 +52,7 @@ fun ApiKeysSection(
         ) {
             Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Add custom provider")
+            Text(stringResource(R.string.add_custom_provider))
         }
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -61,7 +63,7 @@ fun ApiKeysSection(
         ) {
             Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Download Local Model")
+            Text(stringResource(R.string.download_local_model))
         }
     }
 }
@@ -99,19 +101,19 @@ private fun ApiKeyItem(
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             if (keyInfo.isSet) {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Edit, stringResource(R.string.api_key_item_edit), modifier = Modifier.size(20.dp))
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Delete, stringResource(R.string.api_key_item_delete), modifier = Modifier.size(20.dp))
                 }
             } else {
                 FilledTonalButton(onClick = onAdd) {
-                    Text("Add")
+                    Text(stringResource(R.string.api_key_item_add))
                 }
             }
             
             IconButton(onClick = { /* TODO: Show help */ }) {
-                Icon(Icons.Default.HelpOutline, "Help", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.HelpOutline, stringResource(R.string.settings_api_keys_title), modifier = Modifier.size(20.dp))
             }
         }
     }

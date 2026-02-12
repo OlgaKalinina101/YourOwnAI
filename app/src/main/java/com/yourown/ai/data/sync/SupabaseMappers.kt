@@ -171,6 +171,10 @@ fun PersonaDto.toEntity(systemPrompt: String): PersonaEntity {
         // Memory Scope
         useOnlyPersonaMemories = use_only_persona_memories,
         shareMemoriesGlobally = share_memories_globally,
+        // API Embeddings Configuration
+        useApiEmbeddings = use_api_embeddings,
+        apiEmbeddingsProvider = api_embeddings_provider,
+        apiEmbeddingsModel = api_embeddings_model,
         createdAt = created_at,
         updatedAt = updated_at
     )
@@ -216,6 +220,10 @@ fun PersonaEntity.toDto(deviceId: String): PersonaDto {
         // Memory Scope
         use_only_persona_memories = useOnlyPersonaMemories,
         share_memories_globally = shareMemoriesGlobally,
+        // API Embeddings Configuration
+        use_api_embeddings = useApiEmbeddings,
+        api_embeddings_provider = apiEmbeddingsProvider,
+        api_embeddings_model = apiEmbeddingsModel,
         created_at = createdAt,
         updated_at = updatedAt,
         device_id = deviceId,

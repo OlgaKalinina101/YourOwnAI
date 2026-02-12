@@ -84,6 +84,8 @@ fun ConversationEntity.toDomain(messages: List<Message> = emptyList()): Conversa
         isPinned = isPinned,
         isArchived = isArchived,
         sourceConversationId = sourceConversationId,
+        webSearchEnabled = webSearchEnabled,
+        xSearchEnabled = xSearchEnabled,
         messages = messages
     )
 }
@@ -101,7 +103,9 @@ fun Conversation.toEntity(): ConversationEntity {
         updatedAt = updatedAt,
         isPinned = isPinned,
         isArchived = isArchived,
-        sourceConversationId = sourceConversationId
+        sourceConversationId = sourceConversationId,
+        webSearchEnabled = webSearchEnabled,
+        xSearchEnabled = xSearchEnabled
     )
 }
 

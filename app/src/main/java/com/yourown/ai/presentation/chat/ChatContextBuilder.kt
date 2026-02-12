@@ -248,7 +248,9 @@ class ChatContextBuilder @Inject constructor(
                 ),
                 systemPrompt = "Ты - аналитик смысла.",
                 userContext = null,
-                config = config.copy(temperature = 0.3f) // Lower temperature for structured output
+                config = config.copy(temperature = 0.3f), // Lower temperature for structured output
+                webSearchEnabled = false, // No web search for empathy analysis
+                xSearchEnabled = false // No X search for empathy analysis
             ).collect { chunk ->
                 analysisResponseBuilder.append(chunk)
             }

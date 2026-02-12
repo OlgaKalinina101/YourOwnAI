@@ -299,6 +299,51 @@ object DatabaseModule {
         }
     }
     
+    /**
+     * Migration from version 15 to 16
+     * Add webSearchEnabled column to conversations table for OpenRouter :online support
+     */
+    private val MIGRATION_15_16 = object : Migration(15, 16) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add webSearchEnabled column (default false for existing conversations)
+            database.execSQL(
+                "ALTER TABLE conversations ADD COLUMN webSearchEnabled INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+    
+    /**
+     * Migration from version 16 to 17
+     * Add xSearchEnabled column to conversations table for xAI Grok X Search
+     */
+    private val MIGRATION_16_17 = object : Migration(16, 17) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add xSearchEnabled column (default false for existing conversations)
+            database.execSQL(
+                "ALTER TABLE conversations ADD COLUMN xSearchEnabled INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+    }
+    
+    /**
+     * Migration from version 17 to 18
+     * Add API Embeddings configuration to personas table
+     */
+    private val MIGRATION_17_18 = object : Migration(17, 18) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add API Embeddings configuration columns
+            database.execSQL(
+                "ALTER TABLE personas ADD COLUMN useApiEmbeddings INTEGER NOT NULL DEFAULT 0"
+            )
+            database.execSQL(
+                "ALTER TABLE personas ADD COLUMN apiEmbeddingsProvider TEXT NOT NULL DEFAULT 'openai'"
+            )
+            database.execSQL(
+                "ALTER TABLE personas ADD COLUMN apiEmbeddingsModel TEXT NOT NULL DEFAULT 'text-embedding-3-small'"
+            )
+        }
+    }
+    
     @Provides
     @Singleton
     fun provideDatabase(
@@ -320,7 +365,10 @@ object DatabaseModule {
                 MIGRATION_11_12,
                 MIGRATION_12_13,
                 MIGRATION_13_14,
-                MIGRATION_14_15
+                MIGRATION_14_15,
+                MIGRATION_15_16,
+                MIGRATION_16_17,
+                MIGRATION_17_18
             )
             .fallbackToDestructiveMigration() // Keep for future migrations
             .build()

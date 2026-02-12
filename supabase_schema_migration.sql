@@ -45,6 +45,11 @@ ALTER TABLE personas ADD COLUMN IF NOT EXISTS linked_document_ids TEXT;
 ALTER TABLE personas ADD COLUMN IF NOT EXISTS use_only_persona_memories BOOLEAN DEFAULT FALSE;
 ALTER TABLE personas ADD COLUMN IF NOT EXISTS share_memories_globally BOOLEAN DEFAULT TRUE;
 
+-- API Embeddings Configuration (NEW)
+ALTER TABLE personas ADD COLUMN IF NOT EXISTS use_api_embeddings BOOLEAN DEFAULT FALSE;
+ALTER TABLE personas ADD COLUMN IF NOT EXISTS api_embeddings_provider TEXT DEFAULT 'openai';
+ALTER TABLE personas ADD COLUMN IF NOT EXISTS api_embeddings_model TEXT DEFAULT 'text-embedding-3-small';
+
 -- Success message
 SELECT 'Personas table migration completed successfully! ✅' as status;
 SELECT 'Now all persona settings will be synced across devices' as info;

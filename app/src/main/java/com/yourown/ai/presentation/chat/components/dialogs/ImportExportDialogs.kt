@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.Message
 
 /**
@@ -212,7 +214,7 @@ fun ExportChatDialog(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Copy")
+                            Text(stringResource(R.string.export_copy))
                         }
                         
                         Button(
@@ -225,7 +227,7 @@ fun ExportChatDialog(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Share")
+                            Text(stringResource(R.string.export_share))
                         }
                     }
                     
@@ -244,7 +246,7 @@ fun ExportChatDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save to File (.txt)")
+                        Text(stringResource(R.string.export_save_to_file))
                     }
                 }
             }
@@ -450,7 +452,7 @@ fun ImportChatDialog(
             )
         },
         title = {
-            Text("Import Chat")
+            Text(stringResource(R.string.import_dialog_title))
         },
         text = {
             Column(
@@ -467,7 +469,7 @@ fun ImportChatDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(400.dp),
-                    placeholder = { Text("# Chat Export: ...") },
+                    placeholder = { Text(stringResource(R.string.import_placeholder)) },
                     maxLines = Int.MAX_VALUE, // No limit on lines
                     singleLine = false,
                     isError = errorMessage != null,
@@ -538,7 +540,7 @@ fun ImportChatDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Load from File (.txt)")
+                    Text(stringResource(R.string.import_load_from_file))
                 }
             }
         },
@@ -557,12 +559,12 @@ fun ImportChatDialog(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Import")
+                Text(stringResource(R.string.import_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.import_cancel))
             }
         }
     )
@@ -613,7 +615,7 @@ fun SourceChatSelectionDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Inherit Context From Chat") },
+        title = { Text(stringResource(R.string.inherit_context_title)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -635,7 +637,7 @@ fun SourceChatSelectionDialog(
                         value = selectedPersonaName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Persona") },
+                        label = { Text(stringResource(R.string.inherit_context_persona_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPersona) },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
@@ -722,7 +724,7 @@ fun SourceChatSelectionDialog(
                         value = selectedChatTitle,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Source Chat") },
+                        label = { Text(stringResource(R.string.inherit_context_source_chat_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedChat) },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                         modifier = Modifier
@@ -797,12 +799,12 @@ fun SourceChatSelectionDialog(
         },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("Confirm")
+                Text(stringResource(R.string.inherit_context_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.inherit_context_cancel))
             }
         }
     )

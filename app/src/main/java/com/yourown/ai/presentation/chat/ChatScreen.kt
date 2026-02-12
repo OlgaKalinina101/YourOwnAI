@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.presentation.chat.components.*
 import com.yourown.ai.domain.model.ModelCapabilities
 import kotlinx.coroutines.launch
@@ -59,6 +61,14 @@ fun ChatScreen(
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    
+    // Вычисляем отфильтрованный список для корректного отображения и auto-scroll
+    // Если streamingMessage уже в БД, не показываем дубликат из messages
+    val displayMessages = if (uiState.streamingMessage != null) {
+        uiState.messages.filter { it.id != uiState.streamingMessage!!.id }
+    } else {
+        uiState.messages
+    }
     
     // Speech recognition manager
     val speechRecognitionManager = remember { 
@@ -219,28 +229,24 @@ fun ChatScreen(
     }
     
     // Auto-scroll to bottom when new messages arrive
-    LaunchedEffect(uiState.messages.size) {
-        if (uiState.messages.isNotEmpty()) {
+    LaunchedEffect(displayMessages.size) {
+        if (displayMessages.isNotEmpty()) {
             // Scroll to last item (spacer) to ensure full visibility
-            // +1 for loading indicator (if present), +1 for bottom spacer
-            val targetIndex = if (uiState.isLoading) {
-                uiState.messages.size + 1 // messages + loading + spacer
-            } else {
-                uiState.messages.size // messages + spacer
-            }
+            // Вычисляем индекс: displayMessages + (streaming если есть) + (loading если есть) + spacer
+            val targetIndex = displayMessages.size + 
+                (if (uiState.streamingMessage != null) 1 else 0) +
+                (if (uiState.isLoading) 1 else 0)
             listState.scrollToItem(targetIndex)
         }
     }
     
     // Auto-scroll after streaming completes
     LaunchedEffect(uiState.shouldScrollToBottom) {
-        if (uiState.shouldScrollToBottom && uiState.messages.isNotEmpty()) {
+        if (uiState.shouldScrollToBottom && displayMessages.isNotEmpty()) {
             // Scroll to last item (spacer)
-            val targetIndex = if (uiState.streamingMessage != null || uiState.isLoading) {
-                uiState.messages.size + 1
-            } else {
-                uiState.messages.size
-            }
+            val targetIndex = displayMessages.size + 
+                (if (uiState.streamingMessage != null) 1 else 0) +
+                (if (uiState.isLoading) 1 else 0)
             listState.animateScrollToItem(targetIndex)
             viewModel.onScrolledToBottom()
         }
@@ -250,7 +256,7 @@ fun ChatScreen(
     LaunchedEffect(uiState.streamingMessage?.content) {
         if (uiState.streamingMessage != null) {
             // Скроллим к spacer после streaming message для полной видимости
-            val targetIndex = uiState.messages.size + 1 // messages + streaming + spacer
+            val targetIndex = displayMessages.size + 1 // displayMessages + streaming + spacer
             // Используем scrollToItem (без анимации) для мгновенного скролла за стримом
             listState.scrollToItem(targetIndex)
         }
@@ -269,13 +275,11 @@ fun ChatScreen(
     // Scroll to bottom function
     fun scrollToBottom() {
         coroutineScope.launch {
-            if (uiState.messages.isNotEmpty()) {
+            if (displayMessages.isNotEmpty()) {
                 // Scroll to last item (spacer) to ensure full visibility of last message
-                val targetIndex = if (uiState.streamingMessage != null || uiState.isLoading) {
-                    uiState.messages.size + 1 // messages + streaming/loading + spacer
-                } else {
-                    uiState.messages.size // messages + spacer
-                }
+                val targetIndex = displayMessages.size + 
+                    (if (uiState.streamingMessage != null) 1 else 0) +
+                    (if (uiState.isLoading) 1 else 0)
                 listState.animateScrollToItem(targetIndex)
             }
         }
@@ -295,7 +299,7 @@ fun ChatScreen(
                 tonalElevation = 3.dp
             ) {
                 ChatTopBar(
-                    conversationTitle = uiState.currentConversation?.title ?: "YourOwnAI",
+                    conversationTitle = uiState.currentConversation?.title ?: stringResource(R.string.chat_app_name),
                     selectedModel = uiState.selectedModel,
                     availableModels = uiState.availableModels,
                     localModels = uiState.localModels,
@@ -305,6 +309,19 @@ fun ChatScreen(
                     searchQuery = uiState.searchQuery,
                     currentSearchIndex = uiState.currentSearchIndex,
                     searchMatchCount = uiState.searchMatchCount,
+                    webSearchEnabled = uiState.currentConversation?.webSearchEnabled ?: false,
+                    supportsWebSearch = uiState.selectedModel?.let { model ->
+                        if (model is com.yourown.ai.domain.model.ModelProvider.API) {
+                            ModelCapabilities.forModel(model.modelId).supportsWebSearch
+                        } else false
+                    } ?: false,
+                    xSearchEnabled = uiState.currentConversation?.xSearchEnabled ?: false,
+                    supportsXSearch = uiState.selectedModel?.let { model ->
+                        if (model is com.yourown.ai.domain.model.ModelProvider.API) {
+                            // X Search only for xAI (Grok) models
+                            model.provider == com.yourown.ai.domain.model.AIProvider.XAI
+                        } else false
+                    } ?: false,
                     onBackClick = onNavigateBack,
                     onEditTitle = viewModel::showEditTitleDialog,
                     onModelSelect = viewModel::selectModel,
@@ -318,16 +335,24 @@ fun ChatScreen(
                     onSearchClose = viewModel::toggleSearchMode,
                     onSystemPromptClick = viewModel::showSystemPromptDialog,
                     onExportChatClick = viewModel::exportChat,
+                    onToggleWebSearch = viewModel::toggleWebSearch,
+                    onToggleXSearch = viewModel::toggleXSearch,
                     isExporting = uiState.isExporting
                 )
             }
             
             // Контент + Input - эта часть реагирует на клавиатуру
-            Column(
+            // Обернем в Box чтобы баннер был overlay
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .imePadding()
+                    .fillMaxWidth()
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding()
+                ) {
                 // Чат - занимает все место
                 Box(
                     modifier = Modifier.weight(1f)
@@ -344,7 +369,7 @@ fun ChatScreen(
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
                             items(
-                                items = uiState.messages,
+                                items = displayMessages,
                                 key = { it.id },
                                 contentType = { "message" }
                             ) { message ->
@@ -394,7 +419,7 @@ fun ChatScreen(
                                         horizontalArrangement = Arrangement.Start,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        val textToType = "Thinking"
+                                        val textToType = stringResource(R.string.chat_thinking)
                                         val charCount = textToType.length
 
                                         val infiniteTransition = rememberInfiniteTransition(label = "typewriter")
@@ -522,7 +547,7 @@ fun ChatScreen(
                             ) {
                                 Icon(
                                     Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "Scroll to bottom",
+                                    contentDescription = stringResource(R.string.chat_scroll_to_bottom),
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -594,6 +619,13 @@ fun ChatScreen(
                         .fillMaxWidth()
                         .navigationBarsPadding()
                 )
+                }
+                
+                // Search Status Banner overlay (поверх контента)
+                SearchStatusBanner(
+                    message = uiState.searchStatusMessage,
+                    onDismiss = viewModel::clearSearchStatusMessage
+                )
             }
         }
     }
@@ -649,7 +681,7 @@ fun ChatScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "Exporting chat...",
+                        text = stringResource(R.string.chat_exporting),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -677,7 +709,7 @@ fun ChatScreen(
                     putExtra(Intent.EXTRA_TEXT, uiState.exportedChatText)
                     type = "text/plain"
                 }
-                context.startActivity(Intent.createChooser(shareIntent, "Поделиться чатом"))
+                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.chat_share_title)))
             },
             onSaveToFile = {
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -750,13 +782,13 @@ fun ChatScreen(
                 )
             },
             title = {
-                Text("Model Loading Error")
+                Text(stringResource(R.string.chat_model_loading_error))
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(uiState.modelLoadErrorMessage!!)
                     Text(
-                        text = "Please download the model from the model selector before using it.",
+                        text = stringResource(R.string.chat_model_download_required),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -764,7 +796,7 @@ fun ChatScreen(
             },
             confirmButton = {
                 TextButton(onClick = viewModel::hideModelLoadErrorDialog) {
-                    Text("OK")
+                    Text(stringResource(R.string.chat_ok))
                 }
             }
         )

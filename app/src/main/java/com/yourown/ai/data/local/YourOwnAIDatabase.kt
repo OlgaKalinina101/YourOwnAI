@@ -33,7 +33,7 @@ import com.yourown.ai.data.local.entity.*
         KnowledgeDocumentEntity::class,
         PersonaEntity::class,
     ],
-    version = 15,  // Increased: updated Conversation with personaId mapping
+    version = 18,  // Increased: added API Embeddings configuration to personas
     exportSchema = true
 )
 abstract class YourOwnAIDatabase : RoomDatabase() {

@@ -123,6 +123,11 @@ data class PersonaDto(
     val use_only_persona_memories: Boolean = false,
     val share_memories_globally: Boolean = true,
     
+    // API Embeddings Configuration
+    val use_api_embeddings: Boolean = false,
+    val api_embeddings_provider: String = "openai",
+    val api_embeddings_model: String = "text-embedding-3-small",
+    
     val created_at: Long,
     val updated_at: Long,
     val device_id: String? = null,

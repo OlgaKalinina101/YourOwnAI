@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.presentation.settings.dialogs.ApiKeyDialog
 import com.yourown.ai.presentation.settings.dialogs.AppearanceDialog
 import com.yourown.ai.presentation.settings.dialogs.ContextDialog
@@ -30,10 +32,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.SemiBold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.settings_back))
                     }
                 }
             )
@@ -108,7 +110,13 @@ fun SettingsScreen(
                 isRecalculating = uiState.isRecalculatingEmbeddings,
                 recalculationProgress = uiState.recalculationProgress,
                 recalculationProgressPercent = uiState.recalculationProgressPercent,
-                memoryProcessingStatus = uiState.memoryProcessingStatus
+                memoryProcessingStatus = uiState.memoryProcessingStatus,
+                useApiEmbeddings = uiState.aiConfig.useApiEmbeddings,
+                apiEmbeddingsProvider = uiState.aiConfig.apiEmbeddingsProvider,
+                apiEmbeddingsModel = uiState.aiConfig.apiEmbeddingsModel,
+                onUseApiEmbeddingsChange = viewModel::updateUseApiEmbeddings,
+                onApiEmbeddingsProviderChange = viewModel::updateApiEmbeddingsProvider,
+                onApiEmbeddingsModelChange = viewModel::updateApiEmbeddingsModel
             )
             
             // Memory Section
@@ -160,6 +168,9 @@ fun SettingsScreen(
                 onShowInstructions = viewModel::showCloudSyncInstructionsDialog,
                 isSyncing = uiState.isSyncing
             )
+            
+            // Language Section
+            LanguageSection()
             
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -387,27 +398,21 @@ fun SettingsScreen(
                     tint = MaterialTheme.colorScheme.error
                 )
             },
-            title = { Text("Embedding Model Required") },
+            title = { Text(stringResource(R.string.embedding_required_title)) },
             text = {
-                Text(
-                    "To enable Memory or RAG features, you need a downloaded embedding model.\n\n" +
-                    "Available models:\n" +
-                    "• all-MiniLM-L6-v2 (21 MB, fast)\n" +
-                    "• mxbai-embed-large (670 MB, better quality)\n\n" +
-                    "Please download an embedding model to continue."
-                )
+                Text(stringResource(R.string.embedding_required_message))
             },
             confirmButton = {
                 Button(onClick = {
                     viewModel.hideEmbeddingRequiredDialog()
                     viewModel.showEmbeddingModelsDialog()
                 }) {
-                    Text("Download Embedding Model")
+                    Text(stringResource(R.string.embedding_download_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::hideEmbeddingRequiredDialog) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )

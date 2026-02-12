@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.presentation.settings.components.SettingsSection
 
 /**
@@ -21,24 +23,159 @@ fun EmbeddingModelsSection(
     isRecalculating: Boolean,
     recalculationProgress: String?,
     recalculationProgressPercent: Float,
-    memoryProcessingStatus: com.yourown.ai.data.repository.MemoryProcessingStatus = com.yourown.ai.data.repository.MemoryProcessingStatus.Idle
+    memoryProcessingStatus: com.yourown.ai.data.repository.MemoryProcessingStatus = com.yourown.ai.data.repository.MemoryProcessingStatus.Idle,
+    useApiEmbeddings: Boolean = false,
+    apiEmbeddingsProvider: String = "openai",
+    apiEmbeddingsModel: String = "text-embedding-3-small",
+    onUseApiEmbeddingsChange: (Boolean) -> Unit = {},
+    onApiEmbeddingsProviderChange: (String) -> Unit = {},
+    onApiEmbeddingsModelChange: (String) -> Unit = {}
 ) {
     SettingsSection(
-        title = "Embedding Models",
+        title = stringResource(R.string.embedding_section_title),
         icon = Icons.Default.Memory,
-        subtitle = "Models for semantic search and RAG"
+        subtitle = stringResource(R.string.embedding_section_subtitle)
     ) {
-        // Download Embedding Model button
-        FilledTonalButton(
-            onClick = onShowEmbeddingModels,
-            modifier = Modifier.fillMaxWidth()
+        // Use API Embeddings Toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Download Embedding Model")
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.embedding_use_api_title),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(R.string.embedding_use_api_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = useApiEmbeddings,
+                onCheckedChange = onUseApiEmbeddingsChange
+            )
         }
         
-        Spacer(modifier = Modifier.height(12.dp))
+        // API Embeddings Configuration (shown when enabled)
+        if (useApiEmbeddings) {
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Provider Selection
+            var expandedProvider by remember { mutableStateOf(false) }
+            val providers = listOf(
+                "openai" to "OpenAI",
+                "openrouter" to "OpenRouter"
+            )
+            
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.embedding_provider_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(
+                    onClick = { expandedProvider = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = providers.find { it.first == apiEmbeddingsProvider }?.second ?: "OpenAI",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(Icons.Default.ArrowDropDown, null)
+                }
+                
+                DropdownMenu(
+                    expanded = expandedProvider,
+                    onDismissRequest = { expandedProvider = false }
+                ) {
+                    providers.forEach { (value, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                onApiEmbeddingsProviderChange(value)
+                                expandedProvider = false
+                            }
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Model Selection
+            var expandedModel by remember { mutableStateOf(false) }
+            val models = when (apiEmbeddingsProvider) {
+                "openai" -> listOf(
+                    "text-embedding-3-small" to "text-embedding-3-small (1536 dim)",
+                    "text-embedding-3-large" to "text-embedding-3-large (3072 dim)",
+                    "text-embedding-ada-002" to "text-embedding-ada-002 (1536 dim, legacy)"
+                )
+                "openrouter" -> listOf(
+                    "text-embedding-3-small" to "OpenAI: text-embedding-3-small",
+                    "text-embedding-3-large" to "OpenAI: text-embedding-3-large",
+                    "voyage-3" to "Voyage AI: voyage-3",
+                    "voyage-3-lite" to "Voyage AI: voyage-3-lite"
+                )
+                else -> listOf("text-embedding-3-small" to "text-embedding-3-small")
+            }
+            
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.embedding_model_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedButton(
+                    onClick = { expandedModel = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = models.find { it.first == apiEmbeddingsModel }?.second 
+                            ?: apiEmbeddingsModel,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(Icons.Default.ArrowDropDown, null)
+                }
+                
+                DropdownMenu(
+                    expanded = expandedModel,
+                    onDismissRequest = { expandedModel = false }
+                ) {
+                    models.forEach { (value, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                onApiEmbeddingsModelChange(value)
+                                expandedModel = false
+                            }
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Download Embedding Model button (shown when using local)
+            FilledTonalButton(
+                onClick = onShowEmbeddingModels,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.embedding_download_model))
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         
         // Recalculate All Embeddings button
         OutlinedButton(
@@ -55,7 +192,7 @@ fun EmbeddingModelsSection(
                 Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Recalculate All Embeddings")
+            Text(stringResource(R.string.embedding_recalculate))
         }
         
         // Memory processing status (during recalculation)
@@ -84,7 +221,7 @@ fun EmbeddingModelsSection(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Memory Embeddings",
+                                text = stringResource(R.string.embedding_memory_embeddings),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -129,7 +266,7 @@ fun EmbeddingModelsSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = recalculationProgress ?: "Processing...",
+                        text = recalculationProgress ?: stringResource(R.string.embedding_processing),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -161,7 +298,7 @@ fun EmbeddingModelsSection(
         // Warning text
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "⚠️ Important: Recalculate all embeddings after switching embedding models",
+            text = stringResource(R.string.embedding_recalculate_warning),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth()

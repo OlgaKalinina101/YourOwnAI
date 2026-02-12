@@ -37,6 +37,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import coil.compose.AsyncImage
 import com.yourown.ai.domain.model.Message
 import com.yourown.ai.domain.model.MessageRole
@@ -110,7 +112,7 @@ fun MessageBubble(
                                 )
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Replied to:",
+                                        text = stringResource(R.string.message_replied_to),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -147,7 +149,7 @@ fun MessageBubble(
                                     val imagePath = imagePaths[index]
                                     AsyncImage(
                                         model = java.io.File(imagePath),
-                                        contentDescription = "Attached image",
+                                        contentDescription = stringResource(R.string.message_attached_image),
                                         modifier = Modifier
                                             .width(200.dp)
                                             .height(150.dp)
@@ -244,7 +246,7 @@ fun MessageBubble(
                                 tint = MaterialTheme.colorScheme.error
                             )
                             Text(
-                                text = "Error",
+                                text = stringResource(R.string.message_error),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.error,
                                 fontWeight = FontWeight.SemiBold
@@ -284,7 +286,7 @@ fun MessageBubble(
                     ) {
                         Icon(
                             Icons.Default.ContentCopy,
-                            contentDescription = "Copy",
+                            contentDescription = stringResource(R.string.message_copy),
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -297,7 +299,7 @@ fun MessageBubble(
                     ) {
                         Icon(
                             Icons.Default.Reply,
-                            contentDescription = "Reply",
+                            contentDescription = stringResource(R.string.message_reply),
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -310,7 +312,7 @@ fun MessageBubble(
                     ) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.message_delete),
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -325,7 +327,7 @@ fun MessageBubble(
                         ) {
                             Icon(
                                 if (message.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Like",
+                                contentDescription = stringResource(R.string.message_like),
                                 modifier = Modifier.size(16.dp),
                                 tint = if (message.isLiked) {
                                     MaterialTheme.colorScheme.primary
@@ -342,7 +344,7 @@ fun MessageBubble(
                         ) {
                             Icon(
                                 Icons.Default.Refresh,
-                                contentDescription = "Regenerate",
+                                contentDescription = stringResource(R.string.message_regenerate),
                                 modifier = Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -356,7 +358,7 @@ fun MessageBubble(
                             ) {
                                 Icon(
                                     Icons.Default.Code,
-                                    contentDescription = "View Request Logs",
+                                    contentDescription = stringResource(R.string.message_view_logs),
                                     modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -372,9 +374,9 @@ fun MessageBubble(
     if (showRegenerateDialog) {
         AlertDialog(
             onDismissRequest = { showRegenerateDialog = false },
-            title = { Text("Regenerate Response?") },
+            title = { Text(stringResource(R.string.dialog_regenerate_title)) },
             text = { 
-                Text("This will delete the current response and generate a new one. This action cannot be undone.") 
+                Text(stringResource(R.string.dialog_regenerate_message)) 
             },
             confirmButton = {
                 Button(
@@ -386,12 +388,12 @@ fun MessageBubble(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("Regenerate")
+                    Text(stringResource(R.string.dialog_regenerate_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRegenerateDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )
@@ -401,9 +403,9 @@ fun MessageBubble(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Message?") },
+            title = { Text(stringResource(R.string.dialog_delete_title)) },
             text = { 
-                Text("This will permanently delete this message. This action cannot be undone.") 
+                Text(stringResource(R.string.dialog_delete_message)) 
             },
             confirmButton = {
                 Button(
@@ -415,12 +417,12 @@ fun MessageBubble(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.dialog_delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.dialog_cancel))
                 }
             }
         )
@@ -622,7 +624,7 @@ private fun CodeBlock(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (language.isNotEmpty()) language else "code",
+                text = if (language.isNotEmpty()) language else stringResource(R.string.message_code),
                 style = MaterialTheme.typography.labelMedium,
                 color = codeTextColor.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Medium
@@ -652,13 +654,13 @@ private fun CodeBlock(
                 ) {
                     Icon(
                         imageVector = if (showCopied) Icons.Default.Check else Icons.Default.ContentCopy,
-                        contentDescription = "Copy code",
+                        contentDescription = stringResource(R.string.message_copy_code),
                         modifier = Modifier.size(14.dp),
                         tint = if (showCopied) MaterialTheme.colorScheme.primary 
                                else codeTextColor
                     )
                     Text(
-                        text = if (showCopied) "Copied!" else "Copy",
+                        text = if (showCopied) stringResource(R.string.message_copied) else stringResource(R.string.message_copy),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (showCopied) MaterialTheme.colorScheme.primary 
                                else codeTextColor
@@ -695,6 +697,7 @@ private fun CodeBlock(
  * - `inline code`
  * - [text](url)
  * - **[bold link](url)**
+ * - [[1]](url) - citation links (superscript numbers)
  * - > blockquote
  * - # Heading 1-6
  * - --- horizontal divider
@@ -807,6 +810,7 @@ private fun parseMarkdownWithoutCodeBlocks(text: String, isUser: Boolean): Annot
             }
             
             // Regular expressions (order is important!)
+            val citationLinkRegex = """\[\[(\d+)\]\]\(([^\)]+)\)""".toRegex()  // [[1]](url) - citation links
             val boldLinkRegex = """\*\*\[([^\]]+)\]\(([^\)]+)\)\*\*""".toRegex()  // **[text](url)**
             val linkRegex = """\[([^\]]+)\]\(([^\)]+)\)""".toRegex()  // [text](url)
             val boldRegex = """\*\*(.+?)\*\*""".toRegex()  // **text**
@@ -816,7 +820,10 @@ private fun parseMarkdownWithoutCodeBlocks(text: String, isUser: Boolean): Annot
             // Find all matches
             val matches = mutableListOf<Triple<IntRange, String, MatchResult>>()
 
-            // Important: first bold+link, then links, then inline code, then bold, then italic
+            // Important: citation links first, then bold+link, then links, then inline code, then bold, then italic
+            citationLinkRegex.findAll(processLine).forEach {
+                matches.add(Triple(it.range, "citation", it))
+            }
             boldLinkRegex.findAll(processLine).forEach {
                 matches.add(Triple(it.range, "boldlink", it))
             }
@@ -850,6 +857,29 @@ private fun parseMarkdownWithoutCodeBlocks(text: String, isUser: Boolean): Annot
                 }
 
                 when (type) {
+                    "citation" -> {
+                        // [[1]](url) - citation link (small superscript number)
+                        val number = match.groupValues[1]
+                        val url = match.groupValues[2]
+                        val start = length
+
+                        withStyle(SpanStyle(
+                            color = if (isQuote) quoteColor else linkColor,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize * 0.85f, // Smaller
+                            baselineShift = androidx.compose.ui.text.style.BaselineShift.Superscript,
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.Underline
+                        )) {
+                            append("[$number]")
+                        }
+
+                        addStringAnnotation(
+                            tag = "URL",
+                            annotation = url,
+                            start = start,
+                            end = start + "[$number]".length
+                        )
+                    }
                     "boldlink" -> {
                         // **[text](url)** - bold link
                         val label = match.groupValues[1]

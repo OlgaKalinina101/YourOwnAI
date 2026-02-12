@@ -450,6 +450,27 @@ class SettingsViewModel @Inject constructor(
             aiConfigManager.updateContext(_uiState.value.aiConfig, context)
         }
     }
+
+    fun updateUseApiEmbeddings(value: Boolean) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateUseApiEmbeddings(_uiState.value.aiConfig, value)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateApiEmbeddingsProvider(provider: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateApiEmbeddingsProvider(_uiState.value.aiConfig, provider)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
+    
+    fun updateApiEmbeddingsModel(model: String) {
+        viewModelScope.launch {
+            val updated = aiConfigManager.updateApiEmbeddingsModel(_uiState.value.aiConfig, model)
+            _uiState.update { it.copy(aiConfig = updated) }
+        }
+    }
     
     // ===== Dialog State Methods =====
     

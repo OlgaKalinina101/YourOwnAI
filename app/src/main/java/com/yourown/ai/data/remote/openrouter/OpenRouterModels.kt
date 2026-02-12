@@ -118,3 +118,32 @@ enum class OpenRouterModel(
         )
     }
 }
+
+/**
+ * Embedding request for OpenRouter
+ */
+data class OpenRouterEmbeddingRequest(
+    val input: Any, // String or List<String>
+    val model: String
+)
+
+/**
+ * Embedding response from OpenRouter
+ */
+data class OpenRouterEmbeddingResponse(
+    val `object`: String,
+    val data: List<OpenRouterEmbeddingData>,
+    val model: String,
+    val usage: OpenRouterEmbeddingUsage
+)
+
+data class OpenRouterEmbeddingData(
+    val `object`: String,
+    val embedding: List<Float>,
+    val index: Int
+)
+
+data class OpenRouterEmbeddingUsage(
+    val prompt_tokens: Int,
+    val total_tokens: Int
+)

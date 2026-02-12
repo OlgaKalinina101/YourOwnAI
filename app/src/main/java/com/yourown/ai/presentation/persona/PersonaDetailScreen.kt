@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.domain.model.Persona
 
@@ -72,7 +74,7 @@ fun PersonaDetailScreen(
                 title = { Text(editedPersona.name) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.persona_back))
                     }
                 }
             )
@@ -200,7 +202,7 @@ fun BasicInfoSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            "Basic Information",
+            stringResource(R.string.persona_basic_info),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -208,7 +210,7 @@ fun BasicInfoSection(
         OutlinedTextField(
             value = persona.name,
             onValueChange = { onUpdate(persona.copy(name = it)) },
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.persona_name_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -216,7 +218,7 @@ fun BasicInfoSection(
         OutlinedTextField(
             value = persona.description,
             onValueChange = { onUpdate(persona.copy(description = it)) },
-            label = { Text("Description") },
+            label = { Text(stringResource(R.string.persona_description_label)) },
             maxLines = 3,
             modifier = Modifier.fillMaxWidth()
         )
@@ -224,13 +226,13 @@ fun BasicInfoSection(
         // Preferred Model
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                "Preferred Model",
+                stringResource(R.string.persona_preferred_model),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
             
             Text(
-                "This model will be auto-selected when using this persona",
+                stringResource(R.string.persona_preferred_model_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -275,7 +277,7 @@ fun SystemPromptSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "System Prompt",
+                stringResource(R.string.persona_system_prompt),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -285,7 +287,7 @@ fun SystemPromptSection(
                 shape = MaterialTheme.shapes.small
             ) {
                 Text(
-                    text = "Linked to SystemPrompt",
+                    text = stringResource(R.string.persona_linked_to_system_prompt),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -294,7 +296,7 @@ fun SystemPromptSection(
         }
         
         Text(
-            text = "This prompt is synced with the selected SystemPrompt. To edit it, go to Settings > System Prompts.",
+            text = stringResource(R.string.persona_system_prompt_readonly_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -303,7 +305,7 @@ fun SystemPromptSection(
             value = systemPrompt,
             onValueChange = { }, // Read-only
             enabled = false,
-            label = { Text("Prompt (Read-only)") },
+            label = { Text(stringResource(R.string.persona_prompt_readonly)) },
             minLines = 5,
             maxLines = 10,
             modifier = Modifier.fillMaxWidth(),
@@ -323,7 +325,7 @@ fun AISettingsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "AI Settings",
+            stringResource(R.string.persona_ai_settings),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -334,7 +336,7 @@ fun AISettingsSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Temperature", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_temperature), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     String.format("%.2f", persona.temperature),
                     style = MaterialTheme.typography.bodyMedium,
@@ -355,7 +357,7 @@ fun AISettingsSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Top P", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_top_p), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     String.format("%.2f", persona.topP),
                     style = MaterialTheme.typography.bodyMedium,
@@ -376,7 +378,7 @@ fun AISettingsSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Max Tokens", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_max_tokens), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     persona.maxTokens.toString(),
                     style = MaterialTheme.typography.bodyMedium,
@@ -397,7 +399,7 @@ fun AISettingsSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Message History", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_message_history), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     persona.messageHistoryLimit.toString(),
                     style = MaterialTheme.typography.bodyMedium,
@@ -419,9 +421,9 @@ fun AISettingsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Deep Empathy", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_deep_empathy), style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "Enhanced emotional understanding",
+                    stringResource(R.string.persona_deep_empathy_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -443,7 +445,7 @@ fun MemorySettingsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "Memory Settings",
+            stringResource(R.string.persona_memory_settings),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -455,9 +457,9 @@ fun MemorySettingsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Enable Memory", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_enable_memory), style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "Save and recall important facts",
+                    stringResource(R.string.persona_enable_memory_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -480,18 +482,18 @@ fun MemorySettingsSection(
                 ) {
                     Column {
                         Text(
-                            "Saved Memories",
+                            stringResource(R.string.persona_saved_memories),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "$memoryCount memories for this persona",
+                            stringResource(R.string.persona_memories_count, memoryCount),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     
                     TextButton(onClick = onManageMemories) {
-                        Text("Manage")
+                        Text(stringResource(R.string.persona_manage_memories))
                     }
                 }
             }
@@ -507,11 +509,11 @@ fun MemorySettingsSection(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Isolate Memories",
+                            stringResource(R.string.persona_isolate_memories),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "Use only this persona's memories",
+                            stringResource(R.string.persona_isolate_memories_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -534,11 +536,11 @@ fun MemorySettingsSection(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Share Memories",
+                            stringResource(R.string.persona_share_memories),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "Allow other personas to access these memories",
+                            stringResource(R.string.persona_share_memories_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -556,7 +558,7 @@ fun MemorySettingsSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Memory Limit", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.persona_memory_limit), style = MaterialTheme.typography.bodyMedium)
                     Text(
                         persona.memoryLimit.toString(),
                         style = MaterialTheme.typography.bodyMedium,
@@ -582,7 +584,7 @@ fun RAGSettingsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "RAG Settings",
+            stringResource(R.string.persona_rag_settings),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -594,9 +596,9 @@ fun RAGSettingsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Enable RAG", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.persona_enable_rag), style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "Use document knowledge base",
+                    stringResource(R.string.persona_enable_rag_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -619,18 +621,18 @@ fun RAGSettingsSection(
                 ) {
                     Column {
                         Text(
-                            "Linked Documents",
+                            stringResource(R.string.persona_linked_documents),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            "${persona.linkedDocumentIds.size} documents linked",
+                            stringResource(R.string.persona_documents_count, persona.linkedDocumentIds.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     
                     TextButton(onClick = onManageDocuments) {
-                        Text("Manage")
+                        Text(stringResource(R.string.persona_manage_memories))
                     }
                 }
             }
@@ -641,7 +643,7 @@ fun RAGSettingsSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("RAG Chunk Limit", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.persona_rag_chunk_limit), style = MaterialTheme.typography.bodyMedium)
                     Text(
                         persona.ragChunkLimit.toString(),
                         style = MaterialTheme.typography.bodyMedium,
@@ -688,17 +690,17 @@ fun DocumentLinkDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Link Documents",
+                        text = stringResource(R.string.document_link_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, "Close")
+                        Icon(Icons.Default.Close, stringResource(R.string.document_link_close))
                     }
                 }
                 
                 Text(
-                    text = "Select documents for \"${persona.name}\"",
+                    text = stringResource(R.string.document_link_subtitle, persona.name),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -706,7 +708,7 @@ fun DocumentLinkDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "${linkedDocumentIds.size} of ${availableDocuments.size} documents selected",
+                    text = stringResource(R.string.document_link_selected_count, linkedDocumentIds.size, availableDocuments.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
@@ -736,12 +738,12 @@ fun DocumentLinkDialog(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "No documents available",
+                                text = stringResource(R.string.document_link_no_documents),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Add documents in RAG section first",
+                                text = stringResource(R.string.document_link_add_first),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -792,7 +794,7 @@ fun DocumentLinkDialog(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            text = "${document.sizeBytes / 1024} KB",
+                                            text = stringResource(R.string.document_size_kb, document.sizeBytes / 1024),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -813,7 +815,7 @@ fun DocumentLinkDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.document_link_cancel))
                     }
                     
                     Button(
@@ -823,7 +825,7 @@ fun DocumentLinkDialog(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.document_link_save))
                     }
                 }
             }

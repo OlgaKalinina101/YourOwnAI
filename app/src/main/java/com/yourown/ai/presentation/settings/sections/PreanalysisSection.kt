@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.presentation.settings.SettingsUiState
 import com.yourown.ai.presentation.settings.SettingsViewModel
@@ -23,14 +25,14 @@ fun PreanalysisSection(
     onToggleDeepEmpathy: () -> Unit
 ) {
     SettingsSection(
-        title = "Preanalysis",
+        title = stringResource(R.string.preanalysis_title),
         icon = Icons.Default.Analytics,
-        subtitle = "What AI do before responds"
+        subtitle = stringResource(R.string.preanalysis_subtitle)
     ) {
         // Deep Empathy Toggle
         ToggleSetting(
-            title = "Deep Empathy",
-            subtitle = "How deeply your AI can hear you",
+            title = stringResource(R.string.preanalysis_deep_empathy),
+            subtitle = stringResource(R.string.preanalysis_deep_empathy_subtitle),
             checked = config.deepEmpathy,
             onCheckedChange = { onToggleDeepEmpathy() }
         )
@@ -38,28 +40,28 @@ fun PreanalysisSection(
         // Deep Empathy Settings (shown when Deep Empathy is enabled)
         if (config.deepEmpathy) {
             SettingItemClickable(
-                title = "Deep Empathy Prompt",
-                subtitle = "Customize focus tracking prompt • Required: {dialogue_focus}",
+                title = stringResource(R.string.preanalysis_deep_empathy_prompt),
+                subtitle = stringResource(R.string.preanalysis_deep_empathy_prompt_subtitle),
                 onClick = { viewModel.showDeepEmpathyPromptDialog() },
                 trailing = {
-                    Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.Edit, stringResource(R.string.preanalysis_edit), tint = MaterialTheme.colorScheme.primary)
                 }
             )
             
             // Advanced Deep Empathy Settings
             SettingItemClickable(
-                title = if (uiState.showAdvancedDeepEmpathySettings) "▼ Advanced Deep Empathy Settings" else "▶ Advanced Deep Empathy Settings",
-                subtitle = "Customize dialogue focus analysis",
+                title = if (uiState.showAdvancedDeepEmpathySettings) stringResource(R.string.preanalysis_advanced_settings_expanded) else stringResource(R.string.preanalysis_advanced_settings_collapsed),
+                subtitle = stringResource(R.string.preanalysis_advanced_settings_subtitle),
                 onClick = { viewModel.toggleAdvancedDeepEmpathySettings() }
             )
             
             if (uiState.showAdvancedDeepEmpathySettings) {
                 SettingItemClickable(
-                    title = "Analysis Prompt",
-                    subtitle = "How AI finds focus points • Required: {text}",
+                    title = stringResource(R.string.preanalysis_analysis_prompt),
+                    subtitle = stringResource(R.string.preanalysis_analysis_prompt_subtitle),
                     onClick = { viewModel.showDeepEmpathyAnalysisDialog() },
                     trailing = {
-                        Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Edit, stringResource(R.string.preanalysis_edit), tint = MaterialTheme.colorScheme.primary)
                     }
                 )
             }

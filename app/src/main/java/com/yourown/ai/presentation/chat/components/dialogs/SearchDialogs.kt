@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.Message
 import com.yourown.ai.domain.model.MessageRole
 
@@ -57,12 +59,12 @@ fun SearchDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Search in chat",
+                        text = stringResource(R.string.search_dialog_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, "Close")
+                        Icon(Icons.Default.Close, stringResource(R.string.search_dialog_close))
                     }
                 }
                 
@@ -71,7 +73,7 @@ fun SearchDialog(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Enter text to search...") },
+                    placeholder = { Text(stringResource(R.string.search_placeholder)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
@@ -81,9 +83,9 @@ fun SearchDialog(
                 // Results info
                 Text(
                     text = if (searchQuery.isBlank()) {
-                        "Enter query to search"
+                        stringResource(R.string.search_enter_query)
                     } else {
-                        "Found: ${filteredMessages.size} messages"
+                        stringResource(R.string.search_found, filteredMessages.size)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -99,7 +101,7 @@ fun SearchDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Nothing found",
+                                text = stringResource(R.string.search_nothing_found),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -154,7 +156,7 @@ private fun SearchResultItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = if (message.role == MessageRole.USER) "You" else "Assistant",
+                    text = if (message.role == MessageRole.USER) stringResource(R.string.search_you) else stringResource(R.string.search_assistant),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -206,18 +208,18 @@ fun SystemPromptDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Select persona",
+                        text = stringResource(R.string.prompt_dialog_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, "Close")
+                        Icon(Icons.Default.Close, stringResource(R.string.prompt_dialog_close))
                     }
                 }
                 
                 // Info text
                 Text(
-                    text = "Select persona for this chat",
+                    text = stringResource(R.string.prompt_dialog_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -291,7 +293,7 @@ private fun SystemPromptItem(
                             shape = MaterialTheme.shapes.extraSmall
                         ) {
                             Text(
-                                text = "Default",
+                                text = stringResource(R.string.prompt_default_badge),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary
@@ -305,7 +307,7 @@ private fun SystemPromptItem(
                             shape = MaterialTheme.shapes.extraSmall
                         ) {
                             Text(
-                                text = "Persona",
+                                text = stringResource(R.string.prompt_persona_badge),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onTertiary
@@ -315,11 +317,11 @@ private fun SystemPromptItem(
                 }
                 
                 if (isSelected) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Selected",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = stringResource(R.string.prompt_selected),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                 }
             }
             
@@ -335,13 +337,13 @@ private fun SystemPromptItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Type: ${if (prompt.type.value == "api") "API" else "Local"}",
+                    text = stringResource(R.string.prompt_type_label, if (prompt.type.value == "api") stringResource(R.string.prompt_type_api) else stringResource(R.string.prompt_type_local)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
                 Text(
-                    text = "Usage: ${prompt.usageCount}",
+                    text = stringResource(R.string.prompt_usage, prompt.usageCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

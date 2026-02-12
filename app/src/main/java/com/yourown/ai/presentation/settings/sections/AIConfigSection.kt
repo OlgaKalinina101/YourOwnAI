@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.presentation.settings.SettingsUiState
 import com.yourown.ai.presentation.settings.SettingsViewModel
@@ -30,14 +32,14 @@ fun AIConfigurationSection(
     onMaxTokensChange: (Int) -> Unit
 ) {
     SettingsSection(
-        title = "AI Configuration",
+        title = stringResource(R.string.settings_ai_configuration),
         icon = Icons.Default.SmartToy,
-        subtitle = "Customize your AI's behavior"
+        subtitle = stringResource(R.string.settings_ai_configuration_subtitle)
     ) {
         // System Prompts (API models)
         SettingItemClickable(
-            title = "System Prompt (API)",
-            subtitle = "For cloud models (Deepseek, OpenAI, Grok) • Total: ${apiPrompts.size}",
+            title = stringResource(R.string.settings_system_prompt_api),
+            subtitle = stringResource(R.string.settings_system_prompt_api_subtitle, apiPrompts.size),
             onClick = { viewModel.showSystemPromptsListDialog(com.yourown.ai.data.repository.PromptType.API) }
         )
         
@@ -45,8 +47,8 @@ fun AIConfigurationSection(
         
         // System Prompts (Local models)
         SettingItemClickable(
-            title = "System Prompt (Local)",
-            subtitle = "For local models (Qwen, Llama) • Total: ${localPrompts.size}",
+            title = stringResource(R.string.settings_system_prompt_local),
+            subtitle = stringResource(R.string.settings_system_prompt_local_subtitle, localPrompts.size),
             onClick = { viewModel.showSystemPromptsListDialog(com.yourown.ai.data.repository.PromptType.LOCAL) }
         )
         
@@ -54,8 +56,8 @@ fun AIConfigurationSection(
         
         // Temperature
         SliderSetting(
-            title = "Temperature",
-            subtitle = "How creative and free your AI can sound",
+            title = stringResource(R.string.settings_temperature),
+            subtitle = stringResource(R.string.settings_temperature_subtitle),
             value = config.temperature,
             valueRange = AIConfig.MIN_TEMPERATURE..AIConfig.MAX_TEMPERATURE,
             onValueChange = onTemperatureChange
@@ -65,8 +67,8 @@ fun AIConfigurationSection(
         
         // Top-p
         SliderSetting(
-            title = "Top-p",
-            subtitle = "How chaotic your AI can be",
+            title = stringResource(R.string.settings_top_p),
+            subtitle = stringResource(R.string.settings_top_p_subtitle),
             value = config.topP,
             valueRange = AIConfig.MIN_TOP_P..AIConfig.MAX_TOP_P,
             onValueChange = onTopPChange
@@ -76,24 +78,24 @@ fun AIConfigurationSection(
         
         // Message History Limit (API models only)
         DropdownSetting(
-            title = "Message History (API only)",
-            subtitle = "How many messages to send to API models • Local models always use last message",
+            title = stringResource(R.string.settings_message_history),
+            subtitle = stringResource(R.string.settings_message_history_subtitle),
             value = config.messageHistoryLimit,
             options = (AIConfig.MIN_MESSAGE_HISTORY..AIConfig.MAX_MESSAGE_HISTORY).toList(),
             onValueChange = onMessageHistoryChange,
-            valueSuffix = "pairs"
+            valueSuffix = stringResource(R.string.settings_pairs)
         )
         
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
         
         // Max Tokens
         DropdownSetting(
-            title = "Max Tokens",
-            subtitle = "Maximum length of AI response",
+            title = stringResource(R.string.settings_max_tokens),
+            subtitle = stringResource(R.string.settings_max_tokens_subtitle),
             value = config.maxTokens,
             options = listOf(256, 512, 1024, 2048, 4096, 8192),
             onValueChange = onMaxTokensChange,
-            valueSuffix = "tokens"
+            valueSuffix = stringResource(R.string.settings_tokens)
         )
     }
 }

@@ -246,4 +246,28 @@ class AIConfigManager @Inject constructor(
         aiConfigRepository.updateUserContext(context)
         return config
     }
+    
+    /**
+     * Toggle use API embeddings
+     */
+    suspend fun updateUseApiEmbeddings(config: AIConfig, value: Boolean): AIConfig {
+        aiConfigRepository.setUseApiEmbeddings(value)
+        return config.copy(useApiEmbeddings = value)
+    }
+    
+    /**
+     * Update API embeddings provider
+     */
+    suspend fun updateApiEmbeddingsProvider(config: AIConfig, provider: String): AIConfig {
+        aiConfigRepository.setApiEmbeddingsProvider(provider)
+        return config.copy(apiEmbeddingsProvider = provider)
+    }
+    
+    /**
+     * Update API embeddings model
+     */
+    suspend fun updateApiEmbeddingsModel(config: AIConfig, model: String): AIConfig {
+        aiConfigRepository.setApiEmbeddingsModel(model)
+        return config.copy(apiEmbeddingsModel = model)
+    }
 }

@@ -23,7 +23,9 @@ interface AIService {
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        webSearchEnabled: Boolean = false,
+        xSearchEnabled: Boolean = false
     ): Flow<String>
     
     /**

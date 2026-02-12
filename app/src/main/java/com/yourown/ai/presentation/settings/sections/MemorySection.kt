@@ -6,7 +6,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.presentation.settings.SettingsUiState
 import com.yourown.ai.presentation.settings.SettingsViewModel
@@ -26,14 +28,14 @@ fun MemorySection(
     onViewMemories: () -> Unit
 ) {
     SettingsSection(
-        title = "Memory",
+        title = stringResource(R.string.memory_section_title),
         icon = Icons.Default.Memory,
-        subtitle = "AI remembers important things automatically"
+        subtitle = stringResource(R.string.memory_section_subtitle)
     ) {
         // Memory Toggle
         ToggleSetting(
-            title = "Memory Enabled",
-            subtitle = "AI remembers important things automatically",
+            title = stringResource(R.string.memory_enabled_title),
+            subtitle = stringResource(R.string.memory_enabled_subtitle),
             checked = config.memoryEnabled,
             onCheckedChange = { onToggleMemory() }
         )
@@ -41,18 +43,18 @@ fun MemorySection(
         // Memory Extraction Prompt
         if (config.memoryEnabled) {
             SettingItemClickable(
-                title = "Memory Extraction Prompt",
-                subtitle = "Customize how AI extracts memories • Required: {text}",
+                title = stringResource(R.string.memory_extraction_prompt_title),
+                subtitle = stringResource(R.string.memory_extraction_prompt_subtitle),
                 onClick = onEditMemoryPrompt,
                 trailing = {
-                    Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.Edit, stringResource(R.string.preanalysis_edit), tint = MaterialTheme.colorScheme.primary)
                 }
             )
             
             // Memory Limit Slider
             SliderSetting(
-                title = "Memory Limit",
-                subtitle = "AI memory for memories limit",
+                title = stringResource(R.string.memory_limit_title),
+                subtitle = stringResource(R.string.memory_limit_subtitle),
                 value = config.memoryLimit.toFloat(),
                 valueRange = AIConfig.MIN_MEMORY_LIMIT.toFloat()..AIConfig.MAX_MEMORY_LIMIT.toFloat(),
                 onValueChange = { onMemoryLimitChange(it.toInt()) },
@@ -61,8 +63,8 @@ fun MemorySection(
             
             // Advanced Memory Settings
             SettingItemClickable(
-                title = if (uiState.showAdvancedMemorySettings) "▼ Advanced Memory Settings" else "▶ Advanced Memory Settings",
-                subtitle = "Customize memory behavior",
+                title = if (uiState.showAdvancedMemorySettings) stringResource(R.string.preanalysis_advanced_settings_expanded).replace("Deep Empathy", "Memory") else stringResource(R.string.preanalysis_advanced_settings_collapsed).replace("Deep Empathy", "Memory"),
+                subtitle = stringResource(R.string.memory_advanced_subtitle),
                 onClick = { viewModel.toggleAdvancedMemorySettings() }
             )
             
@@ -70,7 +72,7 @@ fun MemorySection(
                 OutlinedTextField(
                     value = config.memoryTitle,
                     onValueChange = { viewModel.updateMemoryTitle(it) },
-                    label = { Text("Memory Title") },
+                    label = { Text(stringResource(R.string.memory_title_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )

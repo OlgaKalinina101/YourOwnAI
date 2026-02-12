@@ -2,64 +2,394 @@
 <resources>
     <string name="app_name">YourOwnAI</string>
     
-    <!-- Auth Screen -->
-    <string name="auth_welcome_title">Welcome to YourOwnAI</string>
-    <string name="auth_welcome_subtitle">Your AI. Your Rules. No Limits.</string>
-    <string name="auth_welcome_message">Before we start, let\'s customize your experience. All settings can be changed later.</string>
-    <string name="auth_continue">Continue</string>
+    <!-- Chat Screen -->
+    <string name="chat_app_name">YourOwnAI</string>
+    <string name="chat_thinking">Thinking</string>
+    <string name="chat_scroll_to_bottom">Scroll to bottom</string>
+    <string name="chat_scroll_to_top">Scroll to top</string>
+    <string name="chat_share_title">Share chat</string>
+    <string name="chat_model_loading_error">Model loading error</string>
+    <string name="chat_exporting">Exporting chat...</string>
+    <string name="chat_exporting_progress">Exporting %d%%</string>
+    <string name="chat_model_download_required">Please download the model from the model selector before using it.</string>
+    <string name="chat_ok">OK</string>
+    
+    <!-- Message Bubble -->
+    <string name="message_replied_to">Replied to:</string>
+    <string name="message_attached_image">Attached image</string>
+    <string name="message_reply">Reply</string>
+    <string name="message_copy">Copy</string>
+    <string name="message_copied">Copied!</string>
+    <string name="message_delete">Delete</string>
+    <string name="message_like">Like</string>
+    <string name="message_regenerate">Regenerate</string>
+    <string name="message_code">code</string>
+    <string name="message_copy_code">Copy code</string>
+    <string name="message_code_copied">Code copied!</string>
+    <string name="message_error">Error</string>
+    <string name="message_error_icon">Error icon</string>
+    <string name="message_view_logs">View Request Logs</string>
+    
+    <!-- Delete Message Dialog -->
+    <string name="dialog_delete_message_title">Delete Message?</string>
+    <string name="dialog_delete_message_text">This action cannot be undone</string>
+    <string name="dialog_delete_title">Delete Message?</string>
+    <string name="dialog_delete_message">This will permanently delete this message. This action cannot be undone.</string>
+    <string name="dialog_delete">Delete</string>
+    <string name="dialog_delete_confirm">Delete</string>
+    <string name="dialog_cancel">Cancel</string>
+    
+    <!-- Regenerate Dialog -->
+    <string name="dialog_regenerate_title">Regenerate Response?</string>
+    <string name="dialog_regenerate_message">This will delete the current response and generate a new one. This action cannot be undone.</string>
+    <string name="dialog_regenerate">Regenerate</string>
+    <string name="dialog_regenerate_confirm">Regenerate</string>
+    
+    <!-- Conversation Drawer -->
+    <string name="drawer_import_chat">Import Chat</string>
+    <string name="drawer_new_chat">New Chat</string>
+    <string name="drawer_voice_chat">Voice Chat</string>
+    <string name="drawer_no_conversations">No conversations yet</string>
+    <string name="drawer_pinned">Pinned</string>
+    <string name="drawer_delete_chat_title">Delete Chat?</string>
+    <string name="drawer_delete_chat_message">This action cannot be undone</string>
+    <string name="drawer_delete_chat_warning">This action cannot be undone.</string>
+    <string name="drawer_delete_confirm">Delete</string>
+    <string name="drawer_just_now">Just now</string>
+    <string name="drawer_time_minutes_ago">%dm ago</string>
+    <string name="drawer_time_hours_ago">%dh ago</string>
+    <string name="drawer_time_days_ago">%dd ago</string>
+    
+    <!-- TopBar -->
+    <string name="topbar_back">Back</string>
+    <string name="topbar_more_options">More options</string>
+    <string name="topbar_search">Search</string>
+    <string name="topbar_persona">Persona</string>
+    <string name="topbar_save_chat">Save chat</string>
+    <string name="topbar_exporting">Exporting...</string>
+    <string name="topbar_search_placeholder">Search messages...</string>
+    <string name="topbar_previous_match">Previous match</string>
+    <string name="topbar_next_match">Next match</string>
+    <string name="topbar_close_search">Close search</string>
+    
+    <!-- Chat Components -->
+    <string name="chat_search_placeholder">Search in chat…</string>
+    <string name="chat_search_previous">Previous</string>
+    <string name="chat_search_next">Next</string>
+    <string name="chat_search_results">Found: %d messages</string>
+    <string name="chat_menu_search">Search in Chat</string>
+    <string name="chat_menu_export">Export Chat</string>
+    <string name="chat_menu_edit_title">Edit Title</string>
+    <string name="chat_menu_delete">Delete Chat</string>
+    <string name="chat_menu_pin">Pin</string>
+    <string name="chat_menu_unpin">Unpin</string>
+    <string name="chat_menu_logs">Request Logs</string>
+    
+    <!-- Search Dialogs -->
+    <string name="search_in_chat_title">Search in Chat</string>
+    <string name="search_dialog_title">Search in Chat</string>
+    <string name="search_placeholder">Search messages…</string>
+    <string name="search_no_results">Nothing found</string>
+    <string name="search_nothing_found">Nothing found</string>
+    <string name="search_results_count">Found: %d</string>
+    <string name="search_found">Found: %d</string>
+    <string name="search_enter_query">Enter search query</string>
+    <string name="search_close">Close</string>
+    <string name="search_dialog_close">Close</string>
+    <string name="search_you">You</string>
+    <string name="search_assistant">Assistant</string>
+    
+    <!-- Prompt Selection Dialog -->
+    <string name="prompt_dialog_title">Select System Prompt</string>
+    <string name="prompt_dialog_close">Close</string>
+    <string name="prompt_dialog_subtitle">Choose a system prompt for this persona</string>
+    <string name="prompt_default_badge">Default</string>
+    <string name="prompt_persona_badge">Persona</string>
+    <string name="prompt_selected">Selected</string>
+    <string name="prompt_type_label">Type</string>
+    <string name="prompt_type_api">API</string>
+    <string name="prompt_type_local">Local</string>
+    <string name="prompt_usage">Usage: %d personas</string>
+    
+    <string name="select_persona_title">Select Persona</string>
+    <string name="persona_default">Default (no persona)</string>
+    <string name="persona_uses_prompt">Uses prompt: %s</string>
     
     <!-- Settings -->
-    <string name="settings_appearance">Appearance</string>
-    <string name="settings_typography">Typography</string>
-    <string name="settings_theme">Theme</string>
-    <string name="settings_theme_light">Light</string>
-    <string name="settings_theme_dark">Dark</string>
-    <string name="settings_theme_system">System</string>
-    <string name="settings_colors">Colors</string>
-    <string name="settings_colors_dynamic">Dynamic</string>
-    <string name="settings_colors_neutral">Neutral</string>
-    <string name="settings_font">Font</string>
-    <string name="settings_font_roboto">Roboto</string>
-    <string name="settings_font_system">System</string>
-    <string name="settings_text_size">Text Size</string>
-    
-    <!-- Privacy -->
-    <string name="privacy_note">All settings are stored locally on your device. No data is sent to any server.</string>
-
-    <!-- Home Screen -->
-    <string name="home_import_success">Chat imported successfully!</string>
-    <string name="home_file_loaded">File loaded: %d characters</string>
-    <string name="home_file_error">Error loading file</string>
-    <string name="home_file_picker_cancelled">File picker cancelled or returned null</string>
-    <string name="home_no_conversations_title">No conversations yet</string>
-    <string name="home_no_conversations_subtitle">Start a new chat to begin talking with your AI</string>
-    <string name="home_getting_started_title">Getting Started</string>
-    <string name="home_step1_api_key">Add your API key in Settings</string>
-    <string name="home_step2_create_conversation">Create a new conversation</string>
-    <string name="home_step3_customize_prompts">Customize system prompts</string>
-    <string name="home_fab_new_chat">New Chat</string>
-
-    <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_embedding_model_required_title">Embedding Model Required</string>
+    <string name="settings_embedding_model_required_message">To use memory or RAG, you need to download an embedding model in settings.</string>
+    <string name="settings_go_to_settings">Go to Settings</string>
+    <string name="embedding_required_title">Embedding Model Required</string>
+    <string name="embedding_required_message">To use memory or RAG, you need to download an embedding model in settings.</string>
+    <string name="embedding_download_button">Download Model</string>
+    
+    <!-- API Keys Section -->
+    <string name="api_keys_section_title">API Keys</string>
+    <string name="api_keys_section_subtitle">Manage provider API keys</string>
+    <string name="api_keys_add_provider">Add Provider</string>
+    <string name="api_keys_edit">Edit</string>
+    <string name="api_keys_delete">Delete</string>
+    <string name="api_keys_local_models">Local Models</string>
     <string name="settings_api_keys_title">API Keys</string>
-    <string name="settings_api_keys_subtitle">Configure your AI providers</string>
-
-    <string name="api_key_dialog_title">Add %s API Key</string>
-    <string name="api_key_dialog_text">Enter your API key to use %s</string>
-    <string name="api_key_help_hint">Your key is stored encrypted on your device</string>
-    <string name="api_key_confirm">Save</string>
-    <string name="api_key_dismiss">Cancel</string>
-
+    <string name="settings_api_keys_subtitle">Manage provider API keys</string>
+    <string name="add_custom_provider">Add Custom Provider</string>
+    <string name="download_local_model">Download Local Model</string>
     <string name="api_key_item_edit">Edit</string>
     <string name="api_key_item_delete">Delete</string>
-    <string name="api_key_item_add">Add</string>
-    <string name="add_custom_provider">Add custom provider</string>
-    <string name="download_local_model">Download Local Model</string>
-
-    <string name="local_models_dialog_header">Local AI Models</string>
-    <string name="local_models_dialog_text">Run AI on your device, no internet needed</string>
-    <string name="local_models_info_card">Models are downloaded from Hugging Face and stored locally</string>
-
-    <string name="model_qwen_1_7b">Fast and efficient, good for quick responses</string>
-    <string name="model_llama_3_2_3b">More capable, better quality responses</string>
+    <string name="api_key_item_add">Add API Key</string>
+    
+    <!-- Inherit Context Dialog -->
+    <string name="inherit_context_title">Inherit Context From Chat</string>
+    <string name="inherit_context_persona_label">Persona</string>
+    <string name="inherit_context_source_chat_label">Source Chat</string>
+    <string name="inherit_context_confirm">Confirm</string>
+    <string name="inherit_context_cancel">Cancel</string>
+    
+    <!-- Edit Title Dialog -->
+    <string name="edit_title_dialog_title">Edit Chat Title</string>
+    <string name="edit_title_label">Title</string>
+    <string name="edit_title_placeholder">Chat 1</string>
+    <string name="edit_title_save">Save</string>
+    <string name="edit_title_cancel">Cancel</string>
+    
+    <!-- Request Logs Dialog -->
+    <string name="request_logs_title">Request Logs</string>
+    <string name="request_logs_close">Close</string>
+    <string name="request_logs_copy">Copy</string>
+    <string name="request_logs_copied">✓ Copied to clipboard</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings_ai_configuration">AI Configuration</string>
+    <string name="settings_ai_configuration_subtitle">Customize your AI\'s behavior</string>
+    <string name="settings_system_prompt_api">System Prompt (API)</string>
+    <string name="settings_system_prompt_api_subtitle">For cloud models (Deepseek, OpenAI, Grok) • Total: %d</string>
+    <string name="settings_system_prompt_local">System Prompt (Local)</string>
+    <string name="settings_system_prompt_local_subtitle">For local models (Qwen, Llama) • Total: %d</string>
+    <string name="settings_temperature">Temperature</string>
+    <string name="settings_temperature_subtitle">How creative your AI can sound</string>
+    <string name="settings_top_p">Top-p</string>
+    <string name="settings_top_p_subtitle">How chaotic your AI can be</string>
+    <string name="settings_message_history">Message History (API only)</string>
+    <string name="settings_message_history_subtitle">How many messages to send to API models • Local models always use last message</string>
+    <string name="settings_pairs">pairs</string>
+    <string name="settings_max_tokens">Max Tokens</string>
+    <string name="settings_max_tokens_subtitle">Maximum length of AI response</string>
+    <string name="settings_tokens">tokens</string>
+    
+    <!-- Persona Detail Screen -->
+    <string name="persona_back">Back</string>
+    <string name="persona_basic_info">Basic Information</string>
+    <string name="persona_name_label">Name</string>
+    <string name="persona_description_label">Description</string>
+    <string name="persona_preferred_model">Preferred Model</string>
+    <string name="persona_preferred_model_subtitle">This model will be auto-selected when using this persona</string>
+    <string name="persona_system_prompt">System Prompt</string>
+    <string name="persona_linked_to_system_prompt">Linked to SystemPrompt</string>
+    <string name="persona_system_prompt_readonly_hint">This prompt is synced with the selected SystemPrompt. To edit it, go to Settings > System Prompts.</string>
+    <string name="persona_prompt_readonly">Prompt (Read-only)</string>
+    <string name="persona_ai_settings">AI Settings</string>
+    <string name="persona_temperature">Temperature</string>
+    <string name="persona_top_p">Top P</string>
+    <string name="persona_max_tokens">Max Tokens</string>
+    <string name="persona_message_history">Message History</string>
+    <string name="persona_deep_empathy">Deep Empathy</string>
+    <string name="persona_deep_empathy_subtitle">Enhanced emotional understanding</string>
+    
+    <!-- Memory Settings -->
+    <string name="persona_memory_settings">Memory Settings</string>
+    <string name="persona_enable_memory">Enable Memory</string>
+    <string name="persona_enable_memory_subtitle">Save and recall important facts</string>
+    <string name="persona_saved_memories">Saved Memories</string>
+    <string name="persona_memories_count">%d memories for this persona</string>
+    <string name="persona_manage_memories">Manage</string>
+    <string name="persona_isolate_memories">Isolate Memories</string>
+    <string name="persona_isolate_memories_subtitle">Use only this persona\'s memories</string>
+    <string name="persona_share_memories">Share Memories</string>
+    <string name="persona_share_memories_subtitle">Allow other personas to access these memories</string>
+    <string name="persona_memory_limit">Memory Limit</string>
+    
+    <!-- RAG Settings -->
+    <string name="persona_rag_settings">RAG Settings</string>
+    <string name="persona_enable_rag">Enable RAG</string>
+    <string name="persona_enable_rag_subtitle">Use document knowledge base</string>
+    <string name="persona_linked_documents">Linked Documents</string>
+    <string name="persona_documents_count">%d documents linked</string>
+    <string name="persona_rag_chunk_limit">RAG Chunk Limit</string>
+    
+    <!-- Document Link Dialog -->
+    <string name="document_link_title">Link Documents</string>
+    <string name="document_link_close">Close</string>
+    <string name="document_link_subtitle">Select documents for \"%s\"</string>
+    <string name="document_link_selected_count">%d of %d documents selected</string>
+    <string name="document_link_no_documents">No documents available</string>
+    <string name="document_link_add_first">Add documents in RAG section first</string>
+    <string name="document_size_kb">%d KB</string>
+    <string name="document_link_cancel">Cancel</string>
+    <string name="document_link_save">Save</string>
+    
+    <!-- Export Dialog -->
+    <string name="export_copy">Copy</string>
+    <string name="export_share">Share</string>
+    <string name="export_save_to_file">Save to File (.txt)</string>
+    
+    <!-- Import Dialog -->
+    <string name="import_dialog_title">Import Chat</string>
+    <string name="import_placeholder"># Chat Export: ...</string>
+    <string name="import_load_from_file">Load from File (.txt)</string>
+    <string name="import_confirm">Import</string>
+    <string name="import_cancel">Cancel</string>
+    
+    <!-- Error Dialog -->
+    <string name="error_dialog_title">Message Generation Error</string>
+    <string name="error_dialog_failed_from">Failed to generate response from %s:</string>
+    <string name="error_dialog_your_message">Your message:</string>
+    <string name="error_dialog_choose_action">Choose an action:</string>
+    <string name="error_dialog_retry_explanation">Retry: Will delete this attempt and try again</string>
+    <string name="error_dialog_cancel_explanation">Cancel: Will copy your message to clipboard and delete the failed attempt</string>
+    <string name="error_dialog_retry">Retry</string>
+    <string name="error_dialog_cancel_copy">Cancel &amp; Copy</string>
+    
+    <!-- Preanalysis Section -->
+    <string name="preanalysis_title">Preanalysis</string>
+    <string name="preanalysis_subtitle">What AI does before responding</string>
+    <string name="preanalysis_deep_empathy">Deep Empathy</string>
+    <string name="preanalysis_deep_empathy_subtitle">How deeply your AI can hear you</string>
+    <string name="preanalysis_deep_empathy_prompt">Deep Empathy Prompt</string>
+    <string name="preanalysis_deep_empathy_prompt_subtitle">Customize focus tracking prompt • Required: {dialogue_focus}</string>
+    <string name="preanalysis_edit">Edit</string>
+    <string name="preanalysis_advanced_settings_expanded">▼ Advanced Deep Empathy Settings</string>
+    <string name="preanalysis_advanced_settings_collapsed">▶ Advanced Deep Empathy Settings</string>
+    <string name="preanalysis_advanced_settings_subtitle">Customize dialogue focus analysis</string>
+    <string name="preanalysis_analysis_prompt">Analysis Prompt</string>
+    <string name="preanalysis_analysis_prompt_subtitle">How AI finds focus points • Required: {text}</string>
+    
+    <!-- Cloud Sync Section -->
+    <string name="cloud_sync_title">Cloud Sync</string>
+    <string name="cloud_sync_subtitle">Sync with Supabase (PostgreSQL)</string>
+    <string name="cloud_sync_configuration">Supabase Configuration</string>
+    <string name="cloud_sync_configured">Project configured</string>
+    <string name="cloud_sync_not_configured">Set your Project URL and API Key</string>
+    <string name="cloud_sync_instructions">Instructions</string>
+    <string name="cloud_sync_edit">Edit</string>
+    <string name="cloud_sync_uploaded_data">Uploaded Data</string>
+    <string name="cloud_sync_usage">%s / %d MB</string>
+    <string name="cloud_sync_free_tier">Free tier: %d%% used</string>
+    <string name="cloud_sync_estimated">Estimated</string>
+    <string name="cloud_sync_last_sync">Last sync: %s</string>
+    <string name="cloud_sync_manually_sync">Manually sync all data</string>
+    <string name="cloud_sync_syncing">Syncing...</string>
+    <string name="cloud_sync_sync_now">Sync Now</string>
+    
+    <!-- SQL Schema Dialog -->
+    <string name="sql_schema_dialog_title">Supabase SQL Schema</string>
+    <string name="sql_schema_copy">Copy SQL</string>
+    <string name="sql_schema_close">Close</string>
+    
+    <!-- Cloud Sync Instructions Dialog -->
+    <string name="cloud_sync_instructions_title">Supabase Setup Instructions</string>
+    <string name="cloud_sync_instructions_ok">Got it</string>
+    <string name="cloud_sync_instructions_copy_sql">Copy SQL query</string>
+    
+    <!-- Voice Chat -->
+    <string name="voice_chat_title">Voice Chat</string>
+    <string name="voice_chat_speak">Tap to speak</string>
+    <string name="voice_chat_listening">Listening…</string>
+    <string name="voice_chat_processing">Processing…</string>
+    <string name="voice_chat_error">Speech recognition error</string>
+    <string name="voice_chat_empty">Speech not recognized</string>
+    <string name="voice_chat_request_logs">Request Logs</string>
+    
+    <!-- Web Search Status Messages -->
+    <string name="web_search_enabled">Web Search enabled - searching the internet</string>
+    <string name="web_search_disabled">Web Search disabled</string>
+    <string name="x_search_enabled">𝕏 Search enabled - searching posts on X (Twitter)</string>
+    <string name="x_search_disabled">𝕏 Search disabled</string>
+    
+    <!-- Embedding Section -->
+    <string name="embedding_section_title">Embedding Models</string>
+    <string name="embedding_section_subtitle">Models for semantic search and RAG</string>
+    <string name="embedding_use_api_title">Use API Embeddings</string>
+    <string name="embedding_use_api_subtitle">Use cloud API instead of local model</string>
+    <string name="embedding_provider_title">Embedding Provider</string>
+    <string name="embedding_model_title">Embedding Model</string>
+    <string name="embedding_memory_embeddings">Memory Embeddings</string>
+    <string name="embedding_processing">Processing...</string>
+    <string name="embedding_recalculate_warning">⚠️ Important: Recalculate all embeddings after switching embedding models</string>
+    <string name="embedding_download_model">Download Embedding Model</string>
+    <string name="embedding_recalculate">Recalculate All Embeddings</string>
+    
+    <!-- RAG Section -->
+    <string name="rag_section_title">RAG (Knowledge &amp; Data)</string>
+    <string name="rag_section_subtitle">Use knowledge documents in responses</string>
+    <string name="rag_enabled_title">RAG Enabled</string>
+    <string name="rag_enabled_subtitle">Use knowledge documents in responses</string>
+    <string name="rag_knowledge_data_title">Knowledge data</string>
+    <string name="rag_knowledge_data_subtitle">Text documents for AI teaching</string>
+    <string name="rag_documents_title">RAG Documents</string>
+    <string name="rag_documents_subtitle">What you want to teach your AI - documents, notes, conversations</string>
+    <string name="rag_chunk_limit_title">RAG Chunk Limit</string>
+    <string name="rag_chunk_limit_subtitle">AI knowledge memory limit</string>
+    <string name="rag_advanced_subtitle">Customize RAG behavior</string>
+    <string name="rag_chunk_size_title">Chunk Size</string>
+    <string name="rag_chunk_size_subtitle">Text size for each document chunk</string>
+    <string name="rag_chunk_overlap_title">Chunk Overlap</string>
+    <string name="rag_chunk_overlap_subtitle">Overlapping characters between chunks</string>
+    <string name="rag_instructions_title">RAG Instructions</string>
+    <string name="rag_instructions_subtitle">What AI does with knowledge documents</string>
+    <string name="rag_title_label">RAG Title</string>
+    
+    <!-- Context Section -->
+    <string name="context_section_title">Context</string>
+    <string name="context_section_subtitle">What you want your AI to know about you</string>
+    <string name="context_your_context_title">Your Context</string>
+    <string name="context_your_context_subtitle">Information about you or anything else</string>
+    <string name="context_advanced_subtitle">Customize enhanced context instructions</string>
+    <string name="context_instructions_title">Context Instructions</string>
+    <string name="context_instructions_subtitle">How AI understands enhanced context</string>
+    <string name="context_swipe_message_title">Swipe Message Prompt</string>
+    <string name="context_swipe_message_subtitle">How AI sees replied messages</string>
+    
+    <!-- Memory Section -->
+    <string name="memory_section_title">Memory</string>
+    <string name="memory_section_subtitle">AI remembers important things automatically</string>
+    <string name="memory_enabled_title">Memory Enabled</string>
+    <string name="memory_enabled_subtitle">AI remembers important things automatically</string>
+    <string name="memory_extraction_prompt_title">Memory Extraction Prompt</string>
+    <string name="memory_extraction_prompt_subtitle">Customize how AI extracts memories • Required: {text}</string>
+    <string name="memory_limit_title">Memory Limit</string>
+    <string name="memory_limit_subtitle">AI memory for memories limit</string>
+    <string name="memory_advanced_subtitle">Customize memory behavior</string>
+    <string name="memory_age_filter_title">Memory Age Filter</string>
+    <string name="memory_age_filter_subtitle">Only retrieve memories older than X days</string>
+    <string name="memory_instructions_section_title">Memory Instructions</string>
+    <string name="memory_instructions_section_subtitle">What AI does with memories</string>
+    <string name="memory_saved_title">Saved Memories</string>
+    <string name="memory_saved_subtitle">View saved memories</string>
+    <string name="memory_title_label">Memory Title</string>
+    
+    <!-- Sound & Haptics Section -->
+    <string name="sound_haptics_title">Sound &amp; Haptics</string>
+    <string name="sound_haptics_subtitle">Keyboard typing effects</string>
+    <string name="sound_test_title">Test sound</string>
+    <string name="sound_test_subtitle">Preview typing sound</string>
+    
+    <!-- Appearance Section -->
+    <string name="appearance_section_title">Appearance</string>
+    <string name="appearance_section_subtitle">Theme, colors, and fonts</string>
+    <string name="appearance_customize_title">Customize</string>
+    <string name="appearance_customize_subtitle">Change theme, colors, and text size</string>
+    
+    <!-- Persona Section -->
+    <string name="persona_section_title">Personas</string>
+    <string name="persona_section_subtitle">Create and manage personas</string>
+    
+    <!-- Language Section -->
+    <string name="language_section_title">Language</string>
+    <string name="language_section_subtitle">Choose your language</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_restart_required">Language will be applied immediately</string>
 </resources>

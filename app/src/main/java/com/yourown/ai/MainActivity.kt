@@ -4,11 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.core.os.LocaleListCompat
 import com.yourown.ai.data.local.preferences.SettingsManager
 import com.yourown.ai.presentation.chat.ChatScreen
 import com.yourown.ai.presentation.home.HomeScreen
@@ -22,7 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     
     @Inject
     lateinit var settingsManager: SettingsManager
@@ -30,6 +34,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Initialize locale to English if not set
+        if (AppCompatDelegate.getApplicationLocales().isEmpty) {
+            AppCompatDelegate.setApplicationLocales(
+                LocaleListCompat.forLanguageTags("en")
+            )
+        }
         
         setContent {
             YourOwnAIApp(settingsManager)
@@ -50,16 +61,18 @@ enum class Screen {
 
 @Composable
 fun YourOwnAIApp(settingsManager: SettingsManager) {
+    val activity = androidx.compose.ui.platform.LocalContext.current as? ComponentActivity
     val hasCompletedOnboarding by settingsManager.hasCompletedOnboarding.collectAsState(initial = false)
     
     // Theme settings from SettingsManager
     val themeMode by settingsManager.themeMode.collectAsState(initial = com.yourown.ai.presentation.theme.ThemeMode.SYSTEM)
     val colorStyle by settingsManager.colorStyle.collectAsState(initial = com.yourown.ai.presentation.theme.ColorStyle.DYNAMIC)
     
-    var currentScreen by remember { mutableStateOf(if (hasCompletedOnboarding) Screen.HOME else Screen.ONBOARDING) }
-    var previousScreen by remember { mutableStateOf<Screen?>(null) }
-    var currentChatId by remember { mutableStateOf<String?>(null) }
-    var currentPersonaId by remember { mutableStateOf<String?>(null) }
+    // Save and restore screen state across configuration changes (like language change)
+    var currentScreen by rememberSaveable { mutableStateOf(if (hasCompletedOnboarding) Screen.HOME else Screen.ONBOARDING) }
+    var previousScreen by rememberSaveable { mutableStateOf<Screen?>(null) }
+    var currentChatId by rememberSaveable { mutableStateOf<String?>(null) }
+    var currentPersonaId by rememberSaveable { mutableStateOf<String?>(null) }
     
     // Update screen when onboarding completes
     LaunchedEffect(hasCompletedOnboarding) {

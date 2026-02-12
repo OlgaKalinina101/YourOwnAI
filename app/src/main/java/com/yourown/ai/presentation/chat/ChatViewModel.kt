@@ -72,7 +72,8 @@ data class ChatUiState(
     val attachedFiles: List<android.net.Uri> = emptyList(),
     val isExporting: Boolean = false,
     val exportProgress: Float = 0f,
-    val exportProgressMessage: String = ""
+    val exportProgressMessage: String = "",
+    val searchStatusMessage: String? = null
 )
 
 /**
@@ -201,6 +202,7 @@ class ChatViewModel @Inject constructor(
                                 "DEEPSEEK" -> DeepseekModel.entries.find { it.modelId == savedModel.modelId }?.toModelProvider()
                                 "OPENAI" -> OpenAIModel.entries.find { it.modelId == savedModel.modelId }?.toModelProvider()
                                 "XAI" -> XAIModel.entries.find { it.modelId == savedModel.modelId }?.toModelProvider()
+                                "OPENROUTER" -> OpenRouterModel.entries.find { it.modelId == savedModel.modelId }?.toModelProvider()
                                 else -> null
                             }
                         }
@@ -343,6 +345,46 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.togglePinnedModel(model.getModelKey())
         }
+    }
+    
+    fun toggleWebSearch() {
+        val conversationId = _uiState.value.currentConversationId ?: return
+        val currentState = _uiState.value.currentConversation?.webSearchEnabled ?: false
+        val newState = !currentState
+        
+        viewModelScope.launch {
+            conversationRepository.updateWebSearchEnabled(conversationId, newState)
+            
+            // Show temporary banner
+            val message = if (newState) {
+                "Web Search enabled - searching the internet"
+            } else {
+                "Web Search disabled"
+            }
+            _uiState.update { it.copy(searchStatusMessage = message) }
+        }
+    }
+    
+    fun toggleXSearch() {
+        val conversationId = _uiState.value.currentConversationId ?: return
+        val currentState = _uiState.value.currentConversation?.xSearchEnabled ?: false
+        val newState = !currentState
+        
+        viewModelScope.launch {
+            conversationRepository.updateXSearchEnabled(conversationId, newState)
+            
+            // Show temporary banner
+            val message = if (newState) {
+                "𝕏 Search enabled - searching posts on X (Twitter)"
+            } else {
+                "𝕏 Search disabled"
+            }
+            _uiState.update { it.copy(searchStatusMessage = message) }
+        }
+    }
+    
+    fun clearSearchStatusMessage() {
+        _uiState.update { it.copy(searchStatusMessage = null) }
     }
     
     // ===== CONVERSATION MANAGEMENT =====
@@ -809,6 +851,9 @@ class ChatViewModel @Inject constructor(
                 val responseBuilder = StringBuilder()
                 
                 Log.d("ChatViewModel", "Calling sendMessage with personaId=$activePersonaId")
+                
+                val webSearchEnabled = _uiState.value.currentConversation?.webSearchEnabled ?: false
+                val xSearchEnabled = _uiState.value.currentConversation?.xSearchEnabled ?: false
 
                 messageHandler.sendMessage(
                     userMessage = finalUserMessage,
@@ -817,7 +862,9 @@ class ChatViewModel @Inject constructor(
                     userContext = userContextContent,
                     allMessages = allMessages,
                     swipeMessage = replyMessage,
-                    personaId = activePersonaId
+                    personaId = activePersonaId,
+                    webSearchEnabled = webSearchEnabled,
+                    xSearchEnabled = xSearchEnabled
                 ).collect { chunk ->
                     responseBuilder.append(chunk)
 
@@ -836,21 +883,20 @@ class ChatViewModel @Inject constructor(
                     content = responseBuilder.toString().trim()
                 )
                 
-                // Очищаем streaming message И isLoading для плавного перехода
+                // Сначала сохраняем в БД (с request logs!)
+                messageRepository.addMessage(finalMessage)
+                
+                // Даем время Flow'у из БД обновиться (обычно ~50-100ms)
+                kotlinx.coroutines.delay(150)
+                
+                // Теперь очищаем streamingMessage - сообщение уже в БД, дубликат отфильтрован в UI
                 _uiState.update { 
                     it.copy(
                         streamingMessage = null,
-                        isLoading = false
+                        isLoading = false,
+                        shouldScrollToBottom = true
                     ) 
                 }
-                
-                // Небольшая задержка для плавной анимации появления кнопок
-                kotlinx.coroutines.delay(50)
-                
-                // Сохраняем в БД - это вызовет появление кнопок
-                messageRepository.addMessage(finalMessage)
-                
-                _uiState.update { it.copy(shouldScrollToBottom = true) }
 
                 // Извлекаем memory если включено
                 if (config.memoryEnabled) {

@@ -102,6 +102,11 @@ CREATE TABLE IF NOT EXISTS personas (
     use_only_persona_memories BOOLEAN DEFAULT FALSE,
     share_memories_globally BOOLEAN DEFAULT TRUE,
     
+    -- API Embeddings Configuration
+    use_api_embeddings BOOLEAN DEFAULT FALSE,
+    api_embeddings_provider TEXT DEFAULT 'openai',
+    api_embeddings_model TEXT DEFAULT 'text-embedding-3-small',
+    
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
     device_id TEXT,

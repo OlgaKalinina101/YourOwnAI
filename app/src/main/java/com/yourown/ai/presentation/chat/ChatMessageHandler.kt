@@ -31,9 +31,11 @@ class ChatMessageHandler @Inject constructor(
         userContext: String,
         allMessages: List<Message>,
         swipeMessage: Message? = null,
-        personaId: String? = null
+        personaId: String? = null,
+        webSearchEnabled: Boolean = false,
+        xSearchEnabled: Boolean = false
     ): Flow<String> = flow {
-        Log.d("ChatMessageHandler", "sendMessage: personaId=$personaId")
+        Log.d("ChatMessageHandler", "sendMessage: personaId=$personaId, webSearch=$webSearchEnabled, xSearch=$xSearchEnabled")
         
         // Build enhanced context with Deep Empathy, Memory, and RAG
         val enhancedContextResult = contextBuilder.buildEnhancedContext(
@@ -58,7 +60,9 @@ class ChatMessageHandler @Inject constructor(
             messages = allMessages,
             systemPrompt = systemPrompt,
             userContext = enhancedContextResult.fullContext.ifBlank { null },
-            config = config
+            config = config,
+            webSearchEnabled = webSearchEnabled,
+            xSearchEnabled = xSearchEnabled
         ).collect { chunk ->
             emit(chunk)
         }
@@ -125,7 +129,9 @@ class ChatMessageHandler @Inject constructor(
                 messages = listOf(promptMessage),
                 systemPrompt = systemPrompt,
                 userContext = null,
-                config = config.copy(messageHistoryLimit = 1) // Don't need history for memory extraction
+                config = config.copy(messageHistoryLimit = 1), // Don't need history for memory extraction
+                webSearchEnabled = false, // No web search for memory extraction
+                xSearchEnabled = false // No X search for memory extraction
             ).collect { chunk ->
                 responseBuilder.append(chunk)
             }

@@ -146,6 +146,36 @@ class ConversationRepository @Inject constructor(
     }
     
     /**
+     * Update web search enabled state for conversation
+     */
+    suspend fun updateWebSearchEnabled(id: String, enabled: Boolean) {
+        val conversation = conversationDao.getConversationById(id)
+        conversation?.let {
+            conversationDao.updateConversation(
+                it.copy(
+                    webSearchEnabled = enabled,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+    
+    /**
+     * Update X search enabled state for conversation (xAI Grok only)
+     */
+    suspend fun updateXSearchEnabled(id: String, enabled: Boolean) {
+        val conversation = conversationDao.getConversationById(id)
+        conversation?.let {
+            conversationDao.updateConversation(
+                it.copy(
+                    xSearchEnabled = enabled,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+    
+    /**
      * Update conversation's updatedAt timestamp
      * Called when a new message is added to keep conversations sorted by last activity
      */

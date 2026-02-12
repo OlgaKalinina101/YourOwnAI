@@ -30,12 +30,13 @@ data class AIConfig(
     val memoryTitle: String = "Твои воспоминания",
     val memoryInstructions: String = DEFAULT_MEMORY_INSTRUCTIONS,
     val ragEnabled: Boolean = false,
-    val ragChunkSize: Int = 512,
-    val ragChunkOverlap: Int = 64,
+    val ragChunkSize: Int = 1400,
+    val ragChunkOverlap: Int = 120,
     val ragChunkLimit: Int = 5, // Number of RAG chunks to include in context
     val ragTitle: String = "Твоя библиотека текстов",
     val ragInstructions: String = DEFAULT_RAG_INSTRUCTIONS,
     val useApiEmbeddings: Boolean = false, // Use API embeddings instead of local
+    val apiEmbeddingsProvider: String = "openai", // API embeddings provider (openai, openrouter)
     val apiEmbeddingsModel: String = "text-embedding-3-small", // API embeddings model
     val useRagInMessageHistory: Boolean = false, // Include RAG chunks in message history
     val ragInMessageHistoryLimit: Int = 4, // Number of RAG chunks to include in message history (max 12)

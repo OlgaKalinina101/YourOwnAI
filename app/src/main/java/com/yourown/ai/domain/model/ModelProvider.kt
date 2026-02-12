@@ -170,6 +170,11 @@ enum class OpenRouterModel(
         displayName = "Claude Sonnet 4.5",
         description = "Balanced performance and speed"
     ),
+    CLAUDE_OPUS_4_6(
+        modelId = "anthropic/claude-opus-4.6",
+        displayName = "Claude Opus 4.6",
+        description = "Most capable, best for complex tasks"
+    ),
     CLAUDE_OPUS_4_5(
         modelId = "anthropic/claude-opus-4.5",
         displayName = "Claude Opus 4.5",
