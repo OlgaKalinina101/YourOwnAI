@@ -45,6 +45,14 @@ data class SettingsUiState(
     val showEditMemoryDialog: Boolean = false,
     val selectedMemoryForEdit: MemoryEntry? = null,
     val showMemoryPromptDialog: Boolean = false,
+    val showMemoryClusteringDialog: Boolean = false,
+    val memoryClusteringStatus: ClusteringStatus = ClusteringStatus.Idle,
+    val biographyGenerationStatus: BiographyGenerationStatus = BiographyGenerationStatus.Idle,
+    val userBiography: UserBiography? = null,
+    val selectedModelForBiography: ModelProvider? = null,
+    val showBiographyDialog: Boolean = false,
+    val showModelSelectorForBiography: Boolean = false,
+    val memoryCleaningStatus: MemoryCleaningStatus = MemoryCleaningStatus.Idle,
     val showDeepEmpathyPromptDialog: Boolean = false,
     val showDeepEmpathyAnalysisDialog: Boolean = false,
     val showEmbeddingRequiredDialog: Boolean = false,
@@ -80,6 +88,7 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     private val localModelRepository: LocalModelRepository,
     private val embeddingModelRepository: LocalEmbeddingModelRepository,
     private val apiKeyRepository: ApiKeyRepository,
@@ -93,6 +102,12 @@ class SettingsViewModel @Inject constructor(
     // Cloud Sync
     private val cloudSyncPreferences: com.yourown.ai.data.local.preferences.CloudSyncPreferences,
     private val cloudSyncRepository: CloudSyncRepository,
+    // Memory Clustering
+    private val memoryClusteringService: MemoryClusteringService,
+    // Biography
+    private val biographyRepository: BiographyRepository,
+    private val generateBiographyUseCase: com.yourown.ai.domain.usecase.GenerateBiographyUseCase,
+    private val cleanMemoryUseCase: com.yourown.ai.domain.usecase.CleanMemoryUseCase,
     // Managers
     private val aiConfigManager: AIConfigManager,
     private val systemPromptManager: SystemPromptManager,
@@ -120,6 +135,10 @@ class SettingsViewModel @Inject constructor(
         initializeDefaultPrompts()
         observeSoundSettings()
         observeCloudSyncSettings()
+        observeMemoryClustering()
+        observeBiography()
+        observeBiographyGeneration()
+        observeMemoryCleaning()
     }
     
     private fun initializeDefaultPrompts() {
@@ -686,6 +705,211 @@ class SettingsViewModel @Inject constructor(
                 showEditMemoryDialog = false,
                 selectedMemoryForEdit = null
             ) 
+        }
+    }
+    
+    // Memory Clustering
+    fun showMemoryClusteringDialog() {
+        _uiState.update { it.copy(showMemoryClusteringDialog = true) }
+    }
+    
+    fun hideMemoryClusteringDialog() {
+        // Don't reset clustering status - keep clusters in memory
+        // so user can reopen dialog and see the same results
+        _uiState.update { it.copy(showMemoryClusteringDialog = false) }
+    }
+    
+    fun startMemoryClustering() {
+        viewModelScope.launch {
+            // Reset status before starting new analysis
+            memoryClusteringService.resetStatus()
+            
+            memoryClusteringService.clusterMemories(
+                targetClusterSize = 5 to 10,
+                similarityThreshold = 0.60f // Hybrid approach: embeddings + keywords
+            )
+        }
+    }
+    
+    private fun observeMemoryClustering() {
+        viewModelScope.launch {
+            memoryClusteringService.clusteringStatus.collect { status ->
+                _uiState.update { it.copy(memoryClusteringStatus = status) }
+            }
+        }
+    }
+    
+    private fun observeBiography() {
+        viewModelScope.launch {
+            biographyRepository.getBiography().collect { biography ->
+                _uiState.update { it.copy(userBiography = biography) }
+            }
+        }
+    }
+    
+    private fun observeBiographyGeneration() {
+        viewModelScope.launch {
+            generateBiographyUseCase.generationStatus.collect { status ->
+                _uiState.update { it.copy(biographyGenerationStatus = status) }
+                
+                // Save biography when completed
+                if (status is BiographyGenerationStatus.Completed) {
+                    biographyRepository.saveBiography(status.biography)
+                }
+            }
+        }
+    }
+    
+    private fun observeMemoryCleaning() {
+        viewModelScope.launch {
+            cleanMemoryUseCase.cleaningStatus.collect { status ->
+                _uiState.update { it.copy(memoryCleaningStatus = status) }
+            }
+        }
+    }
+    
+    // Biography Generation
+    fun showModelSelectorForBiography() {
+        _uiState.update { it.copy(showModelSelectorForBiography = true) }
+    }
+    
+    fun hideModelSelectorForBiography() {
+        _uiState.update { it.copy(showModelSelectorForBiography = false) }
+    }
+    
+    fun selectModelForBiography(model: ModelProvider) {
+        _uiState.update { 
+            it.copy(
+                selectedModelForBiography = model,
+                showModelSelectorForBiography = false
+            )
+        }
+    }
+    
+    private var biographyGenerationJob: kotlinx.coroutines.Job? = null
+    
+    fun generateBiography() {
+        // Cancel previous job if running
+        biographyGenerationJob?.cancel()
+        
+        biographyGenerationJob = viewModelScope.launch {
+            val state = _uiState.value
+            
+            // Get clustering result
+            val clusteringResult = when (val status = state.memoryClusteringStatus) {
+                is ClusteringStatus.Completed -> status.result
+                else -> {
+                    android.util.Log.w("BiographyGen", "No clustering result available")
+                    return@launch
+                }
+            }
+            
+            // Check if model selected
+            val model = state.selectedModelForBiography
+            if (model == null) {
+                android.util.Log.w("BiographyGen", "No model selected")
+                return@launch
+            }
+            
+            // Start foreground service to keep process alive in background
+            com.yourown.ai.domain.service.BiographyGenerationService.start(context, clusteringResult.clusters, model)
+            
+            // Generate biography
+            generateBiographyUseCase.generateBiography(
+                clusters = clusteringResult.clusters,
+                selectedModel = model,
+                currentBiography = state.userBiography
+            )
+        }
+    }
+    
+    fun cancelBiographyGeneration() {
+        biographyGenerationJob?.cancel()
+        biographyGenerationJob = null
+        generateBiographyUseCase.resetStatus()
+        // Cancel foreground service
+        com.yourown.ai.domain.service.BiographyGenerationService.cancel(context)
+    }
+    
+    // Memory Cleaning
+    private var memoryCleaningJob: kotlinx.coroutines.Job? = null
+    
+    fun cleanMemories() {
+        // Cancel previous job if running
+        memoryCleaningJob?.cancel()
+        
+        memoryCleaningJob = viewModelScope.launch {
+            val state = _uiState.value
+            
+            // Check requirements
+            val biography = state.userBiography
+            if (biography == null || biography.isEmpty()) {
+                android.util.Log.w("MemoryCleaning", "No biography available")
+                return@launch
+            }
+            
+            val clusteringResult = when (val status = state.memoryClusteringStatus) {
+                is ClusteringStatus.Completed -> status.result
+                else -> {
+                    android.util.Log.w("MemoryCleaning", "No clustering result available")
+                    return@launch
+                }
+            }
+            
+            val model = state.selectedModelForBiography
+            if (model == null) {
+                android.util.Log.w("MemoryCleaning", "No model selected")
+                return@launch
+            }
+            
+            // Clean memories
+            cleanMemoryUseCase.cleanMemories(
+                biography = biography,
+                clusters = clusteringResult.clusters,
+                selectedModel = model
+            )
+        }
+    }
+    
+    fun cancelMemoryCleaning() {
+        memoryCleaningJob?.cancel()
+        memoryCleaningJob = null
+        cleanMemoryUseCase.resetStatus()
+    }
+    
+    /**
+     * Get all available API models
+     */
+    fun getAvailableModels(): List<ModelProvider> {
+        val models = mutableListOf<ModelProvider>()
+        
+        // Add all DeepSeek models
+        models.addAll(DeepseekModel.values().map { it.toModelProvider() })
+        
+        // Add all OpenAI models
+        models.addAll(OpenAIModel.values().map { it.toModelProvider() })
+        
+        // Add all XAI models
+        models.addAll(XAIModel.values().map { it.toModelProvider() })
+        
+        // Add OpenRouter models
+        models.addAll(OpenRouterModel.values().map { it.toModelProvider() })
+        
+        return models
+    }
+    
+    fun showBiographyDialog() {
+        _uiState.update { it.copy(showBiographyDialog = true) }
+    }
+    
+    fun hideBiographyDialog() {
+        _uiState.update { it.copy(showBiographyDialog = false) }
+    }
+    
+    fun deleteBiography() {
+        viewModelScope.launch {
+            biographyRepository.deleteBiography()
+            _uiState.update { it.copy(showBiographyDialog = false) }
         }
     }
     

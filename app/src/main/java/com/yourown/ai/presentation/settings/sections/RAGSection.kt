@@ -34,14 +34,14 @@ fun RAGSection(
     onAddDocument: () -> Unit
 ) {
     SettingsSection(
-        title = "RAG (Knowledge & Data)",
+        title = stringResource(R.string.rag_section_title),
         icon = Icons.Default.Storage,
-        subtitle = "Use knowledge documents in responses"
+        subtitle = stringResource(R.string.rag_section_subtitle)
     ) {
         // RAG Toggle
         ToggleSetting(
-            title = "RAG Enabled",
-            subtitle = "Use knowledge documents in responses",
+            title = stringResource(R.string.rag_enabled_title),
+            subtitle = stringResource(R.string.rag_enabled_subtitle),
             checked = config.ragEnabled,
             onCheckedChange = { onToggleRAG() }
         )
@@ -52,13 +52,13 @@ fun RAGSection(
             
             // Knowledge Documents
             SettingItemClickable(
-                title = "Knowledge data",
-                subtitle = "Text documents for AI teaching",
+                title = stringResource(R.string.rag_knowledge_data_title),
+                subtitle = stringResource(R.string.rag_knowledge_data_subtitle),
                 onClick = onManageDocuments,
                 trailing = {
                     Row {
                         IconButton(onClick = onManageDocuments) {
-                            Icon(Icons.Default.Description, "View Documents", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Description, stringResource(R.string.rag_view_documents_icon), modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -68,16 +68,16 @@ fun RAGSection(
             
             // RAG Documents
             SettingItemClickable(
-                title = "RAG Documents",
-                subtitle = "What you want to teach your AI - documents, notes, conversations",
+                title = stringResource(R.string.rag_documents_title),
+                subtitle = stringResource(R.string.rag_documents_subtitle),
                 onClick = onAddDocument,
                 trailing = {
                     Row {
                         IconButton(onClick = onAddDocument) {
-                            Icon(Icons.Default.Add, "Add", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Add, stringResource(R.string.rag_add_icon), modifier = Modifier.size(20.dp))
                         }
                         IconButton(onClick = { /* TODO: Show help */ }) {
-                            Icon(Icons.Default.HelpOutline, "Help", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.HelpOutline, stringResource(R.string.rag_help_icon), modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -107,7 +107,7 @@ fun RAGSection(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Processing: ${status.documentName}",
+                                    text = stringResource(R.string.rag_processing_status, status.documentName),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -153,7 +153,7 @@ fun RAGSection(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Deleting: ${status.documentName}",
+                                text = stringResource(R.string.rag_deleting_status, status.documentName),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -183,7 +183,7 @@ fun RAGSection(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "✓ Processing completed!",
+                                text = stringResource(R.string.rag_completed_status),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
@@ -215,7 +215,7 @@ fun RAGSection(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Processing failed",
+                                    text = stringResource(R.string.rag_failed_status),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.error
@@ -235,19 +235,23 @@ fun RAGSection(
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             
             // RAG Chunk Limit Slider
+            val ragChunkLimitFormatter = stringResource(R.string.rag_chunk_limit_formatter)
             SliderSetting(
-                title = "RAG Chunk Limit",
-                subtitle = "AI knowledge memory limit",
+                title = stringResource(R.string.rag_chunk_limit_title),
+                subtitle = stringResource(R.string.rag_chunk_limit_subtitle),
                 value = config.ragChunkLimit.toFloat(),
                 valueRange = AIConfig.MIN_RAG_CHUNK_LIMIT.toFloat()..AIConfig.MAX_RAG_CHUNK_LIMIT.toFloat(),
                 onValueChange = { onRAGChunkLimitChange(it.toInt()) },
-                valueFormatter = { "${it.toInt()} chunks" }
+                valueFormatter = { ragChunkLimitFormatter.format(it.toInt()) }
             )
             
             // Advanced RAG Settings
             SettingItemClickable(
-                title = if (uiState.showAdvancedRAGSettings) "▼ Advanced RAG Settings" else "▶ Advanced RAG Settings",
-                subtitle = "Customize RAG behavior",
+                title = if (uiState.showAdvancedRAGSettings) 
+                    stringResource(R.string.rag_advanced_expanded) 
+                else 
+                    stringResource(R.string.rag_advanced_collapsed),
+                subtitle = stringResource(R.string.rag_advanced_subtitle),
                 onClick = { viewModel.toggleAdvancedRAGSettings() }
             )
             
@@ -263,33 +267,54 @@ fun RAGSection(
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 // Chunk Size
+                val chunkSizeFormatter = stringResource(R.string.rag_chunk_size_formatter)
                 SliderSetting(
-                    title = "Chunk Size",
-                    subtitle = "Text size for each document chunk",
+                    title = stringResource(R.string.rag_chunk_size_title),
+                    subtitle = stringResource(R.string.rag_chunk_size_subtitle),
                     value = config.ragChunkSize.toFloat(),
                     valueRange = AIConfig.MIN_CHUNK_SIZE.toFloat()..AIConfig.MAX_CHUNK_SIZE.toFloat(),
-                    onValueChange = onChunkSizeChange,
-                    valueFormatter = { "${it.toInt()} characters" }
+                    onValueChange = { value ->
+                        // Round to nearest 10
+                        val rounded = (value / 10).toInt() * 10
+                        onChunkSizeChange(rounded.toFloat())
+                    },
+                    valueFormatter = { chunkSizeFormatter.format(it.toInt()) }
                 )
                 
                 // Chunk Overlap
+                val chunkOverlapFormatter = stringResource(R.string.rag_chunk_overlap_formatter)
                 SliderSetting(
-                    title = "Chunk Overlap",
-                    subtitle = "Overlapping characters between chunks",
+                    title = stringResource(R.string.rag_chunk_overlap_title),
+                    subtitle = stringResource(R.string.rag_chunk_overlap_subtitle),
                     value = config.ragChunkOverlap.toFloat(),
                     valueRange = AIConfig.MIN_CHUNK_OVERLAP.toFloat()..AIConfig.MAX_CHUNK_OVERLAP.toFloat(),
-                    onValueChange = onChunkOverlapChange,
-                    valueFormatter = { "${it.toInt()} characters" }
+                    onValueChange = { value ->
+                        // Round to nearest 10
+                        val rounded = (value / 10).toInt() * 10
+                        onChunkOverlapChange(rounded.toFloat())
+                    },
+                    valueFormatter = { chunkOverlapFormatter.format(it.toInt()) }
+                )
+                
+                // Warning about recalculating embeddings
+                Text(
+                    text = stringResource(R.string.rag_recalculate_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp)
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 SettingItemClickable(
-                    title = "RAG Instructions",
-                    subtitle = "What AI do with knowledge documents",
+                    title = stringResource(R.string.rag_instructions_title),
+                    subtitle = stringResource(R.string.rag_instructions_subtitle),
                     onClick = { viewModel.showRAGInstructionsDialog() },
                     trailing = {
-                        Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Edit, stringResource(R.string.rag_edit_icon), tint = MaterialTheme.colorScheme.primary)
                     }
                 )
             }

@@ -45,6 +45,18 @@
     <string name="dialog_regenerate">Перегенерировать</string>
     <string name="dialog_regenerate_confirm">Перегенерировать</string>
     
+    <!-- Home Screen -->
+    <string name="home_chat_imported">Чат успешно импортирован!</string>
+    <string name="home_voice_chat_icon">Голосовой чат</string>
+    <string name="home_new_chat_icon">Новый чат</string>
+    <string name="home_new_chat_button">Новый чат</string>
+    <string name="home_no_conversations">Пока нет разговоров</string>
+    <string name="home_no_conversations_subtitle">Начните новый чат, чтобы поговорить с вашим ИИ</string>
+    <string name="home_getting_started">Начало работы</string>
+    <string name="home_step_api_key">Добавьте API ключ в Настройках</string>
+    <string name="home_step_create_conversation">Создайте новый разговор</string>
+    <string name="home_step_customize_prompts">Настройте системные промпты</string>
+    
     <!-- Conversation Drawer -->
     <string name="drawer_import_chat">Импортировать чат</string>
     <string name="drawer_new_chat">Новый чат</string>
@@ -139,6 +151,17 @@
     <string name="api_key_item_edit">Изменить</string>
     <string name="api_key_item_delete">Удалить</string>
     <string name="api_key_item_add">Добавить API ключ</string>
+    
+    <!-- API Key Dialog -->
+    <string name="api_key_dialog_title">Добавить %s API ключ</string>
+    <string name="api_key_dialog_subtitle">Введите ваш API ключ для использования %s</string>
+    <string name="api_key_dialog_label">API ключ</string>
+    <string name="api_key_dialog_placeholder">sk-…</string>
+    <string name="api_key_dialog_hide">Скрыть ключ</string>
+    <string name="api_key_dialog_show">Показать ключ</string>
+    <string name="api_key_dialog_hint">Ваш ключ хранится в зашифрованном виде на вашем устройстве</string>
+    <string name="api_key_dialog_save">Сохранить</string>
+    <string name="api_key_dialog_cancel">Отмена</string>
     
     <!-- Inherit Context Dialog -->
     <string name="inherit_context_title">Наследовать контекст из чата</string>
@@ -282,8 +305,26 @@
     <string name="cloud_sync_syncing">Синхронизация...</string>
     <string name="cloud_sync_sync_now">Синхронизировать сейчас</string>
     
+    <!-- Cloud Sync Dialog -->
+    <string name="cloud_sync_dialog_title">Конфигурация Supabase</string>
+    <string name="cloud_sync_dialog_subtitle">Введите данные вашего проекта Supabase</string>
+    <string name="cloud_sync_dialog_url_label">URL проекта</string>
+    <string name="cloud_sync_dialog_url_placeholder">https://xxxxx.supabase.co</string>
+    <string name="cloud_sync_dialog_key_label">API ключ (anon/public)</string>
+    <string name="cloud_sync_dialog_key_placeholder">eyJhbGciOi…</string>
+    <string name="cloud_sync_dialog_hide">Скрыть</string>
+    <string name="cloud_sync_dialog_show">Показать</string>
+    <string name="cloud_sync_dialog_hint_encrypted">Ваша строка подключения хранится в зашифрованном виде на вашем устройстве</string>
+    <string name="cloud_sync_dialog_hint_get_credentials">Получите ваши данные из Supabase:</string>
+    <string name="cloud_sync_dialog_hint_steps">1. Перейдите на supabase.com\n2. Откройте ваш проект\n3. Settings → API\n4. Скопируйте Project URL и anon/public ключ\n\nПрямое подключение с телефона!\nБэкенд-сервер не нужен!</string>
+    <string name="cloud_sync_dialog_test_button">Проверить подключение</string>
+    <string name="cloud_sync_dialog_testing">Проверка…</string>
+    <string name="cloud_sync_dialog_test_success">Подключение успешно! Теперь можете сохранить и включить синхронизацию.</string>
+    <string name="cloud_sync_dialog_test_failed">Ошибка подключения: %s</string>
+    <string name="cloud_sync_dialog_save">Сохранить</string>
+    <string name="cloud_sync_dialog_cancel">Отмена</string>
+    
     <!-- SQL Schema Dialog -->
-    <string name="sql_schema_dialog_title">SQL схема Supabase</string>
     <string name="sql_schema_copy">Копировать SQL</string>
     <string name="sql_schema_close">Закрыть</string>
     
@@ -291,6 +332,35 @@
     <string name="cloud_sync_instructions_title">Инструкция по настройке Supabase</string>
     <string name="cloud_sync_instructions_ok">Понятно</string>
     <string name="cloud_sync_instructions_copy_sql">Скопировать SQL запрос</string>
+    <string name="cloud_sync_instructions_close">Закрыть</string>
+    <string name="cloud_sync_instructions_zoom_hint">Сведите пальцы для увеличения</string>
+    <string name="cloud_sync_instructions_url_copied">Ссылка скопирована в буфер обмена</string>
+    <string name="cloud_sync_instructions_copy_icon">Копировать</string>
+    <string name="cloud_sync_instructions_success">Готово! Подключение к облачной базе данных создано ✅</string>
+    <string name="cloud_sync_instructions_data_tracking_title">📊 Отслеживание данных</string>
+    <string name="cloud_sync_instructions_data_tracking_text">Приложение отслеживает примерный размер загруженных данных. Прогресс-бар показывает использование относительно 500 МБ бесплатного тарифа. Для точной информации проверьте Supabase Dashboard: Settings → Database → Database Size</string>
+    <string name="cloud_sync_instructions_pricing_title">💰 Тарифы</string>
+    <string name="cloud_sync_instructions_pricing_text">Бесплатно: 500 МБ БД, 5 ГБ трафика\nPro ($25/мес): 8 ГБ БД, 250 ГБ трафика</string>
+    <string name="cloud_sync_instructions_step1_title">Зарегистрируйтесь на Supabase</string>
+    <string name="cloud_sync_instructions_step1_desc">Перейдите на сайт Supabase и создайте аккаунт</string>
+    <string name="cloud_sync_instructions_step2_title">Создайте организацию</string>
+    <string name="cloud_sync_instructions_step2_desc">Нажмите кнопку + New Organization</string>
+    <string name="cloud_sync_instructions_step3_title">Назовите организацию</string>
+    <string name="cloud_sync_instructions_step3_desc">Введите название вашей организации</string>
+    <string name="cloud_sync_instructions_step4_title">Сохраните пароль БД</string>
+    <string name="cloud_sync_instructions_step4_desc">Скопируйте и сохраните пароль от базы данных в надежном месте, затем нажмите Create new project</string>
+    <string name="cloud_sync_instructions_step5_title">Скопируйте учетные данные</string>
+    <string name="cloud_sync_instructions_step5_desc">Проскрольте страницу вниз и скопируйте Project URL и Publishable API KEY. Сохраните их — они понадобятся для настройки приложения</string>
+    <string name="cloud_sync_instructions_step6_title">Откройте SQL Editor</string>
+    <string name="cloud_sync_instructions_step6_desc">Проскрольте страницу вверх и перейдите в SQL Editor</string>
+    <string name="cloud_sync_instructions_step7_title">Выполните SQL запрос</string>
+    <string name="cloud_sync_instructions_step7_desc">Вставьте SQL запрос в форму Untitled query и нажмите Run</string>
+    <string name="cloud_sync_instructions_step8_title">Проверьте результат</string>
+    <string name="cloud_sync_instructions_step8_desc">Убедитесь, что в разделе Results появилось подтверждение успешного выполнения</string>
+    <string name="cloud_sync_instructions_step9_title">Откройте настройки в приложении</string>
+    <string name="cloud_sync_instructions_step9_desc">Вернитесь в приложение и зайдите в Settings → Cloud Sync → Supabase Configuration</string>
+    <string name="cloud_sync_instructions_step10_title">Настройте подключение</string>
+    <string name="cloud_sync_instructions_step10_desc">Вставьте сохраненные Project URL и Publishable API KEY. Нажмите Test Connection и дождитесь успешного подключения</string>
     
     <!-- Voice Chat -->
     <string name="voice_chat_title">Голосовой чат</string>
@@ -327,17 +397,31 @@
     <string name="rag_enabled_subtitle">Использовать документы знаний в ответах</string>
     <string name="rag_knowledge_data_title">База знаний</string>
     <string name="rag_knowledge_data_subtitle">Текстовые документы для обучения ИИ</string>
+    <string name="rag_view_documents_icon">Просмотр документов</string>
     <string name="rag_documents_title">RAG документы</string>
     <string name="rag_documents_subtitle">Что вы хотите научить ваш ИИ - документы, заметки, беседы</string>
+    <string name="rag_add_icon">Добавить</string>
+    <string name="rag_help_icon">Справка</string>
+    <string name="rag_processing_status">Обработка: %s</string>
+    <string name="rag_deleting_status">Удаление: %s</string>
+    <string name="rag_completed_status">✓ Обработка завершена!</string>
+    <string name="rag_failed_status">Обработка не удалась</string>
     <string name="rag_chunk_limit_title">Лимит фрагментов RAG</string>
     <string name="rag_chunk_limit_subtitle">Лимит памяти знаний ИИ</string>
+    <string name="rag_chunk_limit_formatter">%d чанков</string>
+    <string name="rag_advanced_expanded">▼ Расширенные настройки RAG</string>
+    <string name="rag_advanced_collapsed">▶ Расширенные настройки RAG</string>
     <string name="rag_advanced_subtitle">Настроить поведение RAG</string>
     <string name="rag_chunk_size_title">Размер фрагмента</string>
     <string name="rag_chunk_size_subtitle">Размер текста для каждого фрагмента документа</string>
+    <string name="rag_chunk_size_formatter">%d символов</string>
     <string name="rag_chunk_overlap_title">Перекрытие фрагментов</string>
     <string name="rag_chunk_overlap_subtitle">Перекрывающиеся символы между фрагментами</string>
+    <string name="rag_chunk_overlap_formatter">%d символов</string>
+    <string name="rag_recalculate_warning">⚠️ Важно: Пересчитайте эмбеддинги после изменения размера или перекрытия фрагментов, если хотите обновить существующие фрагменты</string>
     <string name="rag_instructions_title">Инструкции RAG</string>
     <string name="rag_instructions_subtitle">Что ИИ делает с документами знаний</string>
+    <string name="rag_edit_icon">Изменить</string>
     <string name="rag_title_label">Название RAG</string>
     
     <!-- Context Section -->
@@ -345,9 +429,14 @@
     <string name="context_section_subtitle">Что вы хотите, чтобы ваш ИИ знал о вас</string>
     <string name="context_your_context_title">Ваш контекст</string>
     <string name="context_your_context_subtitle">Информация о вас или о чём угодно другом</string>
+    <string name="context_set_icon">Установлено</string>
+    <string name="context_help_icon">Справка</string>
+    <string name="context_advanced_expanded">▼ Расширенные настройки контекста</string>
+    <string name="context_advanced_collapsed">▶ Расширенные настройки контекста</string>
     <string name="context_advanced_subtitle">Настроить инструкции расширенного контекста</string>
     <string name="context_instructions_title">Инструкции контекста</string>
     <string name="context_instructions_subtitle">Как ИИ понимает расширенный контекст</string>
+    <string name="context_edit_icon">Изменить</string>
     <string name="context_swipe_message_title">Промпт ответа на сообщение</string>
     <string name="context_swipe_message_subtitle">Как ИИ видит сообщения, на которые отвечают</string>
     
@@ -360,30 +449,124 @@
     <string name="memory_extraction_prompt_subtitle">Настроить, как ИИ извлекает воспоминания • Требуется: {text}</string>
     <string name="memory_limit_title">Лимит памяти</string>
     <string name="memory_limit_subtitle">Лимит памяти ИИ для воспоминаний</string>
+    <string name="memory_limit_formatter">%d воспоминаний</string>
+    <string name="memory_advanced_expanded">▼ Расширенные настройки памяти</string>
+    <string name="memory_advanced_collapsed">▶ Расширенные настройки памяти</string>
     <string name="memory_advanced_subtitle">Настроить поведение памяти</string>
     <string name="memory_age_filter_title">Фильтр возраста памяти</string>
     <string name="memory_age_filter_subtitle">Извлекать только воспоминания старше X дней</string>
-    <string name="memory_instructions_section_title">Инструкции памяти</string>
-    <string name="memory_instructions_section_subtitle">Что ИИ делает с воспоминаниями</string>
+    <string name="memory_age_filter_formatter">%d дн.</string>
+    <string name="memory_instructions_title">Инструкции памяти</string>
+    <string name="memory_instructions_subtitle">Что ИИ делает с воспоминаниями</string>
+    <string name="memory_edit_icon">Изменить</string>
     <string name="memory_saved_title">Сохранённые воспоминания</string>
     <string name="memory_saved_subtitle">Просмотреть сохранённые воспоминания</string>
+    <string name="memory_view_icon">Просмотр</string>
     <string name="memory_title_label">Название памяти</string>
+    <string name="memory_management_title">Управление памятью</string>
+    <string name="memory_management_subtitle">Управление настройками памяти и воспоминаниями</string>
+    
+    <!-- Memory Clustering -->
+    <string name="memory_clustering_title">Кластеры воспоминаний</string>
+    <string name="memory_clustering_analyzing">Анализ воспоминаний...</string>
+    <string name="memory_clustering_found">Найдено кластеров: %d</string>
+    <string name="memory_clustering_no_memories">Нет воспоминаний для анализа</string>
+    <string name="memory_clustering_error">Ошибка анализа: %s</string>
+    <string name="memory_cluster_size">%d воспоминаний</string>
+    <string name="memory_cluster_density">Плотность: %.2f</string>
+    <string name="memory_cluster_age">Средний возраст: %d дн.</string>
+    <string name="memory_cluster_diversity">Разнообразие: %.2f</string>
+    <string name="memory_cluster_priority">Приоритет: %.2f</string>
+    <string name="memory_cluster_priority_high">Высокий приоритет</string>
+    <string name="memory_cluster_priority_medium">Средний приоритет</string>
+    <string name="memory_cluster_priority_low">Низкий приоритет</string>
+    <string name="memory_cluster_outliers">Выбросы (%d)</string>
+    <string name="memory_cluster_outliers_subtitle">Изолированные воспоминания, не связанные с темами</string>
+    <string name="memory_cluster_avg_size">Средний размер кластера: %.1f</string>
+    <string name="memory_clustering_start">Начать анализ</string>
+    <string name="memory_clustering_close">Закрыть</string>
+    <string name="memory_cluster_expand">Развернуть</string>
+    <string name="memory_cluster_collapse">Свернуть</string>
+    
+    <!-- Biography Generation -->
+    <string name="biography_generate">Заполнить биографию</string>
+    <string name="biography_cancel">Отменить генерацию</string>
+    <string name="biography_select_model">Выбрать модель</string>
+    <string name="biography_generating">Генерация биографии...</string>
+    <string name="biography_processing_cluster">Обработка кластера %d/%d</string>
+    <string name="biography_title">Биография пользователя</string>
+    <string name="biography_status_ready">Нажмите, чтобы посмотреть биографию</string>
+    <string name="biography_status_empty">AI еще не формировал биографию</string>
+    <string name="biography_copy">Копировать</string>
+    <string name="biography_copied">Биография скопирована в буфер обмена</string>
+    <string name="biography_delete">Удалить</string>
+    <string name="biography_delete_confirm_title">Удалить биографию?</string>
+    <string name="biography_delete_confirm_message">Вы уверены, что хотите удалить биографию? Это действие нельзя отменить.</string>
+    <string name="biography_values">Что важно</string>
+    <string name="biography_notification_channel_name">Генерация биографии</string>
+    <string name="biography_notification_channel_description">Показывает прогресс генерации биографии пользователя</string>
+    <string name="biography_completed">Биография готова</string>
+    <string name="biography_completed_description">Биография пользователя успешно сгенерирована</string>
+    <string name="biography_profile">Профиль</string>
+    <string name="biography_pain_points">Что болит</string>
+    <string name="biography_joys">Что радует</string>
+    <string name="biography_fears">Что пугает</string>
+    <string name="biography_loves">Что любит</string>
+    <string name="biography_current_situation">Что происходит сейчас</string>
+    <string name="biography_empty">Биография еще не создана</string>
+    <string name="biography_view">Просмотреть биографию</string>
+    <string name="biography_update">Обновить биографию</string>
+    <string name="biography_error">Ошибка генерации: %s</string>
+    
+    <!-- Memory Cleaning -->
+    <string name="memory_clean">Почистить память</string>
+    <string name="memory_clean_start">Начать очистку</string>
+    <string name="memory_clean_confirm_title">Почистить память?</string>
+    <string name="memory_clean_confirm_message">AI удалит устаревшие воспоминания и объединит дубликаты на основе вашей биографии.</string>
+    <string name="memory_clean_confirm_recommendation">💡 Рекомендация:</string>
+    <string name="memory_clean_confirm_steps">1. Сначала обновите биографию\n2. Потом очистите память\n\nТак AI использует актуальную информацию.</string>
+    <string name="memory_cleaning">Очистка памяти...</string>
+    <string name="memory_cleaning_cluster">Обработка кластера %d/%d</string>
+    <string name="memory_cleaning_completed">Память почищена</string>
+    <string name="memory_cleaning_completed_description">Удалено %d воспоминаний, объединено %d воспоминаний</string>
+    <string name="memory_cleaning_error">Ошибка очистки памяти</string>
+    <string name="memory_clean_cancel">Отменить очистку</string>
     
     <!-- Sound & Haptics Section -->
     <string name="sound_haptics_title">Звук и вибрация</string>
     <string name="sound_haptics_subtitle">Эффекты печати на клавиатуре</string>
+    <string name="sound_volume_label">Громкость звука</string>
     <string name="sound_test_title">Тест звука</string>
     <string name="sound_test_subtitle">Прослушать звук печати</string>
+    <string name="sound_test_icon">Тест звука</string>
     
     <!-- Appearance Section -->
     <string name="appearance_section_title">Оформление</string>
     <string name="appearance_section_subtitle">Тема, цвета и шрифты</string>
     <string name="appearance_customize_title">Настроить</string>
     <string name="appearance_customize_subtitle">Изменить тему, цвета и размер текста</string>
+    <string name="appearance_customize_icon">Настроить</string>
     
     <!-- Persona Section -->
     <string name="persona_section_title">Персоны</string>
     <string name="persona_section_subtitle">Создание и управление персонами</string>
+    <string name="persona_manage_title">Управление персонами</string>
+    <string name="persona_select_prompt_subtitle">Выберите системный промпт для настройки поведения ИИ</string>
+    <string name="persona_no_api_prompts">Нет доступных API системных промптов. Добавьте их в разделе Системные промпты.</string>
+    <string name="persona_help_text">Персоны позволяют создавать разные личности ИИ с уникальными настройками, областями памяти и доступом к документам. Идеально для разделения рабочих, личных или специализированных разговоров.</string>
+    <string name="persona_configured_badge">Настроена</string>
+    <string name="persona_manage_documents">Управление</string>
+    <string name="persona_memories_dialog_title">Воспоминания</string>
+    <string name="persona_memories_dialog_for">для \"%s\"</string>
+    <string name="persona_memories_dialog_close">Закрыть</string>
+    <string name="persona_memories_no_memories">Пока нет воспоминаний</string>
+    <string name="persona_memories_no_memories_hint">Воспоминания будут появляться здесь по мере того, как ИИ узнаёт об этой персоне</string>
+    <string name="persona_memories_count_label">%d воспоминаний</string>
+    <string name="persona_memory_saved">Сохранено %s</string>
+    <string name="time_days_ago">%d д. назад</string>
+    <string name="time_hours_ago">%d ч. назад</string>
+    <string name="time_minutes_ago">%d мин. назад</string>
+    <string name="time_just_now">только что</string>
     
     <!-- Language Section -->
     <string name="language_section_title">Язык</string>
@@ -392,4 +575,248 @@
     <string name="language_russian">Русский</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_restart_required">Язык будет применён немедленно</string>
+    
+    <!-- SQL Schema Dialog -->
+    <string name="sql_schema_dialog_title">SQL схема Supabase</string>
+    <string name="sql_schema_dialog_description">Скопируйте эти SQL команды и выполните их в редакторе SQL Supabase:</string>
+    <string name="sql_schema_dialog_instructions_title">📝 Как запустить:</string>
+    <string name="sql_schema_dialog_instructions_steps">1. Скопируйте SQL (кнопка ниже)\n2. Откройте Supabase → SQL Editor\n3. Вставьте и нажмите Run\n4. Дождитесь сообщения об успехе</string>
+    <string name="sql_schema_dialog_copy">Копировать SQL</string>
+    <string name="sql_schema_dialog_close">Закрыть</string>
+    
+    <!-- Memory Dialogs -->
+    <string name="memory_dialog_title">Сохранённые воспоминания</string>
+    <string name="memory_dialog_close">Закрыть</string>
+    <string name="memory_dialog_count">%d воспоминаний</string>
+    <string name="memory_dialog_recalculating">Пересчёт эмбеддингов...</string>
+    <string name="memory_dialog_progress">%d%%</string>
+    <string name="memory_dialog_completed">✓ Эмбеддинги пересчитаны!</string>
+    <string name="memory_dialog_failed">Ошибка пересчёта</string>
+    <string name="memory_dialog_empty">Пока нет воспоминаний</string>
+    <string name="memory_dialog_empty_hint">Включите память в настройках, чтобы начать сохранение</string>
+    <string name="memory_item_generating">Генерация эмбеддинга...</string>
+    <string name="memory_item_for_all">Для всех</string>
+    <string name="memory_item_edit">Редактировать</string>
+    <string name="memory_item_delete">Удалить</string>
+    <string name="memory_item_delete_title">Удалить воспоминание?</string>
+    <string name="memory_item_delete_message">Это действие нельзя отменить.</string>
+    <string name="memory_item_delete_confirm">Удалить</string>
+    <string name="memory_item_delete_cancel">Отмена</string>
+    <string name="memory_edit_title">Редактирование воспоминания</string>
+    <string name="memory_edit_created">Создано: %s</string>
+    <string name="memory_edit_label">Воспоминание</string>
+    <string name="memory_edit_link_title">Связать с персоной</string>
+    <string name="memory_edit_no_persona">Для всех (без персоны)</string>
+    <string name="memory_edit_generating">Генерация эмбеддинга...</string>
+    <string name="memory_edit_cancel">Отмена</string>
+    <string name="memory_edit_save">Сохранить</string>
+    <string name="memory_prompt_title">Промпт извлечения воспоминаний</string>
+    <string name="memory_prompt_description">Этот промпт используется для извлечения воспоминаний из ваших сообщений.</string>
+    <string name="memory_prompt_placeholder_warning">⚠️ Обязательный плейсхолдер: %s</string>
+    <string name="memory_prompt_editable_label">Редактируемый промпт</string>
+    <string name="memory_prompt_editable_placeholder">Введите промпт извлечения воспоминаний с %s...</string>
+    <string name="memory_prompt_error">Требуется плейсхолдер %s</string>
+    <string name="memory_prompt_locked_title">🔒 Заблокированный формат (инструкция вывода)</string>
+    <string name="memory_prompt_reset">Сбросить по умолчанию</string>
+    <string name="memory_prompt_save">Сохранить</string>
+    <string name="memory_prompt_reset_title">Сбросить по умолчанию?</string>
+    <string name="memory_prompt_reset_message">Это восстановит оригинальный промпт извлечения воспоминаний. Ваши текущие изменения будут потеряны.</string>
+    <string name="memory_prompt_reset_confirm">Сбросить</string>
+    <string name="memory_prompt_reset_cancel">Отмена</string>
+    
+    <!-- System Prompt Dialogs -->
+    <string name="system_prompts_title_api">API промпты</string>
+    <string name="system_prompts_title_local">Локальные промпты</string>
+    <string name="system_prompts_add_new">Добавить новый промпт</string>
+    <string name="system_prompts_close">Закрыть</string>
+    <string name="system_prompts_empty">Нет промптов</string>
+    <string name="system_prompts_add_button">Добавить промпт</string>
+    <string name="system_prompts_badge_default">По умолчанию</string>
+    <string name="system_prompts_badge_persona">Персона</string>
+    <string name="system_prompts_set_default">Установить по умолчанию</string>
+    <string name="system_prompts_edit">Редактировать</string>
+    <string name="system_prompts_delete">Удалить</string>
+    <string name="system_prompts_usage">Использовано: %d раз</string>
+    <string name="system_prompts_delete_title">Удалить промпт?</string>
+    <string name="system_prompts_delete_with_persona">Это также удалит связанную персону и все её настройки. Это действие нельзя отменить.</string>
+    <string name="system_prompts_delete_message">Это действие нельзя отменить.</string>
+    <string name="system_prompts_delete_confirm">Удалить</string>
+    <string name="system_prompts_delete_cancel">Отмена</string>
+    <string name="system_prompts_edit_new">Новая персона</string>
+    <string name="system_prompts_edit_title">Редактирование персоны</string>
+    <string name="system_prompts_name_label">Название</string>
+    <string name="system_prompts_name_placeholder">Система 1</string>
+    <string name="system_prompts_content_label">Содержимое промпта</string>
+    <string name="system_prompts_content_placeholder">Введите ваш системный промпт...</string>
+    <string name="system_prompts_use_default">Использовать по умолчанию</string>
+    <string name="system_prompts_reset">Сбросить по умолчанию</string>
+    <string name="system_prompts_cancel">Отмена</string>
+    <string name="system_prompts_save">Сохранить</string>
+    
+    <!-- Advanced Settings Dialogs -->
+    <string name="context_instructions_description">Настройте, как ИИ использует расширенный контекст (память + RAG)</string>
+    <string name="context_instructions_placeholder">Введите инструкции контекста...</string>
+    <string name="context_instructions_save">Сохранить</string>
+    <string name="context_instructions_reset">Сбросить</string>
+    <string name="context_instructions_cancel">Отмена</string>
+    <string name="memory_instructions_description">Настройте, что ИИ делает с воспоминаниями</string>
+    <string name="memory_instructions_placeholder">Введите инструкции памяти...</string>
+    <string name="memory_instructions_save">Сохранить</string>
+    <string name="memory_instructions_reset">Сбросить</string>
+    <string name="memory_instructions_cancel">Отмена</string>
+    <string name="rag_instructions_description">Настройте, что ИИ делает с документами знаний</string>
+    <string name="rag_instructions_placeholder">Введите инструкции RAG...</string>
+    <string name="rag_instructions_save">Сохранить</string>
+    <string name="rag_instructions_reset">Сбросить</string>
+    <string name="rag_instructions_cancel">Отмена</string>
+    <string name="deep_empathy_prompt_title">Промпт глубокой эмпатии</string>
+    <string name="deep_empathy_prompt_description">Настройте промпт для режима глубокой эмпатии</string>
+    <string name="deep_empathy_prompt_warning">⚠️ Обязательный плейсхолдер: %s</string>
+    <string name="deep_empathy_prompt_placeholder">Введите промпт с %s...</string>
+    <string name="deep_empathy_prompt_error">Требуется плейсхолдер %s</string>
+    <string name="deep_empathy_prompt_save">Сохранить</string>
+    <string name="deep_empathy_prompt_reset">Сбросить</string>
+    <string name="deep_empathy_prompt_cancel">Отмена</string>
+    <string name="swipe_message_prompt_title">Промпт свайпа сообщения</string>
+    <string name="swipe_message_prompt_description">Этот промпт отправляется ИИ, когда пользователь отвечает на сообщение</string>
+    <string name="swipe_message_prompt_warning">⚠️ Обязательный плейсхолдер: %s</string>
+    <string name="swipe_message_prompt_placeholder">Пользователь свайпнул это сообщение...</string>
+    <string name="swipe_message_prompt_error">Требуется плейсхолдер %s</string>
+    <string name="swipe_message_prompt_save">Сохранить</string>
+    <string name="swipe_message_prompt_reset">Сбросить</string>
+    <string name="swipe_message_prompt_cancel">Отмена</string>
+    
+    <!-- Knowledge Documents Dialogs -->
+    <string name="knowledge_docs_title">Документы знаний</string>
+    <string name="knowledge_docs_count">%d документов</string>
+    <string name="knowledge_docs_close">Закрыть</string>
+    <string name="knowledge_docs_processing">Обработка: %s</string>
+    <string name="knowledge_docs_progress">%d%%</string>
+    <string name="knowledge_docs_deleting">Удаление: %s</string>
+    <string name="knowledge_docs_completed">✓ Обработка завершена!</string>
+    <string name="knowledge_docs_failed">Ошибка обработки</string>
+    <string name="knowledge_docs_add">Добавить документ</string>
+    <string name="knowledge_docs_empty">Пока нет документов</string>
+    <string name="knowledge_docs_empty_hint">Добавьте ваш первый документ для начала</string>
+    <string name="knowledge_docs_for_all">Для всех</string>
+    <string name="knowledge_docs_persona_count">%d персона</string>
+    <string name="knowledge_docs_personas_count">%d персон</string>
+    <string name="knowledge_docs_size_date">%d КБ • %s</string>
+    <string name="knowledge_docs_edit">Редактировать</string>
+    <string name="knowledge_docs_delete">Удалить</string>
+    <string name="knowledge_docs_delete_title">Удалить документ?</string>
+    <string name="knowledge_docs_delete_message">Вы уверены, что хотите удалить \"%s\"? Это действие нельзя отменить.</string>
+    <string name="knowledge_docs_delete_confirm">Удалить</string>
+    <string name="knowledge_docs_delete_cancel">Отмена</string>
+    <string name="knowledge_docs_new_title">Новый документ</string>
+    <string name="knowledge_docs_edit_title">Редактирование документа</string>
+    <string name="knowledge_docs_name_label">Название документа</string>
+    <string name="knowledge_docs_name_placeholder">Введите название документа</string>
+    <string name="knowledge_docs_import">Импортировать из файла</string>
+    <string name="knowledge_docs_link_hint">Свяжите документы с персонами в Настройки → Персоны</string>
+    <string name="knowledge_docs_content_label">Содержимое</string>
+    <string name="knowledge_docs_content_placeholder">Введите текст или импортируйте из файла</string>
+    <string name="knowledge_docs_stats">%d символов • %d КБ</string>
+    <string name="knowledge_docs_cancel">Отмена</string>
+    <string name="knowledge_docs_save">Сохранить</string>
+    
+    <!-- Embedding Models Dialog -->
+    <string name="embedding_models_title">Модели эмбеддингов</string>
+    <string name="embedding_models_subtitle">Для семантического поиска и RAG</string>
+    <string name="embedding_models_close">Закрыть</string>
+    <string name="embedding_models_info">Эти модели преобразуют текст в векторы для семантического поиска в вашей базе знаний и воспоминаниях</string>
+    <string name="embedding_models_description">%s • %dD</string>
+    <string name="embedding_models_download">Загрузить</string>
+    <string name="embedding_models_queued">В очереди...</string>
+    <string name="embedding_models_downloading">Загрузка...</string>
+    <string name="embedding_models_progress">%d%%</string>
+    <string name="embedding_models_delete">Удалить</string>
+    <string name="embedding_models_downloaded">Загружено</string>
+    <string name="embedding_models_error">Ошибка: %s</string>
+    <string name="embedding_models_retry">Повторить</string>
+    
+    <!-- Local Models Dialog -->
+    <string name="local_models_title">Локальные AI модели</string>
+    <string name="local_models_subtitle">Запуск ИИ на вашем устройстве, интернет не требуется</string>
+    <string name="local_models_close">Закрыть</string>
+    <string name="local_models_info">Модели загружаются с Hugging Face и хранятся локально</string>
+    <string name="local_models_download">Загрузить</string>
+    <string name="local_models_queued">В очереди...</string>
+    <string name="local_models_downloading">Загрузка...</string>
+    <string name="local_models_progress">%d%%</string>
+    <string name="local_models_delete">Удалить</string>
+    <string name="local_models_downloaded">Загружено</string>
+    <string name="local_models_failed">Ошибка: %s</string>
+    <string name="local_models_retry">Повторить</string>
+    
+    <!-- Prompt Dialogs -->
+    <string name="prompt_dialog_system_title">Системный промпт</string>
+    <string name="prompt_dialog_system_subtitle">Основа личности вашего ИИ</string>
+    <string name="prompt_dialog_placeholder">Ты цифровой партнёр...</string>
+    <string name="prompt_dialog_cancel">Отмена</string>
+    <string name="prompt_dialog_save">Сохранить</string>
+    <string name="prompt_dialog_context_title">Контекст</string>
+    <string name="prompt_dialog_context_subtitle">Что вы хотите, чтобы ваш ИИ знал о вас</string>
+    <string name="prompt_dialog_examples_title">💡 Примеры:</string>
+    <string name="prompt_dialog_example1">• Меня зовут... Я работаю...</string>
+    <string name="prompt_dialog_example2">• Мои интересы: ...</string>
+    <string name="prompt_dialog_example3">• Мой стиль общения: ...</string>
+    <string name="prompt_dialog_context_placeholder">Расскажите вашему ИИ о себе...</string>
+    
+    <!-- Appearance Dialog -->
+    <string name="appearance_dialog_title">Внешний вид</string>
+    <string name="appearance_dialog_subtitle">Настройте свой опыт</string>
+    <string name="appearance_dialog_close">Закрыть</string>
+    <string name="appearance_theme_section">Тема</string>
+    <string name="appearance_theme_mode_title">Режим</string>
+    <string name="appearance_theme_mode_desc">Выберите предпочитаемую тему</string>
+    <string name="appearance_theme_light">Светлая</string>
+    <string name="appearance_theme_dark">Тёмная</string>
+    <string name="appearance_theme_system">Системная</string>
+    <string name="appearance_colors_title">Цвета</string>
+    <string name="appearance_colors_desc_dynamic">Динамические цвета адаптируются к вашим обоям (Android 12+)</string>
+    <string name="appearance_colors_desc">Выберите цветовое предпочтение</string>
+    <string name="appearance_colors_dynamic">Динамические</string>
+    <string name="appearance_colors_neutral">Нейтральные</string>
+    <string name="appearance_typography_section">Типографика</string>
+    <string name="appearance_font_title">Шрифт</string>
+    <string name="appearance_font_desc">Выберите предпочитаемый стиль шрифта</string>
+    <string name="appearance_font_roboto">Roboto</string>
+    <string name="appearance_font_system">Системный</string>
+    <string name="appearance_text_size_title">Размер текста</string>
+    <string name="appearance_text_size_desc">Настройте размер текста для лучшей читаемости</string>
+    <string name="appearance_text_size_s">S</string>
+    <string name="appearance_text_size_m">M</string>
+    <string name="appearance_text_size_l">L</string>
+    <string name="appearance_text_size_xl">XL</string>
+    <string name="appearance_text_size_xxl">XXL</string>
+    <string name="appearance_preview_text">Превью: Съешь ещё этих мягких французских булок, да выпей чаю</string>
+    <string name="appearance_save">Сохранить</string>
+    
+    <!-- Deep Empathy Analysis Dialog -->
+    <string name="deep_empathy_analysis_title">Анализ глубокой эмпатии</string>
+    <string name="deep_empathy_analysis_close">Закрыть</string>
+    <string name="deep_empathy_analysis_subtitle">Этот промпт анализирует сообщения для поиска точек фокусировки диалога</string>
+    <string name="deep_empathy_analysis_warning">⚠️ Обязательный плейсхолдер: %s</string>
+    <string name="deep_empathy_analysis_label">Редактируемый промпт</string>
+    <string name="deep_empathy_analysis_placeholder">Введите промпт с %s...</string>
+    <string name="deep_empathy_analysis_error">Плейсхолдер %s обязателен</string>
+    <string name="deep_empathy_analysis_locked_title">🔒 Заблокированный формат (JSON ответ)</string>
+    <string name="deep_empathy_analysis_reset">Сбросить</string>
+    <string name="deep_empathy_analysis_save">Сохранить</string>
+    <string name="deep_empathy_analysis_reset_confirm_title">Сбросить к настройкам по умолчанию?</string>
+    <string name="deep_empathy_analysis_reset_confirm_message">Это восстановит оригинальный промпт анализа. Текущие изменения будут потеряны.</string>
+    <string name="deep_empathy_analysis_reset_confirm">Сбросить</string>
+    <string name="deep_empathy_analysis_reset_cancel">Отмена</string>
+    
+    <!-- Export Chat Dialog -->
+    <string name="export_preparing">Подготовка экспорта...</string>
+    <string name="export_preview_only">Только превью (первые ~10 пар сообщений)</string>
+    <string name="export_only_liked">Показаны только понравившиеся сообщения</string>
+    <string name="export_markdown_formatting">Чат экспортирован с markdown-форматированием</string>
+    <string name="export_dialog_title">Экспорт чата</string>
+    <string name="export_dialog_close">Закрыть</string>
+    <string name="export_filter_liked">Экспортировать только понравившиеся сообщения</string>
+    <string name="export_copied">✓ Скопировано в буфер обмена</string>
+    <string name="export_large_warning">Большой чат (%d символов). Используйте \'Сохранить в файл\' для импорта.</string>
 </resources>

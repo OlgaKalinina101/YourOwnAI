@@ -45,6 +45,18 @@
     <string name="dialog_regenerate">Перегенерувати</string>
     <string name="dialog_regenerate_confirm">Перегенерувати</string>
     
+    <!-- Home Screen -->
+    <string name="home_chat_imported">Чат успішно імпортовано!</string>
+    <string name="home_voice_chat_icon">Голосовий чат</string>
+    <string name="home_new_chat_icon">Новий чат</string>
+    <string name="home_new_chat_button">Новий чат</string>
+    <string name="home_no_conversations">Поки немає розмов</string>
+    <string name="home_no_conversations_subtitle">Почніть новий чат, щоб поговорити з вашим ШІ</string>
+    <string name="home_getting_started">Початок роботи</string>
+    <string name="home_step_api_key">Додайте API ключ у Налаштуваннях</string>
+    <string name="home_step_create_conversation">Створіть нову розмову</string>
+    <string name="home_step_customize_prompts">Налаштуйте системні промпти</string>
+    
     <!-- Conversation Drawer -->
     <string name="drawer_import_chat">Імпортувати чат</string>
     <string name="drawer_new_chat">Новий чат</string>
@@ -139,6 +151,17 @@
     <string name="api_key_item_edit">Змінити</string>
     <string name="api_key_item_delete">Видалити</string>
     <string name="api_key_item_add">Додати API ключ</string>
+    
+    <!-- API Key Dialog -->
+    <string name="api_key_dialog_title">Додати %s API ключ</string>
+    <string name="api_key_dialog_subtitle">Введіть ваш API ключ для використання %s</string>
+    <string name="api_key_dialog_label">API ключ</string>
+    <string name="api_key_dialog_placeholder">sk-…</string>
+    <string name="api_key_dialog_hide">Приховати ключ</string>
+    <string name="api_key_dialog_show">Показати ключ</string>
+    <string name="api_key_dialog_hint">Ваш ключ зберігається в зашифрованому вигляді на вашому пристрої</string>
+    <string name="api_key_dialog_save">Зберегти</string>
+    <string name="api_key_dialog_cancel">Скасувати</string>
     
     <!-- Inherit Context Dialog -->
     <string name="inherit_context_title">Успадкувати контекст з чату</string>
@@ -282,8 +305,26 @@
     <string name="cloud_sync_syncing">Синхронізація...</string>
     <string name="cloud_sync_sync_now">Синхронізувати зараз</string>
     
+    <!-- Cloud Sync Dialog -->
+    <string name="cloud_sync_dialog_title">Конфігурація Supabase</string>
+    <string name="cloud_sync_dialog_subtitle">Введіть дані вашого проєкту Supabase</string>
+    <string name="cloud_sync_dialog_url_label">URL проєкту</string>
+    <string name="cloud_sync_dialog_url_placeholder">https://xxxxx.supabase.co</string>
+    <string name="cloud_sync_dialog_key_label">API ключ (anon/public)</string>
+    <string name="cloud_sync_dialog_key_placeholder">eyJhbGciOi…</string>
+    <string name="cloud_sync_dialog_hide">Приховати</string>
+    <string name="cloud_sync_dialog_show">Показати</string>
+    <string name="cloud_sync_dialog_hint_encrypted">Ваш рядок підключення зберігається в зашифрованому вигляді на вашому пристрої</string>
+    <string name="cloud_sync_dialog_hint_get_credentials">Отримайте ваші дані з Supabase:</string>
+    <string name="cloud_sync_dialog_hint_steps">1. Перейдіть на supabase.com\n2. Відкрийте ваш проєкт\n3. Settings → API\n4. Скопіюйте Project URL та anon/public ключ\n\nПряме підключення з телефону!\nБекенд-сервер не потрібен!</string>
+    <string name="cloud_sync_dialog_test_button">Перевірити підключення</string>
+    <string name="cloud_sync_dialog_testing">Перевірка…</string>
+    <string name="cloud_sync_dialog_test_success">Підключення успішне! Тепер можете зберегти та увімкнути синхронізацію.</string>
+    <string name="cloud_sync_dialog_test_failed">Помилка підключення: %s</string>
+    <string name="cloud_sync_dialog_save">Зберегти</string>
+    <string name="cloud_sync_dialog_cancel">Скасувати</string>
+    
     <!-- SQL Schema Dialog -->
-    <string name="sql_schema_dialog_title">SQL схема Supabase</string>
     <string name="sql_schema_copy">Копіювати SQL</string>
     <string name="sql_schema_close">Закрити</string>
     
@@ -291,6 +332,35 @@
     <string name="cloud_sync_instructions_title">Інструкція з налаштування Supabase</string>
     <string name="cloud_sync_instructions_ok">Зрозуміло</string>
     <string name="cloud_sync_instructions_copy_sql">Копіювати SQL запит</string>
+    <string name="cloud_sync_instructions_close">Закрити</string>
+    <string name="cloud_sync_instructions_zoom_hint">Зведіть пальці для збільшення</string>
+    <string name="cloud_sync_instructions_url_copied">Посилання скопійовано в буфер обміну</string>
+    <string name="cloud_sync_instructions_copy_icon">Копіювати</string>
+    <string name="cloud_sync_instructions_success">Готово! Підключення до хмарної бази даних створено ✅</string>
+    <string name="cloud_sync_instructions_data_tracking_title">📊 Відстеження даних</string>
+    <string name="cloud_sync_instructions_data_tracking_text">Додаток відстежує приблизний розмір завантажених даних. Прогрес-бар показує використання відносно 500 МБ безкоштовного плану. Для точної інформації перевірте Supabase Dashboard: Settings → Database → Database Size</string>
+    <string name="cloud_sync_instructions_pricing_title">💰 Тарифи</string>
+    <string name="cloud_sync_instructions_pricing_text">Безкоштовно: 500 МБ БД, 5 ГБ трафіку\nPro ($25/міс): 8 ГБ БД, 250 ГБ трафіку</string>
+    <string name="cloud_sync_instructions_step1_title">Зареєструйтеся на Supabase</string>
+    <string name="cloud_sync_instructions_step1_desc">Перейдіть на сайт Supabase та створіть акаунт</string>
+    <string name="cloud_sync_instructions_step2_title">Створіть організацію</string>
+    <string name="cloud_sync_instructions_step2_desc">Натисніть кнопку + New Organization</string>
+    <string name="cloud_sync_instructions_step3_title">Назвіть організацію</string>
+    <string name="cloud_sync_instructions_step3_desc">Введіть назву вашої організації</string>
+    <string name="cloud_sync_instructions_step4_title">Збережіть пароль БД</string>
+    <string name="cloud_sync_instructions_step4_desc">Скопіюйте та збережіть пароль від бази даних у надійному місці, потім натисніть Create new project</string>
+    <string name="cloud_sync_instructions_step5_title">Скопіюйте облікові дані</string>
+    <string name="cloud_sync_instructions_step5_desc">Прокрутіть сторінку вниз і скопіюйте Project URL та Publishable API KEY. Збережіть їх — вони знадобляться для налаштування додатка</string>
+    <string name="cloud_sync_instructions_step6_title">Відкрийте SQL Editor</string>
+    <string name="cloud_sync_instructions_step6_desc">Прокрутіть сторінку вгору та перейдіть у SQL Editor</string>
+    <string name="cloud_sync_instructions_step7_title">Виконайте SQL запит</string>
+    <string name="cloud_sync_instructions_step7_desc">Вставте SQL запит у форму Untitled query та натисніть Run</string>
+    <string name="cloud_sync_instructions_step8_title">Перевірте результат</string>
+    <string name="cloud_sync_instructions_step8_desc">Переконайтеся, що в розділі Results з\'явилося підтвердження успішного виконання</string>
+    <string name="cloud_sync_instructions_step9_title">Відкрийте налаштування в додатку</string>
+    <string name="cloud_sync_instructions_step9_desc">Поверніться в додаток та зайдіть у Settings → Cloud Sync → Supabase Configuration</string>
+    <string name="cloud_sync_instructions_step10_title">Налаштуйте підключення</string>
+    <string name="cloud_sync_instructions_step10_desc">Вставте збережені Project URL та Publishable API KEY. Натисніть Test Connection та дочекайтеся успішного підключення</string>
     
     <!-- Voice Chat -->
     <string name="voice_chat_title">Голосовий чат</string>
@@ -327,17 +397,31 @@
     <string name="rag_enabled_subtitle">Використовувати документи знань у відповідях</string>
     <string name="rag_knowledge_data_title">База знань</string>
     <string name="rag_knowledge_data_subtitle">Текстові документи для навчання ШІ</string>
+    <string name="rag_view_documents_icon">Перегляд документів</string>
     <string name="rag_documents_title">RAG документи</string>
     <string name="rag_documents_subtitle">Що ви хочете навчити ваш ШІ - документи, нотатки, бесіди</string>
+    <string name="rag_add_icon">Додати</string>
+    <string name="rag_help_icon">Довідка</string>
+    <string name="rag_processing_status">Обробка: %s</string>
+    <string name="rag_deleting_status">Видалення: %s</string>
+    <string name="rag_completed_status">✓ Обробка завершена!</string>
+    <string name="rag_failed_status">Обробка не вдалася</string>
     <string name="rag_chunk_limit_title">Ліміт фрагментів RAG</string>
     <string name="rag_chunk_limit_subtitle">Ліміт пам\'яті знань ШІ</string>
+    <string name="rag_chunk_limit_formatter">%d чанків</string>
+    <string name="rag_advanced_expanded">▼ Розширені налаштування RAG</string>
+    <string name="rag_advanced_collapsed">▶ Розширені налаштування RAG</string>
     <string name="rag_advanced_subtitle">Налаштувати поведінку RAG</string>
     <string name="rag_chunk_size_title">Розмір фрагмента</string>
     <string name="rag_chunk_size_subtitle">Розмір тексту для кожного фрагмента документа</string>
+    <string name="rag_chunk_size_formatter">%d символів</string>
     <string name="rag_chunk_overlap_title">Перекриття фрагментів</string>
     <string name="rag_chunk_overlap_subtitle">Символи, що перекриваються між фрагментами</string>
+    <string name="rag_chunk_overlap_formatter">%d символів</string>
+    <string name="rag_recalculate_warning">⚠️ Важливо: Перерахуйте ембединги після зміни розміру або перекриття фрагментів, якщо хочете оновити існуючі фрагменти</string>
     <string name="rag_instructions_title">Інструкції RAG</string>
     <string name="rag_instructions_subtitle">Що ШІ робить з документами знань</string>
+    <string name="rag_edit_icon">Редагувати</string>
     <string name="rag_title_label">Назва RAG</string>
     
     <!-- Context Section -->
@@ -345,9 +429,14 @@
     <string name="context_section_subtitle">Що ви хочете, щоб ваш ШІ знав про вас</string>
     <string name="context_your_context_title">Ваш контекст</string>
     <string name="context_your_context_subtitle">Інформація про вас або про щось інше</string>
+    <string name="context_set_icon">Встановлено</string>
+    <string name="context_help_icon">Довідка</string>
+    <string name="context_advanced_expanded">▼ Розширені налаштування контексту</string>
+    <string name="context_advanced_collapsed">▶ Розширені налаштування контексту</string>
     <string name="context_advanced_subtitle">Налаштувати інструкції розширеного контексту</string>
     <string name="context_instructions_title">Інструкції контексту</string>
     <string name="context_instructions_subtitle">Як ШІ розуміє розширений контекст</string>
+    <string name="context_edit_icon">Редагувати</string>
     <string name="context_swipe_message_title">Промпт відповіді на повідомлення</string>
     <string name="context_swipe_message_subtitle">Як ШІ бачить повідомлення, на які відповідають</string>
     
@@ -360,30 +449,124 @@
     <string name="memory_extraction_prompt_subtitle">Налаштувати, як ШІ витягує спогади • Потрібно: {text}</string>
     <string name="memory_limit_title">Ліміт пам\'яті</string>
     <string name="memory_limit_subtitle">Ліміт пам\'яті ШІ для спогадів</string>
+    <string name="memory_limit_formatter">%d спогадів</string>
+    <string name="memory_advanced_expanded">▼ Розширені налаштування пам\'яті</string>
+    <string name="memory_advanced_collapsed">▶ Розширені налаштування пам\'яті</string>
     <string name="memory_advanced_subtitle">Налаштувати поведінку пам\'яті</string>
     <string name="memory_age_filter_title">Фільтр віку пам\'яті</string>
     <string name="memory_age_filter_subtitle">Витягувати тільки спогади старіші за X днів</string>
-    <string name="memory_instructions_section_title">Інструкції пам\'яті</string>
-    <string name="memory_instructions_section_subtitle">Що ШІ робить зі спогадами</string>
+    <string name="memory_age_filter_formatter">%d дн.</string>
+    <string name="memory_instructions_title">Інструкції пам\'яті</string>
+    <string name="memory_instructions_subtitle">Що ШІ робить зі спогадами</string>
+    <string name="memory_edit_icon">Редагувати</string>
     <string name="memory_saved_title">Збережені спогади</string>
     <string name="memory_saved_subtitle">Переглянути збережені спогади</string>
+    <string name="memory_view_icon">Перегляд</string>
     <string name="memory_title_label">Назва пам\'яті</string>
+    <string name="memory_management_title">Керування пам\'яттю</string>
+    <string name="memory_management_subtitle">Керування налаштуваннями пам\'яті та спогадами</string>
+    
+    <!-- Memory Clustering -->
+    <string name="memory_clustering_title">Кластери спогадів</string>
+    <string name="memory_clustering_analyzing">Аналіз спогадів...</string>
+    <string name="memory_clustering_found">Знайдено кластерів: %d</string>
+    <string name="memory_clustering_no_memories">Немає спогадів для аналізу</string>
+    <string name="memory_clustering_error">Помилка аналізу: %s</string>
+    <string name="memory_cluster_size">%d спогадів</string>
+    <string name="memory_cluster_density">Щільність: %.2f</string>
+    <string name="memory_cluster_age">Середній вік: %d дн.</string>
+    <string name="memory_cluster_diversity">Різноманітність: %.2f</string>
+    <string name="memory_cluster_priority">Пріоритет: %.2f</string>
+    <string name="memory_cluster_priority_high">Високий пріоритет</string>
+    <string name="memory_cluster_priority_medium">Середній пріоритет</string>
+    <string name="memory_cluster_priority_low">Низький пріоритет</string>
+    <string name="memory_cluster_outliers">Викиди (%d)</string>
+    <string name="memory_cluster_outliers_subtitle">Ізольовані спогади, не пов\'язані з темами</string>
+    <string name="memory_cluster_avg_size">Середній розмір кластера: %.1f</string>
+    <string name="memory_clustering_start">Почати аналіз</string>
+    <string name="memory_clustering_close">Закрити</string>
+    <string name="memory_cluster_expand">Розгорнути</string>
+    <string name="memory_cluster_collapse">Згорнути</string>
+    
+    <!-- Biography Generation -->
+    <string name="biography_generate">Заповнити біографію</string>
+    <string name="biography_cancel">Скасувати генерацію</string>
+    <string name="biography_select_model">Вибрати модель</string>
+    <string name="biography_generating">Генерація біографії...</string>
+    <string name="biography_processing_cluster">Обробка кластера %d/%d</string>
+    <string name="biography_title">Біографія користувача</string>
+    <string name="biography_status_ready">Натисніть, щоб переглянути біографію</string>
+    <string name="biography_status_empty">AI ще не формував біографію</string>
+    <string name="biography_copy">Копіювати</string>
+    <string name="biography_copied">Біографію скопійовано в буфер обміну</string>
+    <string name="biography_delete">Видалити</string>
+    <string name="biography_delete_confirm_title">Видалити біографію?</string>
+    <string name="biography_delete_confirm_message">Ви впевнені, що хочете видалити біографію? Цю дію не можна скасувати.</string>
+    <string name="biography_values">Що важливо</string>
+    <string name="biography_notification_channel_name">Генерація біографії</string>
+    <string name="biography_notification_channel_description">Показує прогрес генерації біографії користувача</string>
+    <string name="biography_completed">Біографія готова</string>
+    <string name="biography_completed_description">Біографію користувача успішно згенеровано</string>
+    <string name="biography_profile">Профіль</string>
+    <string name="biography_pain_points">Що болить</string>
+    <string name="biography_joys">Що радує</string>
+    <string name="biography_fears">Що лякає</string>
+    <string name="biography_loves">Що подобається</string>
+    <string name="biography_current_situation">Що відбувається зараз</string>
+    <string name="biography_empty">Біографію ще не створено</string>
+    <string name="biography_view">Переглянути біографію</string>
+    <string name="biography_update">Оновити біографію</string>
+    <string name="biography_error">Помилка генерації: %s</string>
+    
+    <!-- Memory Cleaning -->
+    <string name="memory_clean">Почистити пам\'ять</string>
+    <string name="memory_clean_start">Почати очищення</string>
+    <string name="memory_clean_confirm_title">Почистити пам\'ять?</string>
+    <string name="memory_clean_confirm_message">AI видалить застарілі спогади та об\'єднає дублікати на основі вашої біографії.</string>
+    <string name="memory_clean_confirm_recommendation">💡 Рекомендація:</string>
+    <string name="memory_clean_confirm_steps">1. Спочатку оновіть біографію\n2. Потім очистіть пам\'ять\n\nТак AI використає актуальну інформацію.</string>
+    <string name="memory_cleaning">Очищення пам\'яті...</string>
+    <string name="memory_cleaning_cluster">Обробка кластера %d/%d</string>
+    <string name="memory_cleaning_completed">Пам\'ять почищено</string>
+    <string name="memory_cleaning_completed_description">Видалено %d спогадів, об\'єднано %d спогадів</string>
+    <string name="memory_cleaning_error">Помилка очищення пам\'яті</string>
+    <string name="memory_clean_cancel">Скасувати очищення</string>
     
     <!-- Sound & Haptics Section -->
     <string name="sound_haptics_title">Звук та вібрація</string>
     <string name="sound_haptics_subtitle">Ефекти друку на клавіатурі</string>
+    <string name="sound_volume_label">Гучність звуку</string>
     <string name="sound_test_title">Тест звуку</string>
     <string name="sound_test_subtitle">Прослухати звук друку</string>
+    <string name="sound_test_icon">Тест звуку</string>
     
     <!-- Appearance Section -->
     <string name="appearance_section_title">Оформлення</string>
     <string name="appearance_section_subtitle">Тема, кольори та шрифти</string>
     <string name="appearance_customize_title">Налаштувати</string>
     <string name="appearance_customize_subtitle">Змінити тему, кольори та розмір тексту</string>
+    <string name="appearance_customize_icon">Налаштувати</string>
     
     <!-- Persona Section -->
     <string name="persona_section_title">Персони</string>
     <string name="persona_section_subtitle">Створення та керування персонами</string>
+    <string name="persona_manage_title">Керування персонами</string>
+    <string name="persona_select_prompt_subtitle">Виберіть системний промпт для налаштування поведінки ШІ</string>
+    <string name="persona_no_api_prompts">Немає доступних API системних промптів. Додайте їх у розділі Системні промпти.</string>
+    <string name="persona_help_text">Персони дозволяють створювати різні особистості ШІ з унікальними налаштуваннями, областями пам\'яті та доступом до документів. Ідеально для розділення робочих, особистих або спеціалізованих розмов.</string>
+    <string name="persona_configured_badge">Налаштована</string>
+    <string name="persona_manage_documents">Керування</string>
+    <string name="persona_memories_dialog_title">Спогади</string>
+    <string name="persona_memories_dialog_for">для \"%s\"</string>
+    <string name="persona_memories_dialog_close">Закрити</string>
+    <string name="persona_memories_no_memories">Поки немає спогадів</string>
+    <string name="persona_memories_no_memories_hint">Спогади з\'являтимуться тут у міру того, як ШІ дізнається про цю персону</string>
+    <string name="persona_memories_count_label">%d спогадів</string>
+    <string name="persona_memory_saved">Збережено %s</string>
+    <string name="time_days_ago">%d д. тому</string>
+    <string name="time_hours_ago">%d год. тому</string>
+    <string name="time_minutes_ago">%d хв. тому</string>
+    <string name="time_just_now">щойно</string>
     
     <!-- Language Section -->
     <string name="language_section_title">Мова</string>
@@ -392,4 +575,248 @@
     <string name="language_russian">Русский</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_restart_required">Мову буде застосовано негайно</string>
+    
+    <!-- SQL Schema Dialog -->
+    <string name="sql_schema_dialog_title">SQL схема Supabase</string>
+    <string name="sql_schema_dialog_description">Скопіюйте ці SQL команди та виконайте їх у редакторі SQL Supabase:</string>
+    <string name="sql_schema_dialog_instructions_title">📝 Як запустити:</string>
+    <string name="sql_schema_dialog_instructions_steps">1. Скопіюйте SQL (кнопка нижче)\n2. Відкрийте Supabase → SQL Editor\n3. Вставте та натисніть Run\n4. Дочекайтеся повідомлення про успіх</string>
+    <string name="sql_schema_dialog_copy">Копіювати SQL</string>
+    <string name="sql_schema_dialog_close">Закрити</string>
+    
+    <!-- Memory Dialogs -->
+    <string name="memory_dialog_title">Збережені спогади</string>
+    <string name="memory_dialog_close">Закрити</string>
+    <string name="memory_dialog_count">%d спогадів</string>
+    <string name="memory_dialog_recalculating">Перерахунок ембедингів...</string>
+    <string name="memory_dialog_progress">%d%%</string>
+    <string name="memory_dialog_completed">✓ Ембединги перераховано!</string>
+    <string name="memory_dialog_failed">Помилка перерахунку</string>
+    <string name="memory_dialog_empty">Поки немає спогадів</string>
+    <string name="memory_dialog_empty_hint">Увімкніть пам\'ять у налаштуваннях, щоб почати збереження</string>
+    <string name="memory_item_generating">Генерація ембединга...</string>
+    <string name="memory_item_for_all">Для всіх</string>
+    <string name="memory_item_edit">Редагувати</string>
+    <string name="memory_item_delete">Видалити</string>
+    <string name="memory_item_delete_title">Видалити спогад?</string>
+    <string name="memory_item_delete_message">Цю дію неможливо скасувати.</string>
+    <string name="memory_item_delete_confirm">Видалити</string>
+    <string name="memory_item_delete_cancel">Скасувати</string>
+    <string name="memory_edit_title">Редагування спогаду</string>
+    <string name="memory_edit_created">Створено: %s</string>
+    <string name="memory_edit_label">Спогад</string>
+    <string name="memory_edit_link_title">Зв\'язати з персоною</string>
+    <string name="memory_edit_no_persona">Для всіх (без персони)</string>
+    <string name="memory_edit_generating">Генерація ембединга...</string>
+    <string name="memory_edit_cancel">Скасувати</string>
+    <string name="memory_edit_save">Зберегти</string>
+    <string name="memory_prompt_title">Промпт витягу спогадів</string>
+    <string name="memory_prompt_description">Цей промпт використовується для витягу спогадів з ваших повідомлень.</string>
+    <string name="memory_prompt_placeholder_warning">⚠️ Обов\'язковий плейсхолдер: %s</string>
+    <string name="memory_prompt_editable_label">Редагований промпт</string>
+    <string name="memory_prompt_editable_placeholder">Введіть промпт витягу спогадів з %s...</string>
+    <string name="memory_prompt_error">Потрібен плейсхолдер %s</string>
+    <string name="memory_prompt_locked_title">🔒 Заблокований формат (інструкція виводу)</string>
+    <string name="memory_prompt_reset">Скинути за замовчуванням</string>
+    <string name="memory_prompt_save">Зберегти</string>
+    <string name="memory_prompt_reset_title">Скинути за замовчуванням?</string>
+    <string name="memory_prompt_reset_message">Це відновить оригінальний промпт витягу спогадів. Ваші поточні зміни будуть втрачені.</string>
+    <string name="memory_prompt_reset_confirm">Скинути</string>
+    <string name="memory_prompt_reset_cancel">Скасувати</string>
+    
+    <!-- System Prompt Dialogs -->
+    <string name="system_prompts_title_api">API промпти</string>
+    <string name="system_prompts_title_local">Локальні промпти</string>
+    <string name="system_prompts_add_new">Додати новий промпт</string>
+    <string name="system_prompts_close">Закрити</string>
+    <string name="system_prompts_empty">Немає промптів</string>
+    <string name="system_prompts_add_button">Додати промпт</string>
+    <string name="system_prompts_badge_default">За замовчуванням</string>
+    <string name="system_prompts_badge_persona">Персона</string>
+    <string name="system_prompts_set_default">Встановити за замовчуванням</string>
+    <string name="system_prompts_edit">Редагувати</string>
+    <string name="system_prompts_delete">Видалити</string>
+    <string name="system_prompts_usage">Використано: %d разів</string>
+    <string name="system_prompts_delete_title">Видалити промпт?</string>
+    <string name="system_prompts_delete_with_persona">Це також видалить зв\'язану персону та всі її налаштування. Цю дію неможливо скасувати.</string>
+    <string name="system_prompts_delete_message">Цю дію неможливо скасувати.</string>
+    <string name="system_prompts_delete_confirm">Видалити</string>
+    <string name="system_prompts_delete_cancel">Скасувати</string>
+    <string name="system_prompts_edit_new">Нова персона</string>
+    <string name="system_prompts_edit_title">Редагування персони</string>
+    <string name="system_prompts_name_label">Назва</string>
+    <string name="system_prompts_name_placeholder">Система 1</string>
+    <string name="system_prompts_content_label">Вміст промпта</string>
+    <string name="system_prompts_content_placeholder">Введіть ваш системний промпт...</string>
+    <string name="system_prompts_use_default">Використовувати за замовчуванням</string>
+    <string name="system_prompts_reset">Скинути за замовчуванням</string>
+    <string name="system_prompts_cancel">Скасувати</string>
+    <string name="system_prompts_save">Зберегти</string>
+    
+    <!-- Advanced Settings Dialogs -->
+    <string name="context_instructions_description">Налаштуйте, як ШІ використовує розширений контекст (пам\'ять + RAG)</string>
+    <string name="context_instructions_placeholder">Введіть інструкції контексту...</string>
+    <string name="context_instructions_save">Зберегти</string>
+    <string name="context_instructions_reset">Скинути</string>
+    <string name="context_instructions_cancel">Скасувати</string>
+    <string name="memory_instructions_description">Налаштуйте, що ШІ робить зі спогадами</string>
+    <string name="memory_instructions_placeholder">Введіть інструкції пам\'яті...</string>
+    <string name="memory_instructions_save">Зберегти</string>
+    <string name="memory_instructions_reset">Скинути</string>
+    <string name="memory_instructions_cancel">Скасувати</string>
+    <string name="rag_instructions_description">Налаштуйте, що ШІ робить з документами знань</string>
+    <string name="rag_instructions_placeholder">Введіть інструкції RAG...</string>
+    <string name="rag_instructions_save">Зберегти</string>
+    <string name="rag_instructions_reset">Скинути</string>
+    <string name="rag_instructions_cancel">Скасувати</string>
+    <string name="deep_empathy_prompt_title">Промпт глибокої емпатії</string>
+    <string name="deep_empathy_prompt_description">Налаштуйте промпт для режиму глибокої емпатії</string>
+    <string name="deep_empathy_prompt_warning">⚠️ Обов\'язковий плейсхолдер: %s</string>
+    <string name="deep_empathy_prompt_placeholder">Введіть промпт з %s...</string>
+    <string name="deep_empathy_prompt_error">Потрібен плейсхолдер %s</string>
+    <string name="deep_empathy_prompt_save">Зберегти</string>
+    <string name="deep_empathy_prompt_reset">Скинути</string>
+    <string name="deep_empathy_prompt_cancel">Скасувати</string>
+    <string name="swipe_message_prompt_title">Промпт свайпу повідомлення</string>
+    <string name="swipe_message_prompt_description">Цей промпт надсилається ШІ, коли користувач відповідає на повідомлення</string>
+    <string name="swipe_message_prompt_warning">⚠️ Обов\'язковий плейсхолдер: %s</string>
+    <string name="swipe_message_prompt_placeholder">Користувач свайпнув це повідомлення...</string>
+    <string name="swipe_message_prompt_error">Потрібен плейсхолдер %s</string>
+    <string name="swipe_message_prompt_save">Зберегти</string>
+    <string name="swipe_message_prompt_reset">Скинути</string>
+    <string name="swipe_message_prompt_cancel">Скасувати</string>
+    
+    <!-- Knowledge Documents Dialogs -->
+    <string name="knowledge_docs_title">Документи знань</string>
+    <string name="knowledge_docs_count">%d документів</string>
+    <string name="knowledge_docs_close">Закрити</string>
+    <string name="knowledge_docs_processing">Обробка: %s</string>
+    <string name="knowledge_docs_progress">%d%%</string>
+    <string name="knowledge_docs_deleting">Видалення: %s</string>
+    <string name="knowledge_docs_completed">✓ Обробка завершена!</string>
+    <string name="knowledge_docs_failed">Помилка обробки</string>
+    <string name="knowledge_docs_add">Додати документ</string>
+    <string name="knowledge_docs_empty">Поки немає документів</string>
+    <string name="knowledge_docs_empty_hint">Додайте ваш перший документ для початку</string>
+    <string name="knowledge_docs_for_all">Для всіх</string>
+    <string name="knowledge_docs_persona_count">%d персона</string>
+    <string name="knowledge_docs_personas_count">%d персон</string>
+    <string name="knowledge_docs_size_date">%d КБ • %s</string>
+    <string name="knowledge_docs_edit">Редагувати</string>
+    <string name="knowledge_docs_delete">Видалити</string>
+    <string name="knowledge_docs_delete_title">Видалити документ?</string>
+    <string name="knowledge_docs_delete_message">Ви впевнені, що хочете видалити \"%s\"? Цю дію неможливо скасувати.</string>
+    <string name="knowledge_docs_delete_confirm">Видалити</string>
+    <string name="knowledge_docs_delete_cancel">Скасувати</string>
+    <string name="knowledge_docs_new_title">Новий документ</string>
+    <string name="knowledge_docs_edit_title">Редагування документа</string>
+    <string name="knowledge_docs_name_label">Назва документа</string>
+    <string name="knowledge_docs_name_placeholder">Введіть назву документа</string>
+    <string name="knowledge_docs_import">Імпортувати з файлу</string>
+    <string name="knowledge_docs_link_hint">Зв\'яжіть документи з персонами в Налаштування → Персони</string>
+    <string name="knowledge_docs_content_label">Вміст</string>
+    <string name="knowledge_docs_content_placeholder">Введіть текст або імпортуйте з файлу</string>
+    <string name="knowledge_docs_stats">%d символів • %d КБ</string>
+    <string name="knowledge_docs_cancel">Скасувати</string>
+    <string name="knowledge_docs_save">Зберегти</string>
+    
+    <!-- Embedding Models Dialog -->
+    <string name="embedding_models_title">Моделі ембедингів</string>
+    <string name="embedding_models_subtitle">Для семантичного пошуку та RAG</string>
+    <string name="embedding_models_close">Закрити</string>
+    <string name="embedding_models_info">Ці моделі перетворюють текст у вектори для семантичного пошуку в вашій базі знань і спогадах</string>
+    <string name="embedding_models_description">%s • %dD</string>
+    <string name="embedding_models_download">Завантажити</string>
+    <string name="embedding_models_queued">В черзі...</string>
+    <string name="embedding_models_downloading">Завантаження...</string>
+    <string name="embedding_models_progress">%d%%</string>
+    <string name="embedding_models_delete">Видалити</string>
+    <string name="embedding_models_downloaded">Завантажено</string>
+    <string name="embedding_models_error">Помилка: %s</string>
+    <string name="embedding_models_retry">Повторити</string>
+    
+    <!-- Local Models Dialog -->
+    <string name="local_models_title">Локальні AI моделі</string>
+    <string name="local_models_subtitle">Запуск ШІ на вашому пристрої, інтернет не потрібен</string>
+    <string name="local_models_close">Закрити</string>
+    <string name="local_models_info">Моделі завантажуються з Hugging Face та зберігаються локально</string>
+    <string name="local_models_download">Завантажити</string>
+    <string name="local_models_queued">В черзі...</string>
+    <string name="local_models_downloading">Завантаження...</string>
+    <string name="local_models_progress">%d%%</string>
+    <string name="local_models_delete">Видалити</string>
+    <string name="local_models_downloaded">Завантажено</string>
+    <string name="local_models_failed">Помилка: %s</string>
+    <string name="local_models_retry">Повторити</string>
+    
+    <!-- Prompt Dialogs -->
+    <string name="prompt_dialog_system_title">Системний промпт</string>
+    <string name="prompt_dialog_system_subtitle">Основа особистості вашого ШІ</string>
+    <string name="prompt_dialog_placeholder">Ти цифровий партнер...</string>
+    <string name="prompt_dialog_cancel">Скасувати</string>
+    <string name="prompt_dialog_save">Зберегти</string>
+    <string name="prompt_dialog_context_title">Контекст</string>
+    <string name="prompt_dialog_context_subtitle">Що ви хочете, щоб ваш ШІ знав про вас</string>
+    <string name="prompt_dialog_examples_title">💡 Приклади:</string>
+    <string name="prompt_dialog_example1">• Мене звати... Я працюю...</string>
+    <string name="prompt_dialog_example2">• Мої інтереси: ...</string>
+    <string name="prompt_dialog_example3">• Мій стиль спілкування: ...</string>
+    <string name="prompt_dialog_context_placeholder">Розкажіть вашому ШІ про себе...</string>
+    
+    <!-- Appearance Dialog -->
+    <string name="appearance_dialog_title">Зовнішній вигляд</string>
+    <string name="appearance_dialog_subtitle">Налаштуйте свій досвід</string>
+    <string name="appearance_dialog_close">Закрити</string>
+    <string name="appearance_theme_section">Тема</string>
+    <string name="appearance_theme_mode_title">Режим</string>
+    <string name="appearance_theme_mode_desc">Виберіть бажану тему</string>
+    <string name="appearance_theme_light">Світла</string>
+    <string name="appearance_theme_dark">Темна</string>
+    <string name="appearance_theme_system">Системна</string>
+    <string name="appearance_colors_title">Кольори</string>
+    <string name="appearance_colors_desc_dynamic">Динамічні кольори адаптуються до ваших шпалер (Android 12+)</string>
+    <string name="appearance_colors_desc">Виберіть колірні налаштування</string>
+    <string name="appearance_colors_dynamic">Динамічні</string>
+    <string name="appearance_colors_neutral">Нейтральні</string>
+    <string name="appearance_typography_section">Типографіка</string>
+    <string name="appearance_font_title">Шрифт</string>
+    <string name="appearance_font_desc">Виберіть бажаний стиль шрифту</string>
+    <string name="appearance_font_roboto">Roboto</string>
+    <string name="appearance_font_system">Системний</string>
+    <string name="appearance_text_size_title">Розмір тексту</string>
+    <string name="appearance_text_size_desc">Налаштуйте розмір тексту для кращої читабельності</string>
+    <string name="appearance_text_size_s">S</string>
+    <string name="appearance_text_size_m">M</string>
+    <string name="appearance_text_size_l">L</string>
+    <string name="appearance_text_size_xl">XL</string>
+    <string name="appearance_text_size_xxl">XXL</string>
+    <string name="appearance_preview_text">Превʼю: Чуєш їх, доцю, га? Кумедна ж ти, прощайся без ґольфів!</string>
+    <string name="appearance_save">Зберегти</string>
+    
+    <!-- Deep Empathy Analysis Dialog -->
+    <string name="deep_empathy_analysis_title">Аналіз глибокої емпатії</string>
+    <string name="deep_empathy_analysis_close">Закрити</string>
+    <string name="deep_empathy_analysis_subtitle">Цей промпт аналізує повідомлення для пошуку точок фокусування діалогу</string>
+    <string name="deep_empathy_analysis_warning">⚠️ Обовʼязковий плейсхолдер: %s</string>
+    <string name="deep_empathy_analysis_label">Редагований промпт</string>
+    <string name="deep_empathy_analysis_placeholder">Введіть промпт з %s...</string>
+    <string name="deep_empathy_analysis_error">Плейсхолдер %s обовʼязковий</string>
+    <string name="deep_empathy_analysis_locked_title">🔒 Заблокований формат (JSON відповідь)</string>
+    <string name="deep_empathy_analysis_reset">Скинути</string>
+    <string name="deep_empathy_analysis_save">Зберегти</string>
+    <string name="deep_empathy_analysis_reset_confirm_title">Скинути до налаштувань за замовчуванням?</string>
+    <string name="deep_empathy_analysis_reset_confirm_message">Це відновить оригінальний промпт аналізу. Поточні зміни буде втрачено.</string>
+    <string name="deep_empathy_analysis_reset_confirm">Скинути</string>
+    <string name="deep_empathy_analysis_reset_cancel">Скасувати</string>
+    
+    <!-- Export Chat Dialog -->
+    <string name="export_preparing">Підготовка експорту...</string>
+    <string name="export_preview_only">Лише превʼю (перші ~10 пар повідомлень)</string>
+    <string name="export_only_liked">Показано лише вподобані повідомлення</string>
+    <string name="export_markdown_formatting">Чат експортовано з markdown-форматуванням</string>
+    <string name="export_dialog_title">Експорт чату</string>
+    <string name="export_dialog_close">Закрити</string>
+    <string name="export_filter_liked">Експортувати лише вподобані повідомлення</string>
+    <string name="export_copied">✓ Скопійовано в буфер обміну</string>
+    <string name="export_large_warning">Великий чат (%d символів). Використовуйте \'Зберегти у файл\' для імпорту.</string>
 </resources>

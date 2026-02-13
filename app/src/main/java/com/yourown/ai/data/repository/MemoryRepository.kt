@@ -1,5 +1,7 @@
 package com.yourown.ai.data.repository
 
+import androidx.room.withTransaction
+import com.yourown.ai.data.local.YourOwnAIDatabase
 import com.yourown.ai.data.local.dao.MemoryDao
 import com.yourown.ai.data.local.entity.MemoryEntity
 import com.yourown.ai.data.local.entity.toDomain
@@ -12,8 +14,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -40,7 +46,8 @@ sealed class MemoryProcessingStatus {
 @Singleton
 class MemoryRepository @Inject constructor(
     private val memoryDao: MemoryDao,
-    private val embeddingService: EmbeddingService
+    private val embeddingService: EmbeddingService,
+    private val database: YourOwnAIDatabase
 ) {
     
     private val _processingStatus = MutableStateFlow<MemoryProcessingStatus>(MemoryProcessingStatus.Idle)
@@ -50,9 +57,22 @@ class MemoryRepository @Inject constructor(
      * Get all memories across all conversations
      */
     fun getAllMemories(): Flow<List<MemoryEntry>> {
-        return memoryDao.getAllMemories().map { entities ->
-            entities.map { it.toDomain() }
-        }
+        return memoryDao.getAllMemories()
+            .conflate() // Skip intermediate emissions during rapid changes
+            .map { entities ->
+                entities.map { it.toDomain() }
+            }
+            .retryWhen { cause, attempt ->
+                // Retry on CursorWindow/IllegalState errors (happen during bulk DB changes)
+                if (cause is IllegalStateException || cause is android.database.StaleDataException) {
+                    android.util.Log.w("MemoryRepository", "Flow retry #$attempt: ${cause.message}")
+                    delay(500L * (attempt + 1).coerceAtMost(4)) // 500ms, 1s, 1.5s, 2s max
+                    true
+                } else {
+                    false
+                }
+            }
+            .flowOn(Dispatchers.IO) // Read cursor on IO thread
     }
     
     /**
@@ -66,18 +86,32 @@ class MemoryRepository @Inject constructor(
      * Get memories for a specific persona
      */
     fun getMemoriesByPersonaId(personaId: String): Flow<List<MemoryEntry>> {
-        return memoryDao.getMemoriesByPersonaId(personaId).map { entities ->
-            entities.map { it.toDomain() }
-        }
+        return memoryDao.getMemoriesByPersonaId(personaId)
+            .conflate()
+            .map { entities -> entities.map { it.toDomain() } }
+            .retryWhen { cause, attempt ->
+                if (cause is IllegalStateException || cause is android.database.StaleDataException) {
+                    delay(500L * (attempt + 1).coerceAtMost(4))
+                    true
+                } else false
+            }
+            .flowOn(Dispatchers.IO)
     }
     
     /**
      * Get memories for a specific conversation
      */
     fun getMemoriesForConversation(conversationId: String): Flow<List<MemoryEntry>> {
-        return memoryDao.getMemoriesForConversation(conversationId).map { entities ->
-            entities.map { it.toDomain() }
-        }
+        return memoryDao.getMemoriesForConversation(conversationId)
+            .conflate()
+            .map { entities -> entities.map { it.toDomain() } }
+            .retryWhen { cause, attempt ->
+                if (cause is IllegalStateException || cause is android.database.StaleDataException) {
+                    delay(500L * (attempt + 1).coerceAtMost(4))
+                    true
+                } else false
+            }
+            .flowOn(Dispatchers.IO)
     }
     
     /**
@@ -98,9 +132,16 @@ class MemoryRepository @Inject constructor(
      * Search memories by fact content
      */
     fun searchMemories(query: String): Flow<List<MemoryEntry>> {
-        return memoryDao.searchMemories(query).map { entities ->
-            entities.map { it.toDomain() }
-        }
+        return memoryDao.searchMemories(query)
+            .conflate()
+            .map { entities -> entities.map { it.toDomain() } }
+            .retryWhen { cause, attempt ->
+                if (cause is IllegalStateException || cause is android.database.StaleDataException) {
+                    delay(500L * (attempt + 1).coerceAtMost(4))
+                    true
+                } else false
+            }
+            .flowOn(Dispatchers.IO)
     }
     
     /**
@@ -174,6 +215,54 @@ class MemoryRepository @Inject constructor(
      */
     suspend fun deleteMemory(memory: MemoryEntry) {
         memoryDao.deleteMemory(memory.toEntity())
+    }
+    
+    /**
+     * Delete multiple memories by IDs in a single SQL transaction
+     */
+    suspend fun deleteMemoriesByIds(ids: List<String>) = withContext(Dispatchers.IO) {
+        if (ids.isEmpty()) return@withContext
+        // Process in chunks to avoid SQLite variable limit
+        ids.chunked(50).forEach { chunk ->
+            memoryDao.deleteMemoriesByIds(chunk)
+        }
+    }
+    
+    /**
+     * Update memory fact without regenerating embedding (for batch operations)
+     */
+    suspend fun updateMemoryFact(memory: MemoryEntry) = withContext(Dispatchers.IO) {
+        memoryDao.updateMemory(memory.toEntity())
+    }
+    
+    /**
+     * Atomic batch operation: update facts + delete memories in a SINGLE Room transaction.
+     * This prevents CursorWindow crashes because Room only triggers ONE
+     * InvalidationTracker notification AFTER the entire transaction completes,
+     * instead of notifying on each individual update/delete.
+     *
+     * @param updates List of Pair(MemoryEntry, newFact) - memories to update
+     * @param deleteIds List of memory IDs to permanently delete
+     */
+    suspend fun batchUpdateAndDelete(
+        updates: List<Pair<MemoryEntry, String>>,
+        deleteIds: List<String>
+    ) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            // Step 1: Update all facts
+            updates.forEach { (memory, newFact) ->
+                val updated = memory.copy(fact = newFact)
+                memoryDao.updateMemory(updated.toEntity())
+            }
+            
+            // Step 2: Delete all in chunks (inside same transaction)
+            if (deleteIds.isNotEmpty()) {
+                deleteIds.chunked(50).forEach { chunk ->
+                    memoryDao.deleteMemoriesByIds(chunk)
+                }
+            }
+        }
+        // InvalidationTracker fires here, ONCE, after commit
     }
     
     /**

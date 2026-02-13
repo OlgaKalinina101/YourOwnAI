@@ -16,6 +16,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourown.ai.presentation.onboarding.OnboardingViewModel
 import com.yourown.ai.presentation.theme.*
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,12 +52,12 @@ fun AppearanceDialog(
                     ) {
                         Column {
                             Text(
-                                text = "Appearance",
+                                text = stringResource(R.string.appearance_dialog_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Customize your experience",
+                                text = stringResource(R.string.appearance_dialog_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -63,7 +65,7 @@ fun AppearanceDialog(
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 Icons.Default.Close, 
-                                "Close",
+                                stringResource(R.string.appearance_dialog_close),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -81,28 +83,25 @@ fun AppearanceDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     // Theme Settings Section
-                    SettingsSection(title = "Theme") {
+                    SettingsSection(title = stringResource(R.string.appearance_theme_section)) {
                         // Theme Mode
                         SettingItem(
-                            title = "Mode",
-                            description = "Choose your preferred theme"
+                            title = stringResource(R.string.appearance_theme_mode_title),
+                            description = stringResource(R.string.appearance_theme_mode_desc)
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 ThemeMode.entries.forEach { mode ->
+                                        val label = when (mode) {
+                                        ThemeMode.LIGHT -> stringResource(R.string.appearance_theme_light)
+                                        ThemeMode.DARK -> stringResource(R.string.appearance_theme_dark)
+                                        ThemeMode.SYSTEM -> stringResource(R.string.appearance_theme_system)
+                                    }
                                     FilterChip(
                                         selected = uiState.themeMode == mode,
                                         onClick = { viewModel.setThemeMode(mode) },
-                                        label = {
-                                            Text(
-                                                text = when (mode) {
-                                                    ThemeMode.LIGHT -> "Light"
-                                                    ThemeMode.DARK -> "Dark"
-                                                    ThemeMode.SYSTEM -> "System"
-                                                }
-                                            )
-                                        },
+                                        label = { Text(text = label) },
                                         leadingIcon = {
                                             Icon(
                                                 imageVector = when (mode) {
@@ -123,11 +122,11 @@ fun AppearanceDialog(
                         
                         // Color Style
                         SettingItem(
-                            title = "Colors",
+                            title = stringResource(R.string.appearance_colors_title),
                             description = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                "Dynamic colors adapt to your wallpaper (Android 12+)"
+                                stringResource(R.string.appearance_colors_desc_dynamic)
                             } else {
-                                "Choose your color preference"
+                                stringResource(R.string.appearance_colors_desc)
                             }
                         ) {
                             Row(
@@ -137,7 +136,7 @@ fun AppearanceDialog(
                                     FilterChip(
                                         selected = uiState.colorStyle == ColorStyle.DYNAMIC,
                                         onClick = { viewModel.setColorStyle(ColorStyle.DYNAMIC) },
-                                        label = { Text("Dynamic") },
+                                        label = { Text(stringResource(R.string.appearance_colors_dynamic)) },
                                         leadingIcon = {
                                             Icon(
                                                 imageVector = Icons.Default.Palette,
@@ -150,7 +149,7 @@ fun AppearanceDialog(
                                 FilterChip(
                                     selected = uiState.colorStyle == ColorStyle.NEUTRAL,
                                     onClick = { viewModel.setColorStyle(ColorStyle.NEUTRAL) },
-                                    label = { Text("Neutral") },
+                                    label = { Text(stringResource(R.string.appearance_colors_neutral)) },
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Circle,
@@ -164,11 +163,11 @@ fun AppearanceDialog(
                     }
                     
                     // Typography Settings Section
-                    SettingsSection(title = "Typography") {
+                    SettingsSection(title = stringResource(R.string.appearance_typography_section)) {
                         // Font Style
                         SettingItem(
-                            title = "Font",
-                            description = "Choose your preferred font style"
+                            title = stringResource(R.string.appearance_font_title),
+                            description = stringResource(R.string.appearance_font_desc)
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -176,12 +175,12 @@ fun AppearanceDialog(
                                 FilterChip(
                                     selected = uiState.fontStyle == FontStyle.ROBOTO,
                                     onClick = { viewModel.setFontStyle(FontStyle.ROBOTO) },
-                                    label = { Text("Roboto") }
+                                    label = { Text(stringResource(R.string.appearance_font_roboto)) }
                                 )
                                 FilterChip(
                                     selected = uiState.fontStyle == FontStyle.SYSTEM,
                                     onClick = { viewModel.setFontStyle(FontStyle.SYSTEM) },
-                                    label = { Text("System") }
+                                    label = { Text(stringResource(R.string.appearance_font_system)) }
                                 )
                             }
                         }
@@ -190,8 +189,8 @@ fun AppearanceDialog(
                         
                         // Font Scale
                         SettingItem(
-                            title = "Text Size",
-                            description = "Adjust text size for better readability"
+                            title = stringResource(R.string.appearance_text_size_title),
+                            description = stringResource(R.string.appearance_text_size_desc)
                         ) {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -201,18 +200,19 @@ fun AppearanceDialog(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     FontScale.entries.forEach { scale ->
+                                        val label = when (scale) {
+                                            FontScale.SMALL -> stringResource(R.string.appearance_text_size_s)
+                                            FontScale.DEFAULT -> stringResource(R.string.appearance_text_size_m)
+                                            FontScale.MEDIUM -> stringResource(R.string.appearance_text_size_l)
+                                            FontScale.LARGE -> stringResource(R.string.appearance_text_size_xl)
+                                            FontScale.EXTRA_LARGE -> stringResource(R.string.appearance_text_size_xxl)
+                                        }
                                         FilterChip(
                                             selected = uiState.fontScale == scale,
                                             onClick = { viewModel.setFontScale(scale) },
                                             label = {
                                                 Text(
-                                                    text = when (scale) {
-                                                        FontScale.SMALL -> "S"
-                                                        FontScale.DEFAULT -> "M"
-                                                        FontScale.MEDIUM -> "L"
-                                                        FontScale.LARGE -> "XL"
-                                                        FontScale.EXTRA_LARGE -> "XXL"
-                                                    },
+                                                    text = label,
                                                     style = MaterialTheme.typography.labelMedium
                                                 )
                                             },
@@ -223,7 +223,7 @@ fun AppearanceDialog(
                                 
                                 // Preview text
                                 Text(
-                                    text = "Preview: The quick brown fox jumps over the lazy dog",
+                                    text = stringResource(R.string.appearance_preview_text),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontSize = MaterialTheme.typography.bodyMedium.fontSize * uiState.fontScale.scale
                                     ),
@@ -258,7 +258,7 @@ fun AppearanceDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Save",
+                            text = stringResource(R.string.appearance_save),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )

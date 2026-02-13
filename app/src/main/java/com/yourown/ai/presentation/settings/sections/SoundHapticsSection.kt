@@ -7,7 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.yourown.ai.R
 import com.yourown.ai.presentation.settings.components.SettingItemClickable
 import com.yourown.ai.presentation.settings.components.SettingsSection
 import kotlin.math.roundToInt
@@ -22,9 +24,9 @@ fun SoundHapticsSection(
     onTestSound: () -> Unit
 ) {
     SettingsSection(
-        title = "Sound & Haptics",
+        title = stringResource(R.string.sound_haptics_title),
         icon = Icons.Default.VolumeUp,
-        subtitle = "Keyboard typing effects"
+        subtitle = stringResource(R.string.sound_haptics_subtitle)
     ) {
         // Keyboard Sound Volume Slider
         Column(
@@ -38,7 +40,7 @@ fun SoundHapticsSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Sound volume",
+                    text = stringResource(R.string.sound_volume_label),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
@@ -58,11 +60,11 @@ fun SoundHapticsSection(
         
         // Test Sound Button
         SettingItemClickable(
-            title = "Test sound",
-            subtitle = "Preview typing sound",
+            title = stringResource(R.string.sound_test_title),
+            subtitle = stringResource(R.string.sound_test_subtitle),
             onClick = onTestSound,
             trailing = {
-                Icon(Icons.Default.PlayArrow, "Test sound")
+                Icon(Icons.Default.PlayArrow, stringResource(R.string.sound_test_icon))
             }
         )
     }

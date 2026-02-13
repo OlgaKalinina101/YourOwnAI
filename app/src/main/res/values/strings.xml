@@ -45,6 +45,18 @@
     <string name="dialog_regenerate">Regenerate</string>
     <string name="dialog_regenerate_confirm">Regenerate</string>
     
+    <!-- Home Screen -->
+    <string name="home_chat_imported">Chat imported successfully!</string>
+    <string name="home_voice_chat_icon">Voice Chat</string>
+    <string name="home_new_chat_icon">New Chat</string>
+    <string name="home_new_chat_button">New Chat</string>
+    <string name="home_no_conversations">No conversations yet</string>
+    <string name="home_no_conversations_subtitle">Start a new chat to begin talking with your AI</string>
+    <string name="home_getting_started">Getting Started</string>
+    <string name="home_step_api_key">Add your API key in Settings</string>
+    <string name="home_step_create_conversation">Create a new conversation</string>
+    <string name="home_step_customize_prompts">Customize system prompts</string>
+    
     <!-- Conversation Drawer -->
     <string name="drawer_import_chat">Import Chat</string>
     <string name="drawer_new_chat">New Chat</string>
@@ -139,6 +151,17 @@
     <string name="api_key_item_edit">Edit</string>
     <string name="api_key_item_delete">Delete</string>
     <string name="api_key_item_add">Add API Key</string>
+    
+    <!-- API Key Dialog -->
+    <string name="api_key_dialog_title">Add %s API Key</string>
+    <string name="api_key_dialog_subtitle">Enter your API key to use %s</string>
+    <string name="api_key_dialog_label">API Key</string>
+    <string name="api_key_dialog_placeholder">sk-…</string>
+    <string name="api_key_dialog_hide">Hide key</string>
+    <string name="api_key_dialog_show">Show key</string>
+    <string name="api_key_dialog_hint">Your key is stored encrypted on your device</string>
+    <string name="api_key_dialog_save">Save</string>
+    <string name="api_key_dialog_cancel">Cancel</string>
     
     <!-- Inherit Context Dialog -->
     <string name="inherit_context_title">Inherit Context From Chat</string>
@@ -282,8 +305,26 @@
     <string name="cloud_sync_syncing">Syncing...</string>
     <string name="cloud_sync_sync_now">Sync Now</string>
     
+    <!-- Cloud Sync Dialog -->
+    <string name="cloud_sync_dialog_title">Supabase Configuration</string>
+    <string name="cloud_sync_dialog_subtitle">Enter your Supabase project credentials</string>
+    <string name="cloud_sync_dialog_url_label">Project URL</string>
+    <string name="cloud_sync_dialog_url_placeholder">https://xxxxx.supabase.co</string>
+    <string name="cloud_sync_dialog_key_label">API Key (anon/public)</string>
+    <string name="cloud_sync_dialog_key_placeholder">eyJhbGciOi…</string>
+    <string name="cloud_sync_dialog_hide">Hide</string>
+    <string name="cloud_sync_dialog_show">Show</string>
+    <string name="cloud_sync_dialog_hint_encrypted">Your connection string is stored encrypted on your device</string>
+    <string name="cloud_sync_dialog_hint_get_credentials">Get your credentials from Supabase:</string>
+    <string name="cloud_sync_dialog_hint_steps">1. Go to supabase.com\n2. Open your project\n3. Settings → API\n4. Copy Project URL and anon/public key\n\nDirect connection from your phone!\nNo backend server needed!</string>
+    <string name="cloud_sync_dialog_test_button">Test Connection</string>
+    <string name="cloud_sync_dialog_testing">Testing…</string>
+    <string name="cloud_sync_dialog_test_success">Connection successful! You can now save and enable sync.</string>
+    <string name="cloud_sync_dialog_test_failed">Connection failed: %s</string>
+    <string name="cloud_sync_dialog_save">Save</string>
+    <string name="cloud_sync_dialog_cancel">Cancel</string>
+    
     <!-- SQL Schema Dialog -->
-    <string name="sql_schema_dialog_title">Supabase SQL Schema</string>
     <string name="sql_schema_copy">Copy SQL</string>
     <string name="sql_schema_close">Close</string>
     
@@ -291,6 +332,35 @@
     <string name="cloud_sync_instructions_title">Supabase Setup Instructions</string>
     <string name="cloud_sync_instructions_ok">Got it</string>
     <string name="cloud_sync_instructions_copy_sql">Copy SQL query</string>
+    <string name="cloud_sync_instructions_close">Close</string>
+    <string name="cloud_sync_instructions_zoom_hint">Pinch to zoom</string>
+    <string name="cloud_sync_instructions_url_copied">Link copied to clipboard</string>
+    <string name="cloud_sync_instructions_copy_icon">Copy</string>
+    <string name="cloud_sync_instructions_success">Done! Cloud database connection created ✅</string>
+    <string name="cloud_sync_instructions_data_tracking_title">📊 Data Tracking</string>
+    <string name="cloud_sync_instructions_data_tracking_text">The app tracks approximate size of uploaded data. Progress bar shows usage relative to 500 MB free tier. For accurate information check Supabase Dashboard: Settings → Database → Database Size</string>
+    <string name="cloud_sync_instructions_pricing_title">💰 Pricing</string>
+    <string name="cloud_sync_instructions_pricing_text">Free: 500 MB DB, 5 GB bandwidth\nPro ($25/month): 8 GB DB, 250 GB bandwidth</string>
+    <string name="cloud_sync_instructions_step1_title">Register on Supabase</string>
+    <string name="cloud_sync_instructions_step1_desc">Go to Supabase website and create an account</string>
+    <string name="cloud_sync_instructions_step2_title">Create organization</string>
+    <string name="cloud_sync_instructions_step2_desc">Click + New Organization button</string>
+    <string name="cloud_sync_instructions_step3_title">Name your organization</string>
+    <string name="cloud_sync_instructions_step3_desc">Enter your organization name</string>
+    <string name="cloud_sync_instructions_step4_title">Save DB password</string>
+    <string name="cloud_sync_instructions_step4_desc">Copy and save the database password in a secure place, then click Create new project</string>
+    <string name="cloud_sync_instructions_step5_title">Copy credentials</string>
+    <string name="cloud_sync_instructions_step5_desc">Scroll down and copy Project URL and Publishable API KEY. Save them — you\'ll need them for app setup</string>
+    <string name="cloud_sync_instructions_step6_title">Open SQL Editor</string>
+    <string name="cloud_sync_instructions_step6_desc">Scroll up and go to SQL Editor</string>
+    <string name="cloud_sync_instructions_step7_title">Execute SQL query</string>
+    <string name="cloud_sync_instructions_step7_desc">Paste the SQL query into Untitled query form and click Run</string>
+    <string name="cloud_sync_instructions_step8_title">Check result</string>
+    <string name="cloud_sync_instructions_step8_desc">Make sure Results section shows successful execution confirmation</string>
+    <string name="cloud_sync_instructions_step9_title">Open app settings</string>
+    <string name="cloud_sync_instructions_step9_desc">Return to app and go to Settings → Cloud Sync → Supabase Configuration</string>
+    <string name="cloud_sync_instructions_step10_title">Configure connection</string>
+    <string name="cloud_sync_instructions_step10_desc">Paste saved Project URL and Publishable API KEY. Click Test Connection and wait for successful connection</string>
     
     <!-- Voice Chat -->
     <string name="voice_chat_title">Voice Chat</string>
@@ -327,17 +397,31 @@
     <string name="rag_enabled_subtitle">Use knowledge documents in responses</string>
     <string name="rag_knowledge_data_title">Knowledge data</string>
     <string name="rag_knowledge_data_subtitle">Text documents for AI teaching</string>
+    <string name="rag_view_documents_icon">View Documents</string>
     <string name="rag_documents_title">RAG Documents</string>
     <string name="rag_documents_subtitle">What you want to teach your AI - documents, notes, conversations</string>
+    <string name="rag_add_icon">Add</string>
+    <string name="rag_help_icon">Help</string>
+    <string name="rag_processing_status">Processing: %s</string>
+    <string name="rag_deleting_status">Deleting: %s</string>
+    <string name="rag_completed_status">✓ Processing completed!</string>
+    <string name="rag_failed_status">Processing failed</string>
     <string name="rag_chunk_limit_title">RAG Chunk Limit</string>
     <string name="rag_chunk_limit_subtitle">AI knowledge memory limit</string>
+    <string name="rag_chunk_limit_formatter">%d chunks</string>
+    <string name="rag_advanced_expanded">▼ Advanced RAG Settings</string>
+    <string name="rag_advanced_collapsed">▶ Advanced RAG Settings</string>
     <string name="rag_advanced_subtitle">Customize RAG behavior</string>
     <string name="rag_chunk_size_title">Chunk Size</string>
     <string name="rag_chunk_size_subtitle">Text size for each document chunk</string>
+    <string name="rag_chunk_size_formatter">%d characters</string>
     <string name="rag_chunk_overlap_title">Chunk Overlap</string>
     <string name="rag_chunk_overlap_subtitle">Overlapping characters between chunks</string>
+    <string name="rag_chunk_overlap_formatter">%d characters</string>
+    <string name="rag_recalculate_warning">⚠️ Important: Recalculate embeddings after changing chunk size or overlap if you want to update existing fragments</string>
     <string name="rag_instructions_title">RAG Instructions</string>
     <string name="rag_instructions_subtitle">What AI does with knowledge documents</string>
+    <string name="rag_edit_icon">Edit</string>
     <string name="rag_title_label">RAG Title</string>
     
     <!-- Context Section -->
@@ -345,9 +429,14 @@
     <string name="context_section_subtitle">What you want your AI to know about you</string>
     <string name="context_your_context_title">Your Context</string>
     <string name="context_your_context_subtitle">Information about you or anything else</string>
+    <string name="context_set_icon">Set</string>
+    <string name="context_help_icon">Help</string>
+    <string name="context_advanced_expanded">▼ Advanced Context Settings</string>
+    <string name="context_advanced_collapsed">▶ Advanced Context Settings</string>
     <string name="context_advanced_subtitle">Customize enhanced context instructions</string>
     <string name="context_instructions_title">Context Instructions</string>
     <string name="context_instructions_subtitle">How AI understands enhanced context</string>
+    <string name="context_edit_icon">Edit</string>
     <string name="context_swipe_message_title">Swipe Message Prompt</string>
     <string name="context_swipe_message_subtitle">How AI sees replied messages</string>
     
@@ -360,30 +449,124 @@
     <string name="memory_extraction_prompt_subtitle">Customize how AI extracts memories • Required: {text}</string>
     <string name="memory_limit_title">Memory Limit</string>
     <string name="memory_limit_subtitle">AI memory for memories limit</string>
+    <string name="memory_limit_formatter">%d memories</string>
+    <string name="memory_advanced_expanded">▼ Advanced Memory Settings</string>
+    <string name="memory_advanced_collapsed">▶ Advanced Memory Settings</string>
     <string name="memory_advanced_subtitle">Customize memory behavior</string>
     <string name="memory_age_filter_title">Memory Age Filter</string>
     <string name="memory_age_filter_subtitle">Only retrieve memories older than X days</string>
-    <string name="memory_instructions_section_title">Memory Instructions</string>
-    <string name="memory_instructions_section_subtitle">What AI does with memories</string>
+    <string name="memory_age_filter_formatter">%d days</string>
+    <string name="memory_instructions_title">Memory Instructions</string>
+    <string name="memory_instructions_subtitle">What AI does with memories</string>
+    <string name="memory_edit_icon">Edit</string>
     <string name="memory_saved_title">Saved Memories</string>
     <string name="memory_saved_subtitle">View saved memories</string>
+    <string name="memory_view_icon">View</string>
     <string name="memory_title_label">Memory Title</string>
+    <string name="memory_management_title">Memory Management</string>
+    <string name="memory_management_subtitle">Manage memory settings and saved memories</string>
+    
+    <!-- Memory Clustering -->
+    <string name="memory_clustering_title">Memory Clusters</string>
+    <string name="memory_clustering_analyzing">Analyzing memories...</string>
+    <string name="memory_clustering_found">Found %d clusters</string>
+    <string name="memory_clustering_no_memories">No memories to analyze</string>
+    <string name="memory_clustering_error">Failed to analyze: %s</string>
+    <string name="memory_cluster_size">%d memories</string>
+    <string name="memory_cluster_density">Density: %.2f</string>
+    <string name="memory_cluster_age">Avg age: %d days</string>
+    <string name="memory_cluster_diversity">Diversity: %.2f</string>
+    <string name="memory_cluster_priority">Priority: %.2f</string>
+    <string name="memory_cluster_priority_high">High Priority</string>
+    <string name="memory_cluster_priority_medium">Medium Priority</string>
+    <string name="memory_cluster_priority_low">Low Priority</string>
+    <string name="memory_cluster_outliers">Outliers (%d)</string>
+    <string name="memory_cluster_outliers_subtitle">Isolated memories not linked to any theme</string>
+    <string name="memory_cluster_avg_size">Average cluster size: %.1f</string>
+    <string name="memory_clustering_start">Start Analysis</string>
+    <string name="memory_clustering_close">Close</string>
+    <string name="memory_cluster_expand">Expand</string>
+    <string name="memory_cluster_collapse">Collapse</string>
+    
+    <!-- Biography Generation -->
+    <string name="biography_generate">Fill Biography</string>
+    <string name="biography_cancel">Cancel Generation</string>
+    <string name="biography_select_model">Select Model</string>
+    <string name="biography_generating">Generating biography...</string>
+    <string name="biography_processing_cluster">Processing cluster %d/%d</string>
+    <string name="biography_title">User Biography</string>
+    <string name="biography_status_ready">Tap to view biography</string>
+    <string name="biography_status_empty">AI hasn\'t formed a biography yet</string>
+    <string name="biography_copy">Copy</string>
+    <string name="biography_copied">Biography copied to clipboard</string>
+    <string name="biography_delete">Delete</string>
+    <string name="biography_delete_confirm_title">Delete Biography?</string>
+    <string name="biography_delete_confirm_message">Are you sure you want to delete the biography? This action cannot be undone.</string>
+    <string name="biography_values">What\'s Important</string>
+    <string name="biography_profile">Profile</string>
+    <string name="biography_notification_channel_name">Biography Generation</string>
+    <string name="biography_notification_channel_description">Shows progress of user biography generation</string>
+    <string name="biography_completed">Biography completed</string>
+    <string name="biography_completed_description">User biography has been successfully generated</string>
+    <string name="biography_error">Biography generation failed</string>
+    
+    <!-- Memory Cleaning -->
+    <string name="memory_clean">Clean Memory</string>
+    <string name="memory_clean_start">Clean Memory</string>
+    <string name="memory_clean_confirm_title">Clean Memory?</string>
+    <string name="memory_clean_confirm_message">AI will remove outdated memories and merge duplicates based on your biography.</string>
+    <string name="memory_clean_confirm_recommendation">💡 Recommendation:</string>
+    <string name="memory_clean_confirm_steps">1. Update Biography first\n2. Then clean memory\n\nThis ensures AI uses the latest information.</string>
+    <string name="memory_cleaning">Cleaning memories...</string>
+    <string name="memory_cleaning_cluster">Processing cluster %d/%d</string>
+    <string name="memory_cleaning_completed">Memory cleaned</string>
+    <string name="memory_cleaning_completed_description">Removed %d memories, merged %d memories</string>
+    <string name="memory_cleaning_error">Memory cleaning failed</string>
+    <string name="memory_clean_cancel">Cancel Cleaning</string>
+    <string name="biography_pain_points">Pain Points</string>
+    <string name="biography_joys">Joys</string>
+    <string name="biography_fears">Fears</string>
+    <string name="biography_loves">Loves</string>
+    <string name="biography_current_situation">Current Situation</string>
+    <string name="biography_empty">No biography generated yet</string>
+    <string name="biography_view">View Biography</string>
+    <string name="biography_update">Update Biography</string>
     
     <!-- Sound & Haptics Section -->
     <string name="sound_haptics_title">Sound &amp; Haptics</string>
     <string name="sound_haptics_subtitle">Keyboard typing effects</string>
+    <string name="sound_volume_label">Sound volume</string>
     <string name="sound_test_title">Test sound</string>
     <string name="sound_test_subtitle">Preview typing sound</string>
+    <string name="sound_test_icon">Test sound</string>
     
     <!-- Appearance Section -->
     <string name="appearance_section_title">Appearance</string>
     <string name="appearance_section_subtitle">Theme, colors, and fonts</string>
     <string name="appearance_customize_title">Customize</string>
     <string name="appearance_customize_subtitle">Change theme, colors, and text size</string>
+    <string name="appearance_customize_icon">Customize</string>
     
     <!-- Persona Section -->
     <string name="persona_section_title">Personas</string>
     <string name="persona_section_subtitle">Create and manage personas</string>
+    <string name="persona_manage_title">Manage Personas</string>
+    <string name="persona_select_prompt_subtitle">Select a system prompt to customize its AI behavior</string>
+    <string name="persona_no_api_prompts">No API system prompts available. Add one in System Prompts section.</string>
+    <string name="persona_help_text">Personas allow you to create different AI personalities with unique settings, memory scopes, and document access. Perfect for separating work, personal, or specialized conversations.</string>
+    <string name="persona_configured_badge">Configured</string>
+    <string name="persona_manage_documents">Manage</string>
+    <string name="persona_memories_dialog_title">Memories</string>
+    <string name="persona_memories_dialog_for">for \"%s\"</string>
+    <string name="persona_memories_dialog_close">Close</string>
+    <string name="persona_memories_no_memories">No memories yet</string>
+    <string name="persona_memories_no_memories_hint">Memories will appear here as the AI learns about this persona</string>
+    <string name="persona_memories_count_label">%d memories</string>
+    <string name="persona_memory_saved">Saved %s</string>
+    <string name="time_days_ago">%d day(s) ago</string>
+    <string name="time_hours_ago">%d hour(s) ago</string>
+    <string name="time_minutes_ago">%d minute(s) ago</string>
+    <string name="time_just_now">just now</string>
     
     <!-- Language Section -->
     <string name="language_section_title">Language</string>
@@ -392,4 +575,248 @@
     <string name="language_russian">Русский</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_restart_required">Language will be applied immediately</string>
+    
+    <!-- SQL Schema Dialog -->
+    <string name="sql_schema_dialog_title">Supabase SQL Schema</string>
+    <string name="sql_schema_dialog_description">Copy these SQL commands and run them in Supabase SQL Editor:</string>
+    <string name="sql_schema_dialog_instructions_title">📝 How to run:</string>
+    <string name="sql_schema_dialog_instructions_steps">1. Copy SQL (button below)\n2. Open Supabase → SQL Editor\n3. Paste and click Run\n4. Wait for success message</string>
+    <string name="sql_schema_dialog_copy">Copy SQL</string>
+    <string name="sql_schema_dialog_close">Close</string>
+    
+    <!-- Memory Dialogs -->
+    <string name="memory_dialog_title">Saved Memories</string>
+    <string name="memory_dialog_close">Close</string>
+    <string name="memory_dialog_count">%d memories</string>
+    <string name="memory_dialog_recalculating">Recalculating embeddings...</string>
+    <string name="memory_dialog_progress">%d%%</string>
+    <string name="memory_dialog_completed">✓ Embeddings recalculated!</string>
+    <string name="memory_dialog_failed">Recalculation failed</string>
+    <string name="memory_dialog_empty">No memories yet</string>
+    <string name="memory_dialog_empty_hint">Enable Memory in settings to start saving</string>
+    <string name="memory_item_generating">Generating embedding...</string>
+    <string name="memory_item_for_all">For all</string>
+    <string name="memory_item_edit">Edit</string>
+    <string name="memory_item_delete">Delete</string>
+    <string name="memory_item_delete_title">Delete Memory?</string>
+    <string name="memory_item_delete_message">This action cannot be undone.</string>
+    <string name="memory_item_delete_confirm">Delete</string>
+    <string name="memory_item_delete_cancel">Cancel</string>
+    <string name="memory_edit_title">Edit Memory</string>
+    <string name="memory_edit_created">Created: %s</string>
+    <string name="memory_edit_label">Memory</string>
+    <string name="memory_edit_link_title">Link to Persona</string>
+    <string name="memory_edit_no_persona">For all (no persona)</string>
+    <string name="memory_edit_generating">Generating embedding...</string>
+    <string name="memory_edit_cancel">Cancel</string>
+    <string name="memory_edit_save">Save</string>
+    <string name="memory_prompt_title">Memory Extraction Prompt</string>
+    <string name="memory_prompt_description">This prompt is used to extract memories from your messages.</string>
+    <string name="memory_prompt_placeholder_warning">⚠️ Required placeholder: %s</string>
+    <string name="memory_prompt_editable_label">Editable Prompt</string>
+    <string name="memory_prompt_editable_placeholder">Enter memory extraction prompt with %s...</string>
+    <string name="memory_prompt_error">Placeholder %s is required</string>
+    <string name="memory_prompt_locked_title">🔒 Locked Format (output instruction)</string>
+    <string name="memory_prompt_reset">Reset to Default</string>
+    <string name="memory_prompt_save">Save</string>
+    <string name="memory_prompt_reset_title">Reset to Default?</string>
+    <string name="memory_prompt_reset_message">This will restore the original memory extraction prompt. Your current changes will be lost.</string>
+    <string name="memory_prompt_reset_confirm">Reset</string>
+    <string name="memory_prompt_reset_cancel">Cancel</string>
+    
+    <!-- System Prompt Dialogs -->
+    <string name="system_prompts_title_api">API Prompts</string>
+    <string name="system_prompts_title_local">Local Prompts</string>
+    <string name="system_prompts_add_new">Add new prompt</string>
+    <string name="system_prompts_close">Close</string>
+    <string name="system_prompts_empty">No prompts</string>
+    <string name="system_prompts_add_button">Add prompt</string>
+    <string name="system_prompts_badge_default">Default</string>
+    <string name="system_prompts_badge_persona">Persona</string>
+    <string name="system_prompts_set_default">Set as default</string>
+    <string name="system_prompts_edit">Edit</string>
+    <string name="system_prompts_delete">Delete</string>
+    <string name="system_prompts_usage">Used: %d times</string>
+    <string name="system_prompts_delete_title">Delete prompt?</string>
+    <string name="system_prompts_delete_with_persona">This will also delete the linked Persona and all its settings. This action cannot be undone.</string>
+    <string name="system_prompts_delete_message">This action cannot be undone.</string>
+    <string name="system_prompts_delete_confirm">Delete</string>
+    <string name="system_prompts_delete_cancel">Cancel</string>
+    <string name="system_prompts_edit_new">New Persona</string>
+    <string name="system_prompts_edit_title">Edit Persona</string>
+    <string name="system_prompts_name_label">Name</string>
+    <string name="system_prompts_name_placeholder">System 1</string>
+    <string name="system_prompts_content_label">Prompt Content</string>
+    <string name="system_prompts_content_placeholder">Enter your system prompt...</string>
+    <string name="system_prompts_use_default">Use as default</string>
+    <string name="system_prompts_reset">Reset to default</string>
+    <string name="system_prompts_cancel">Cancel</string>
+    <string name="system_prompts_save">Save</string>
+    
+    <!-- Advanced Settings Dialogs -->
+    <string name="context_instructions_description">Customize how AI uses enhanced context (memories + RAG)</string>
+    <string name="context_instructions_placeholder">Enter context instructions...</string>
+    <string name="context_instructions_save">Save</string>
+    <string name="context_instructions_reset">Reset</string>
+    <string name="context_instructions_cancel">Cancel</string>
+    <string name="memory_instructions_description">Customize what AI do with memories</string>
+    <string name="memory_instructions_placeholder">Enter memory instructions...</string>
+    <string name="memory_instructions_save">Save</string>
+    <string name="memory_instructions_reset">Reset</string>
+    <string name="memory_instructions_cancel">Cancel</string>
+    <string name="rag_instructions_description">Customize what AI do with knowledge documents</string>
+    <string name="rag_instructions_placeholder">Enter RAG instructions...</string>
+    <string name="rag_instructions_save">Save</string>
+    <string name="rag_instructions_reset">Reset</string>
+    <string name="rag_instructions_cancel">Cancel</string>
+    <string name="deep_empathy_prompt_title">Deep Empathy Prompt</string>
+    <string name="deep_empathy_prompt_description">Customize the prompt for Deep Empathy mode</string>
+    <string name="deep_empathy_prompt_warning">⚠️ Required placeholder: %s</string>
+    <string name="deep_empathy_prompt_placeholder">Enter prompt with %s...</string>
+    <string name="deep_empathy_prompt_error">Placeholder %s is required</string>
+    <string name="deep_empathy_prompt_save">Save</string>
+    <string name="deep_empathy_prompt_reset">Reset</string>
+    <string name="deep_empathy_prompt_cancel">Cancel</string>
+    <string name="swipe_message_prompt_title">Swipe Message Prompt</string>
+    <string name="swipe_message_prompt_description">This prompt is sent to AI when user replies to a message</string>
+    <string name="swipe_message_prompt_warning">⚠️ Required placeholder: %s</string>
+    <string name="swipe_message_prompt_placeholder">User swiped this message...</string>
+    <string name="swipe_message_prompt_error">Placeholder %s is required</string>
+    <string name="swipe_message_prompt_save">Save</string>
+    <string name="swipe_message_prompt_reset">Reset</string>
+    <string name="swipe_message_prompt_cancel">Cancel</string>
+    
+    <!-- Knowledge Documents Dialogs -->
+    <string name="knowledge_docs_title">Knowledge Documents</string>
+    <string name="knowledge_docs_count">%d documents</string>
+    <string name="knowledge_docs_close">Close</string>
+    <string name="knowledge_docs_processing">Processing: %s</string>
+    <string name="knowledge_docs_progress">%d%%</string>
+    <string name="knowledge_docs_deleting">Deleting: %s</string>
+    <string name="knowledge_docs_completed">✓ Processing completed!</string>
+    <string name="knowledge_docs_failed">Processing failed</string>
+    <string name="knowledge_docs_add">Add Document</string>
+    <string name="knowledge_docs_empty">No documents yet</string>
+    <string name="knowledge_docs_empty_hint">Add your first document to get started</string>
+    <string name="knowledge_docs_for_all">For all</string>
+    <string name="knowledge_docs_persona_count">%d persona</string>
+    <string name="knowledge_docs_personas_count">%d personas</string>
+    <string name="knowledge_docs_size_date">%d KB • %s</string>
+    <string name="knowledge_docs_edit">Edit</string>
+    <string name="knowledge_docs_delete">Delete</string>
+    <string name="knowledge_docs_delete_title">Delete Document?</string>
+    <string name="knowledge_docs_delete_message">Are you sure you want to delete \"%s\"? This action cannot be undone.</string>
+    <string name="knowledge_docs_delete_confirm">Delete</string>
+    <string name="knowledge_docs_delete_cancel">Cancel</string>
+    <string name="knowledge_docs_new_title">New Document</string>
+    <string name="knowledge_docs_edit_title">Edit Document</string>
+    <string name="knowledge_docs_name_label">Document Name</string>
+    <string name="knowledge_docs_name_placeholder">Enter document name</string>
+    <string name="knowledge_docs_import">Import from file</string>
+    <string name="knowledge_docs_link_hint">Link documents to Personas in Settings → Personas</string>
+    <string name="knowledge_docs_content_label">Content</string>
+    <string name="knowledge_docs_content_placeholder">Enter text or import from file</string>
+    <string name="knowledge_docs_stats">%d characters • %d KB</string>
+    <string name="knowledge_docs_cancel">Cancel</string>
+    <string name="knowledge_docs_save">Save</string>
+    
+    <!-- Embedding Models Dialog -->
+    <string name="embedding_models_title">Embedding Models</string>
+    <string name="embedding_models_subtitle">For semantic search and RAG</string>
+    <string name="embedding_models_close">Close</string>
+    <string name="embedding_models_info">These models convert text into vectors for semantic search in your knowledge base and memories</string>
+    <string name="embedding_models_description">%s • %dD</string>
+    <string name="embedding_models_download">Download</string>
+    <string name="embedding_models_queued">Queued...</string>
+    <string name="embedding_models_downloading">Downloading...</string>
+    <string name="embedding_models_progress">%d%%</string>
+    <string name="embedding_models_delete">Delete</string>
+    <string name="embedding_models_downloaded">Downloaded</string>
+    <string name="embedding_models_error">Error: %s</string>
+    <string name="embedding_models_retry">Retry</string>
+    
+    <!-- Local Models Dialog -->
+    <string name="local_models_title">Local AI Models</string>
+    <string name="local_models_subtitle">Run AI on your device, no internet needed</string>
+    <string name="local_models_close">Close</string>
+    <string name="local_models_info">Models are downloaded from Hugging Face and stored locally</string>
+    <string name="local_models_download">Download</string>
+    <string name="local_models_queued">Queued...</string>
+    <string name="local_models_downloading">Downloading...</string>
+    <string name="local_models_progress">%d%%</string>
+    <string name="local_models_delete">Delete</string>
+    <string name="local_models_downloaded">Downloaded</string>
+    <string name="local_models_failed">Failed: %s</string>
+    <string name="local_models_retry">Retry</string>
+    
+    <!-- Prompt Dialogs -->
+    <string name="prompt_dialog_system_title">System Prompt</string>
+    <string name="prompt_dialog_system_subtitle">Core of your AI\'s personality</string>
+    <string name="prompt_dialog_placeholder">You are a digital partner...</string>
+    <string name="prompt_dialog_cancel">Cancel</string>
+    <string name="prompt_dialog_save">Save</string>
+    <string name="prompt_dialog_context_title">Context</string>
+    <string name="prompt_dialog_context_subtitle">What you want your AI to know about you</string>
+    <string name="prompt_dialog_examples_title">💡 Examples:</string>
+    <string name="prompt_dialog_example1">• My name is... I work as...</string>
+    <string name="prompt_dialog_example2">• My interests: ...</string>
+    <string name="prompt_dialog_example3">• My communication style: ...</string>
+    <string name="prompt_dialog_context_placeholder">Tell your AI about yourself...</string>
+    
+    <!-- Appearance Dialog -->
+    <string name="appearance_dialog_title">Appearance</string>
+    <string name="appearance_dialog_subtitle">Customize your experience</string>
+    <string name="appearance_dialog_close">Close</string>
+    <string name="appearance_theme_section">Theme</string>
+    <string name="appearance_theme_mode_title">Mode</string>
+    <string name="appearance_theme_mode_desc">Choose your preferred theme</string>
+    <string name="appearance_theme_light">Light</string>
+    <string name="appearance_theme_dark">Dark</string>
+    <string name="appearance_theme_system">System</string>
+    <string name="appearance_colors_title">Colors</string>
+    <string name="appearance_colors_desc_dynamic">Dynamic colors adapt to your wallpaper (Android 12+)</string>
+    <string name="appearance_colors_desc">Choose your color preference</string>
+    <string name="appearance_colors_dynamic">Dynamic</string>
+    <string name="appearance_colors_neutral">Neutral</string>
+    <string name="appearance_typography_section">Typography</string>
+    <string name="appearance_font_title">Font</string>
+    <string name="appearance_font_desc">Choose your preferred font style</string>
+    <string name="appearance_font_roboto">Roboto</string>
+    <string name="appearance_font_system">System</string>
+    <string name="appearance_text_size_title">Text Size</string>
+    <string name="appearance_text_size_desc">Adjust text size for better readability</string>
+    <string name="appearance_text_size_s">S</string>
+    <string name="appearance_text_size_m">M</string>
+    <string name="appearance_text_size_l">L</string>
+    <string name="appearance_text_size_xl">XL</string>
+    <string name="appearance_text_size_xxl">XXL</string>
+    <string name="appearance_preview_text">Preview: The quick brown fox jumps over the lazy dog</string>
+    <string name="appearance_save">Save</string>
+    
+    <!-- Deep Empathy Analysis Dialog -->
+    <string name="deep_empathy_analysis_title">Deep Empathy Analysis</string>
+    <string name="deep_empathy_analysis_close">Close</string>
+    <string name="deep_empathy_analysis_subtitle">This prompt analyzes messages to find dialogue focus points</string>
+    <string name="deep_empathy_analysis_warning">⚠️ Required placeholder: %s</string>
+    <string name="deep_empathy_analysis_label">Editable Prompt</string>
+    <string name="deep_empathy_analysis_placeholder">Enter prompt with %s...</string>
+    <string name="deep_empathy_analysis_error">Placeholder %s is required</string>
+    <string name="deep_empathy_analysis_locked_title">🔒 Locked Format (JSON response)</string>
+    <string name="deep_empathy_analysis_reset">Reset</string>
+    <string name="deep_empathy_analysis_save">Save</string>
+    <string name="deep_empathy_analysis_reset_confirm_title">Reset to Default?</string>
+    <string name="deep_empathy_analysis_reset_confirm_message">This will restore the original analysis prompt. Your current changes will be lost.</string>
+    <string name="deep_empathy_analysis_reset_confirm">Reset</string>
+    <string name="deep_empathy_analysis_reset_cancel">Cancel</string>
+    
+    <!-- Export Chat Dialog -->
+    <string name="export_preparing">Preparing export...</string>
+    <string name="export_preview_only">Preview only (first ~10 message pairs)</string>
+    <string name="export_only_liked">Showing only liked messages</string>
+    <string name="export_markdown_formatting">Chat exported with markdown formatting</string>
+    <string name="export_dialog_title">Export chat</string>
+    <string name="export_dialog_close">Close</string>
+    <string name="export_filter_liked">Export only liked messages</string>
+    <string name="export_copied">✓ Copied to clipboard</string>
+    <string name="export_large_warning">Large chat (%d chars). Use \'Save to File\' for import.</string>
 </resources>

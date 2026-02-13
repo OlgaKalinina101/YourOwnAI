@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for editing context instructions
@@ -22,11 +24,11 @@ fun ContextInstructionsDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Context Instructions") },
+        title = { Text(stringResource(R.string.context_instructions_title)) },
         text = {
             Column {
                 Text(
-                    text = "Customize how AI uses enhanced context (memories + RAG)",
+                    text = stringResource(R.string.context_instructions_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -37,14 +39,14 @@ fun ContextInstructionsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp),
-                    placeholder = { Text("Enter context instructions...") },
+                    placeholder = { Text(stringResource(R.string.context_instructions_placeholder)) },
                     maxLines = 15
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onSave(text) }) {
-                Text("Save")
+                Text(stringResource(R.string.context_instructions_save))
             }
         },
         dismissButton = {
@@ -55,10 +57,10 @@ fun ContextInstructionsDialog(
                 }) {
                     Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reset")
+                    Text(stringResource(R.string.context_instructions_reset))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.context_instructions_cancel))
                 }
             }
         }
@@ -79,11 +81,11 @@ fun MemoryInstructionsDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Memory Instructions") },
+        title = { Text(stringResource(R.string.memory_instructions_title)) },
         text = {
             Column {
                 Text(
-                    text = "Customize what AI do with memories",
+                    text = stringResource(R.string.memory_instructions_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -94,14 +96,14 @@ fun MemoryInstructionsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
-                    placeholder = { Text("Enter memory instructions...") },
+                    placeholder = { Text(stringResource(R.string.memory_instructions_placeholder)) },
                     maxLines = 10
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onSave(text) }) {
-                Text("Save")
+                Text(stringResource(R.string.memory_instructions_save))
             }
         },
         dismissButton = {
@@ -112,10 +114,10 @@ fun MemoryInstructionsDialog(
                 }) {
                     Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reset")
+                    Text(stringResource(R.string.memory_instructions_reset))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.memory_instructions_cancel))
                 }
             }
         }
@@ -136,11 +138,11 @@ fun RAGInstructionsDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("RAG Instructions") },
+        title = { Text(stringResource(R.string.rag_instructions_title)) },
         text = {
             Column {
                 Text(
-                    text = "Customize what AI do with knowledge documents",
+                    text = stringResource(R.string.rag_instructions_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -151,14 +153,14 @@ fun RAGInstructionsDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp),
-                    placeholder = { Text("Enter RAG instructions...") },
+                    placeholder = { Text(stringResource(R.string.rag_instructions_placeholder)) },
                     maxLines = 12
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = { onSave(text) }) {
-                Text("Save")
+                Text(stringResource(R.string.rag_instructions_save))
             }
         },
         dismissButton = {
@@ -169,10 +171,10 @@ fun RAGInstructionsDialog(
                 }) {
                     Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reset")
+                    Text(stringResource(R.string.rag_instructions_reset))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.rag_instructions_cancel))
                 }
             }
         }
@@ -195,11 +197,11 @@ fun DeepEmpathyPromptDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Deep Empathy Prompt") },
+        title = { Text(stringResource(R.string.deep_empathy_prompt_title)) },
         text = {
             Column {
                 Text(
-                    text = "Customize the prompt for Deep Empathy mode",
+                    text = stringResource(R.string.deep_empathy_prompt_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -213,7 +215,7 @@ fun DeepEmpathyPromptDialog(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = "⚠️ Required placeholder: $requiredPlaceholder",
+                            text = stringResource(R.string.deep_empathy_prompt_warning, requiredPlaceholder),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(8.dp)
@@ -228,11 +230,11 @@ fun DeepEmpathyPromptDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(150.dp),
-                    placeholder = { Text("Enter prompt with $requiredPlaceholder...") },
+                    placeholder = { Text(stringResource(R.string.deep_empathy_prompt_placeholder, requiredPlaceholder)) },
                     maxLines = 6,
                     isError = !hasPlaceholder,
                     supportingText = if (!hasPlaceholder) {
-                        { Text("Placeholder $requiredPlaceholder is required", color = MaterialTheme.colorScheme.error) }
+                        { Text(stringResource(R.string.deep_empathy_prompt_error, requiredPlaceholder), color = MaterialTheme.colorScheme.error) }
                     } else null
                 )
             }
@@ -242,7 +244,7 @@ fun DeepEmpathyPromptDialog(
                 onClick = { onSave(text) },
                 enabled = hasPlaceholder
             ) {
-                Text("Save")
+                Text(stringResource(R.string.deep_empathy_prompt_save))
             }
         },
         dismissButton = {
@@ -253,10 +255,10 @@ fun DeepEmpathyPromptDialog(
                 }) {
                     Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reset")
+                    Text(stringResource(R.string.deep_empathy_prompt_reset))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.deep_empathy_prompt_cancel))
                 }
             }
         }
@@ -279,11 +281,11 @@ fun SwipeMessagePromptDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Swipe Message Prompt") },
+        title = { Text(stringResource(R.string.swipe_message_prompt_title)) },
         text = {
             Column {
                 Text(
-                    text = "This prompt is sent to AI when user replies to a message",
+                    text = stringResource(R.string.swipe_message_prompt_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -297,7 +299,7 @@ fun SwipeMessagePromptDialog(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = "⚠️ Required placeholder: $requiredPlaceholder",
+                            text = stringResource(R.string.swipe_message_prompt_warning, requiredPlaceholder),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(8.dp)
@@ -312,11 +314,11 @@ fun SwipeMessagePromptDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(150.dp),
-                    placeholder = { Text("Пользователь свайпнул это сообщение...") },
+                    placeholder = { Text(stringResource(R.string.swipe_message_prompt_placeholder)) },
                     maxLines = 6,
                     isError = !hasPlaceholder,
                     supportingText = if (!hasPlaceholder) {
-                        { Text("Placeholder $requiredPlaceholder is required", color = MaterialTheme.colorScheme.error) }
+                        { Text(stringResource(R.string.swipe_message_prompt_error, requiredPlaceholder), color = MaterialTheme.colorScheme.error) }
                     } else null
                 )
             }
@@ -326,7 +328,7 @@ fun SwipeMessagePromptDialog(
                 onClick = { onSave(text) },
                 enabled = hasPlaceholder
             ) {
-                Text("Save")
+                Text(stringResource(R.string.swipe_message_prompt_save))
             }
         },
         dismissButton = {
@@ -337,10 +339,10 @@ fun SwipeMessagePromptDialog(
                 }) {
                     Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reset")
+                    Text(stringResource(R.string.swipe_message_prompt_reset))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.swipe_message_prompt_cancel))
                 }
             }
         }

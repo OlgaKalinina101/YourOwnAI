@@ -7,10 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.yourown.ai.R
 import com.yourown.ai.presentation.chat.ChatViewModel
 import com.yourown.ai.presentation.chat.components.ConversationDrawer
 import kotlinx.coroutines.launch
@@ -38,12 +40,13 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     
     // Handle imported conversation - navigate to it
+    val chatImportedMessage = stringResource(R.string.home_chat_imported)
     LaunchedEffect(uiState.importedConversationId) {
         uiState.importedConversationId?.let { conversationId ->
             scope.launch {
                 // Show success message
                 snackbarHostState.showSnackbar(
-                    message = "Chat imported successfully!",
+                    message = chatImportedMessage,
                     duration = SnackbarDuration.Short
                 )
                 // Close drawer
@@ -149,7 +152,7 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                     ) {
-                        Icon(Icons.Default.Mic, "Voice Chat")
+                        Icon(Icons.Default.Mic, stringResource(R.string.home_voice_chat_icon))
                     }
                     
                     // New Chat FAB
@@ -159,10 +162,10 @@ fun HomeScreen(
                             viewModel.showSourceChatDialog()
                         },
                         icon = {
-                            Icon(Icons.Default.Add, "New Chat")
+                            Icon(Icons.Default.Add, stringResource(R.string.home_new_chat_icon))
                         },
                         text = {
-                            Text("New Chat")
+                            Text(stringResource(R.string.home_new_chat_button))
                         }
                     )
                 }
@@ -188,7 +191,7 @@ fun HomeScreen(
                 
                 // Title
                 Text(
-                    text = "No conversations yet",
+                    text = stringResource(R.string.home_no_conversations),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -199,7 +202,7 @@ fun HomeScreen(
                 
                 // Subtitle
                 Text(
-                    text = "Start a new chat to begin talking with your AI",
+                    text = stringResource(R.string.home_no_conversations_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -219,7 +222,7 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Getting Started",
+                            text = stringResource(R.string.home_getting_started),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -227,19 +230,19 @@ fun HomeScreen(
                         // Step 1: API Key
                         GettingStartedItem(
                             icon = Icons.Default.Key,
-                            text = "Add your API key in Settings"
+                            text = stringResource(R.string.home_step_api_key)
                         )
                         
                         // Step 2: Create conversation
                         GettingStartedItem(
                             icon = Icons.Default.ChatBubbleOutline,
-                            text = "Create a new conversation"
+                            text = stringResource(R.string.home_step_create_conversation)
                         )
                         
                         // Step 3: Customize prompts
                         GettingStartedItem(
                             icon = Icons.Default.Edit,
-                            text = "Customize system prompts"
+                            text = stringResource(R.string.home_step_customize_prompts)
                         )
                     }
                 }

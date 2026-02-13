@@ -94,6 +94,18 @@ interface MemoryDao {
     suspend fun deleteMemory(memory: MemoryEntity)
     
     /**
+     * Delete multiple memories in a transaction
+     */
+    @Delete
+    suspend fun deleteMemories(memories: List<MemoryEntity>)
+    
+    /**
+     * Delete memories by IDs in a single transaction
+     */
+    @Query("DELETE FROM memories WHERE id IN (:ids)")
+    suspend fun deleteMemoriesByIds(ids: List<String>)
+    
+    /**
      * Delete all memories for a conversation
      */
     @Query("DELETE FROM memories WHERE conversation_id = :conversationId")

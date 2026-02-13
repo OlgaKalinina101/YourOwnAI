@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for editing Deep Empathy Analysis prompt
@@ -63,14 +65,14 @@ fun DeepEmpathyAnalysisDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Deep Empathy Analysis",
+                        text = stringResource(R.string.deep_empathy_analysis_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.deep_empathy_analysis_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -79,7 +81,7 @@ fun DeepEmpathyAnalysisDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "This prompt analyzes messages to find dialogue focus points",
+                    text = stringResource(R.string.deep_empathy_analysis_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -94,7 +96,7 @@ fun DeepEmpathyAnalysisDialog(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = "⚠️ Required placeholder: $requiredPlaceholder",
+                            text = stringResource(R.string.deep_empathy_analysis_warning, requiredPlaceholder),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(8.dp)
@@ -112,13 +114,13 @@ fun DeepEmpathyAnalysisDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    label = { Text("Editable Prompt") },
-                    placeholder = { Text("Enter prompt with $requiredPlaceholder...") },
+                    label = { Text(stringResource(R.string.deep_empathy_analysis_label)) },
+                    placeholder = { Text(stringResource(R.string.deep_empathy_analysis_placeholder, requiredPlaceholder)) },
                     minLines = 10,
                     textStyle = MaterialTheme.typography.bodySmall,
                     isError = !hasPlaceholder,
                     supportingText = if (!hasPlaceholder) {
-                        { Text("Placeholder $requiredPlaceholder is required", color = MaterialTheme.colorScheme.error) }
+                        { Text(stringResource(R.string.deep_empathy_analysis_error, requiredPlaceholder), color = MaterialTheme.colorScheme.error) }
                     } else null
                 )
                 
@@ -134,7 +136,7 @@ fun DeepEmpathyAnalysisDialog(
                         modifier = Modifier.padding(12.dp)
                     ) {
                         Text(
-                            text = "🔒 Locked Format (JSON response)",
+                            text = stringResource(R.string.deep_empathy_analysis_locked_title),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold
@@ -165,7 +167,7 @@ fun DeepEmpathyAnalysisDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reset")
+                        Text(stringResource(R.string.deep_empathy_analysis_reset))
                     }
                     
                     Button(
@@ -179,7 +181,7 @@ fun DeepEmpathyAnalysisDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save")
+                        Text(stringResource(R.string.deep_empathy_analysis_save))
                     }
                 }
             }
@@ -190,8 +192,8 @@ fun DeepEmpathyAnalysisDialog(
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            title = { Text("Reset to Default?") },
-            text = { Text("This will restore the original analysis prompt. Your current changes will be lost.") },
+            title = { Text(stringResource(R.string.deep_empathy_analysis_reset_confirm_title)) },
+            text = { Text(stringResource(R.string.deep_empathy_analysis_reset_confirm_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -200,12 +202,12 @@ fun DeepEmpathyAnalysisDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Reset")
+                    Text(stringResource(R.string.deep_empathy_analysis_reset_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.deep_empathy_analysis_reset_cancel))
                 }
             }
         )

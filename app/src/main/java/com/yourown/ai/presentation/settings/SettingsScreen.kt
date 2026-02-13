@@ -19,6 +19,9 @@ import com.yourown.ai.presentation.settings.dialogs.ContextDialog
 import com.yourown.ai.presentation.settings.dialogs.LocalModelsDialog
 import com.yourown.ai.presentation.settings.dialogs.EmbeddingModelsDialog
 import com.yourown.ai.presentation.settings.sections.*
+import com.yourown.ai.presentation.settings.components.MemoryClusteringDialog
+import com.yourown.ai.presentation.settings.components.BiographyViewDialog
+import com.yourown.ai.presentation.settings.components.ModelSelectorDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,7 +130,8 @@ fun SettingsScreen(
                 onToggleMemory = viewModel::toggleMemory,
                 onEditMemoryPrompt = viewModel::showMemoryPromptDialog,
                 onMemoryLimitChange = viewModel::updateMemoryLimit,
-                onViewMemories = viewModel::showMemoriesDialog
+                onViewMemories = viewModel::showMemoriesDialog,
+                onManageMemory = viewModel::showMemoryClusteringDialog
             )
             
             // RAG Section
@@ -301,6 +305,44 @@ fun SettingsScreen(
             onDismiss = viewModel::hideMemoriesDialog,
             onEditMemory = viewModel::showEditMemoryDialog,
             onDeleteMemory = viewModel::deleteMemory
+        )
+    }
+    
+    // Memory Clustering Dialog
+    if (uiState.showMemoryClusteringDialog) {
+        MemoryClusteringDialog(
+            clusteringStatus = uiState.memoryClusteringStatus,
+            biographyStatus = uiState.biographyGenerationStatus,
+            memoryCleaningStatus = uiState.memoryCleaningStatus,
+            selectedModel = uiState.selectedModelForBiography,
+            biography = uiState.userBiography,
+            onStartClustering = viewModel::startMemoryClustering,
+            onSelectModel = viewModel::showModelSelectorForBiography,
+            onGenerateBiography = viewModel::generateBiography,
+            onCancelBiography = viewModel::cancelBiographyGeneration,
+            onCleanMemories = viewModel::cleanMemories,
+            onCancelCleaning = viewModel::cancelMemoryCleaning,
+            onViewBiography = viewModel::showBiographyDialog,
+            onDismiss = viewModel::hideMemoryClusteringDialog
+        )
+    }
+    
+    // Biography View Dialog
+    if (uiState.showBiographyDialog && uiState.userBiography != null) {
+        BiographyViewDialog(
+            biography = uiState.userBiography!!,
+            onDelete = viewModel::deleteBiography,
+            onDismiss = viewModel::hideBiographyDialog
+        )
+    }
+    
+    // Model Selector for Biography
+    if (uiState.showModelSelectorForBiography) {
+        ModelSelectorDialog(
+            selectedModel = uiState.selectedModelForBiography,
+            availableModels = viewModel.getAvailableModels(),
+            onSelectModel = viewModel::selectModelForBiography,
+            onDismiss = viewModel::hideModelSelectorForBiography
         )
     }
     

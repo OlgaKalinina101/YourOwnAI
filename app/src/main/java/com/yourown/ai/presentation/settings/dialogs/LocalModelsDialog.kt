@@ -15,6 +15,8 @@ import androidx.compose.ui.window.Dialog
 import com.yourown.ai.domain.model.DownloadStatus
 import com.yourown.ai.domain.model.LocalModel
 import com.yourown.ai.domain.model.LocalModelInfo
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for downloading local models
@@ -48,12 +50,12 @@ fun LocalModelsDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Local AI Models",
+                            text = stringResource(R.string.local_models_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Run AI on your device, no internet needed",
+                            text = stringResource(R.string.local_models_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -61,7 +63,7 @@ fun LocalModelsDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.local_models_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -84,7 +86,7 @@ fun LocalModelsDialog(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Models are downloaded from Hugging Face and stored locally",
+                            text = stringResource(R.string.local_models_info),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -112,7 +114,7 @@ fun LocalModelsDialog(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Close")
+                    Text(stringResource(R.string.local_models_close))
                 }
             }
         }
@@ -182,7 +184,7 @@ private fun LocalModelItem(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Download")
+                        Text(stringResource(R.string.local_models_download))
                     }
                 }
                 
@@ -194,7 +196,7 @@ private fun LocalModelItem(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "В очереди...",
+                                text = stringResource(R.string.local_models_queued),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -216,11 +218,11 @@ private fun LocalModelItem(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Downloading...",
+                                text = stringResource(R.string.local_models_downloading),
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${status.progress}%",
+                                text = stringResource(R.string.local_models_progress, status.progress),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -247,7 +249,7 @@ private fun LocalModelItem(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Delete")
+                            Text(stringResource(R.string.local_models_delete))
                         }
                         
                         Surface(
@@ -268,7 +270,7 @@ private fun LocalModelItem(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Downloaded",
+                                    text = stringResource(R.string.local_models_downloaded),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     style = MaterialTheme.typography.labelLarge
                                 )
@@ -290,7 +292,7 @@ private fun LocalModelItem(
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = "Failed: ${status.error}",
+                                text = stringResource(R.string.local_models_failed, status.error),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -299,7 +301,7 @@ private fun LocalModelItem(
                             onClick = onDownload,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Retry")
+                            Text(stringResource(R.string.local_models_retry))
                         }
                     }
                 }

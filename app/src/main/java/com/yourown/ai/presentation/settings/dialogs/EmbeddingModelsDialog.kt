@@ -15,6 +15,8 @@ import androidx.compose.ui.window.Dialog
 import com.yourown.ai.domain.model.DownloadStatus
 import com.yourown.ai.domain.model.LocalEmbeddingModel
 import com.yourown.ai.domain.model.LocalEmbeddingModelInfo
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for managing embedding models
@@ -47,12 +49,12 @@ fun EmbeddingModelsDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Embedding Models",
+                            text = stringResource(R.string.embedding_models_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "For semantic search and RAG",
+                            text = stringResource(R.string.embedding_models_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -60,7 +62,7 @@ fun EmbeddingModelsDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.embedding_models_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -83,7 +85,7 @@ fun EmbeddingModelsDialog(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "These models convert text into vectors for semantic search in your knowledge base and memories",
+                            text = stringResource(R.string.embedding_models_info),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -111,7 +113,7 @@ fun EmbeddingModelsDialog(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Close")
+                    Text(stringResource(R.string.embedding_models_close))
                 }
             }
         }
@@ -149,7 +151,7 @@ private fun EmbeddingModelItem(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${modelInfo.model.description} • ${modelInfo.model.dimensions}D",
+                        text = stringResource(R.string.embedding_models_description, modelInfo.model.description, modelInfo.model.dimensions),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -181,7 +183,7 @@ private fun EmbeddingModelItem(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Download")
+                        Text(stringResource(R.string.embedding_models_download))
                     }
                 }
                 
@@ -193,7 +195,7 @@ private fun EmbeddingModelItem(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Queued...",
+                                text = stringResource(R.string.embedding_models_queued),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -215,11 +217,11 @@ private fun EmbeddingModelItem(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Downloading...",
+                                text = stringResource(R.string.embedding_models_downloading),
                                 style = MaterialTheme.typography.bodySmall
                             )
                             Text(
-                                text = "${status.progress}%",
+                                text = stringResource(R.string.embedding_models_progress, status.progress),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -250,7 +252,7 @@ private fun EmbeddingModelItem(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Delete")
+                            Text(stringResource(R.string.embedding_models_delete))
                         }
                         
                         Surface(
@@ -271,7 +273,7 @@ private fun EmbeddingModelItem(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Downloaded",
+                                    stringResource(R.string.embedding_models_downloaded),
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -283,7 +285,7 @@ private fun EmbeddingModelItem(
                 is DownloadStatus.Failed -> {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "Error: ${status.error}",
+                            text = stringResource(R.string.embedding_models_error, status.error),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -297,7 +299,7 @@ private fun EmbeddingModelItem(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Retry")
+                            Text(stringResource(R.string.embedding_models_retry))
                         }
                     }
                 }

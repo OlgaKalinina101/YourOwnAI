@@ -632,7 +632,7 @@ fun RAGSettingsSection(
                     }
                     
                     TextButton(onClick = onManageDocuments) {
-                        Text(stringResource(R.string.persona_manage_memories))
+                        Text(stringResource(R.string.persona_manage_documents))
                     }
                 }
             }
@@ -866,12 +866,12 @@ fun PersonaMemoriesDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Memories",
+                            text = stringResource(R.string.persona_memories_dialog_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "for \"$personaName\"",
+                            text = stringResource(R.string.persona_memories_dialog_for, personaName),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -879,7 +879,7 @@ fun PersonaMemoriesDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.persona_memories_dialog_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -907,13 +907,13 @@ fun PersonaMemoriesDialog(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No memories yet",
+                                text = stringResource(R.string.persona_memories_no_memories),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Memories will appear here as the AI learns about this persona",
+                                text = stringResource(R.string.persona_memories_no_memories_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -923,7 +923,7 @@ fun PersonaMemoriesDialog(
                 } else {
                     // Memories list
                     Text(
-                        text = "${memories.size} memories",
+                        text = stringResource(R.string.persona_memories_count_label, memories.size),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -952,7 +952,7 @@ fun PersonaMemoriesDialog(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Saved ${formatTimestamp(memory.createdAt)}",
+                                        text = stringResource(R.string.persona_memory_saved, formatTimestamp(memory.createdAt)),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -966,6 +966,7 @@ fun PersonaMemoriesDialog(
     }
 }
 
+@Composable
 private fun formatTimestamp(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
@@ -975,9 +976,9 @@ private fun formatTimestamp(timestamp: Long): String {
     val days = hours / 24
     
     return when {
-        days > 0 -> "$days day${if (days > 1) "s" else ""} ago"
-        hours > 0 -> "$hours hour${if (hours > 1) "s" else ""} ago"
-        minutes > 0 -> "$minutes minute${if (minutes > 1) "s" else ""} ago"
-        else -> "just now"
+        days > 0 -> stringResource(R.string.time_days_ago, days)
+        hours > 0 -> stringResource(R.string.time_hours_ago, hours)
+        minutes > 0 -> stringResource(R.string.time_minutes_ago, minutes)
+        else -> stringResource(R.string.time_just_now)
     }
 }

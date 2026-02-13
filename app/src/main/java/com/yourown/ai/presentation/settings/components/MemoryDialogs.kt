@@ -17,6 +17,8 @@ import androidx.compose.ui.window.Dialog
 import com.yourown.ai.domain.model.MemoryEntry
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog to view all saved memories
@@ -52,14 +54,14 @@ fun MemoriesDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Saved Memories",
+                        text = stringResource(R.string.memory_dialog_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.memory_dialog_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -69,7 +71,7 @@ fun MemoriesDialog(
                 
                 // Memory count
                 Text(
-                    text = "${memories.size} memories",
+                    text = stringResource(R.string.memory_dialog_count, memories.size),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -101,7 +103,7 @@ fun MemoriesDialog(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Recalculating embeddings...",
+                                            text = stringResource(R.string.memory_dialog_recalculating),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -112,7 +114,7 @@ fun MemoriesDialog(
                                         )
                                     }
                                     Text(
-                                        text = "${processingStatus.progress}%",
+                                        text = stringResource(R.string.memory_dialog_progress, processingStatus.progress),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -147,7 +149,7 @@ fun MemoriesDialog(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "✓ Embeddings recalculated!",
+                                    text = stringResource(R.string.memory_dialog_completed),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary
@@ -178,7 +180,7 @@ fun MemoriesDialog(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Recalculation failed",
+                                        text = stringResource(R.string.memory_dialog_failed),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.error
@@ -216,13 +218,13 @@ fun MemoriesDialog(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No memories yet",
+                                text = stringResource(R.string.memory_dialog_empty),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Enable Memory in settings to start saving",
+                                text = stringResource(R.string.memory_dialog_empty_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -296,7 +298,7 @@ fun MemoryItem(
                         strokeWidth = 2.dp
                     )
                     Text(
-                        text = "Generating embedding...",
+                        text = stringResource(R.string.memory_item_generating),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
@@ -331,7 +333,7 @@ fun MemoryItem(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = linkedPersona?.name ?: "For all",
+                            text = linkedPersona?.name ?: stringResource(R.string.memory_item_for_all),
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             color = if (linkedPersona != null) {
@@ -354,7 +356,7 @@ fun MemoryItem(
                     ) {
                         Icon(
                             Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = stringResource(R.string.memory_item_edit),
                             modifier = Modifier.size(18.dp),
                             tint = if (isProcessing) {
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
@@ -370,7 +372,7 @@ fun MemoryItem(
                     ) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.memory_item_delete),
                             modifier = Modifier.size(18.dp),
                             tint = if (isProcessing) {
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
@@ -397,8 +399,8 @@ fun MemoryItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Memory?") },
-            text = { Text("This action cannot be undone.") },
+            title = { Text(stringResource(R.string.memory_item_delete_title)) },
+            text = { Text(stringResource(R.string.memory_item_delete_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -409,12 +411,12 @@ fun MemoryItem(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.memory_item_delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.memory_item_delete_cancel))
                 }
             }
         )
@@ -460,7 +462,7 @@ fun EditMemoryDialog(
                     .padding(24.dp)
             ) {
                 Text(
-                    text = "Edit Memory",
+                    text = stringResource(R.string.memory_edit_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -468,7 +470,7 @@ fun EditMemoryDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "Created: ${formatDate(memory.createdAt)}",
+                    text = stringResource(R.string.memory_edit_created, formatDate(memory.createdAt)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -479,7 +481,7 @@ fun EditMemoryDialog(
                 OutlinedTextField(
                     value = editedFact,
                     onValueChange = { editedFact = it },
-                    label = { Text("Memory") },
+                    label = { Text(stringResource(R.string.memory_edit_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     maxLines = 8
@@ -490,7 +492,7 @@ fun EditMemoryDialog(
                 // Persona selection
                 if (personas.isNotEmpty()) {
                     Text(
-                        text = "Link to Persona",
+                        text = stringResource(R.string.memory_edit_link_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -504,7 +506,7 @@ fun EditMemoryDialog(
                         ) {
                             val selectedPersona = personas.find { it.id == selectedPersonaId }
                             Text(
-                                text = selectedPersona?.name ?: "For all (no persona)",
+                                text = selectedPersona?.name ?: stringResource(R.string.memory_edit_no_persona),
                                 modifier = Modifier.weight(1f)
                             )
                             Icon(Icons.Default.ArrowDropDown, null)
@@ -516,7 +518,7 @@ fun EditMemoryDialog(
                         ) {
                             // "For all" option
                             DropdownMenuItem(
-                                text = { Text("For all (no persona)") },
+                                text = { Text(stringResource(R.string.memory_edit_no_persona)) },
                                 onClick = {
                                     selectedPersonaId = null
                                     showPersonaMenu = false
@@ -571,7 +573,7 @@ fun EditMemoryDialog(
                                 strokeWidth = 2.dp
                             )
                             Text(
-                                text = "Generating embedding...",
+                                text = stringResource(R.string.memory_edit_generating),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -591,7 +593,7 @@ fun EditMemoryDialog(
                         modifier = Modifier.weight(1f),
                         enabled = !isSaving
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.memory_edit_cancel))
                     }
                     
                     Button(
@@ -606,7 +608,7 @@ fun EditMemoryDialog(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         } else {
-                            Text("Save")
+                            Text(stringResource(R.string.memory_edit_save))
                         }
                     }
                 }
@@ -662,14 +664,14 @@ fun MemoryExtractionPromptDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Memory Extraction Prompt",
+                        text = stringResource(R.string.memory_prompt_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.memory_dialog_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -678,7 +680,7 @@ fun MemoryExtractionPromptDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "This prompt is used to extract memories from your messages.",
+                    text = stringResource(R.string.memory_prompt_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -693,7 +695,7 @@ fun MemoryExtractionPromptDialog(
                         shape = MaterialTheme.shapes.small
                     ) {
                         Text(
-                            text = "⚠️ Required placeholder: $requiredPlaceholder",
+                            text = stringResource(R.string.memory_prompt_placeholder_warning, requiredPlaceholder),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(8.dp)
@@ -711,13 +713,13 @@ fun MemoryExtractionPromptDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    label = { Text("Editable Prompt") },
-                    placeholder = { Text("Enter memory extraction prompt with $requiredPlaceholder...") },
+                    label = { Text(stringResource(R.string.memory_prompt_editable_label)) },
+                    placeholder = { Text(stringResource(R.string.memory_prompt_editable_placeholder, requiredPlaceholder)) },
                     minLines = 8,
                     textStyle = MaterialTheme.typography.bodySmall,
                     isError = !hasPlaceholder,
                     supportingText = if (!hasPlaceholder) {
-                        { Text("Placeholder $requiredPlaceholder is required", color = MaterialTheme.colorScheme.error) }
+                        { Text(stringResource(R.string.memory_prompt_error, requiredPlaceholder), color = MaterialTheme.colorScheme.error) }
                     } else null
                 )
                 
@@ -733,7 +735,7 @@ fun MemoryExtractionPromptDialog(
                         modifier = Modifier.padding(12.dp)
                     ) {
                         Text(
-                            text = "🔒 Locked Format (output instruction)",
+                            text = stringResource(R.string.memory_prompt_locked_title),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold
@@ -764,7 +766,7 @@ fun MemoryExtractionPromptDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Reset to Default")
+                        Text(stringResource(R.string.memory_prompt_reset))
                     }
                     
                     Button(
@@ -778,7 +780,7 @@ fun MemoryExtractionPromptDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save")
+                        Text(stringResource(R.string.memory_prompt_save))
                     }
                 }
             }
@@ -789,8 +791,8 @@ fun MemoryExtractionPromptDialog(
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            title = { Text("Reset to Default?") },
-            text = { Text("This will restore the original memory extraction prompt. Your current changes will be lost.") },
+            title = { Text(stringResource(R.string.memory_prompt_reset_title)) },
+            text = { Text(stringResource(R.string.memory_prompt_reset_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -799,12 +801,12 @@ fun MemoryExtractionPromptDialog(
                         onDismiss()
                     }
                 ) {
-                    Text("Reset")
+                    Text(stringResource(R.string.memory_prompt_reset_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.memory_prompt_reset_cancel))
                 }
             }
         )

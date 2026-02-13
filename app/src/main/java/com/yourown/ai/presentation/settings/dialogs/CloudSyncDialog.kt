@@ -7,11 +7,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.yourown.ai.R
 
 /**
  * Test result data
@@ -31,6 +34,7 @@ fun CloudSyncDialog(
     onTestConnection: (String, String) -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     
     var supabaseUrl by remember { mutableStateOf(currentUrl) }
     var supabaseKey by remember { mutableStateOf(currentKey) }
@@ -46,11 +50,11 @@ fun CloudSyncDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Cloud, null) },
-        title = { Text("Supabase Configuration") },
+        title = { Text(stringResource(R.string.cloud_sync_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Enter your Supabase project credentials",
+                    text = stringResource(R.string.cloud_sync_dialog_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -60,8 +64,8 @@ fun CloudSyncDialog(
                     value = supabaseUrl,
                     onValueChange = { supabaseUrl = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Project URL") },
-                    placeholder = { Text("https://xxxxx.supabase.co") },
+                    label = { Text(stringResource(R.string.cloud_sync_dialog_url_label)) },
+                    placeholder = { Text(stringResource(R.string.cloud_sync_dialog_url_placeholder)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
                 )
@@ -71,8 +75,8 @@ fun CloudSyncDialog(
                     value = supabaseKey,
                     onValueChange = { supabaseKey = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("API Key (anon/public)") },
-                    placeholder = { Text("eyJhbGciOi...") },
+                    label = { Text(stringResource(R.string.cloud_sync_dialog_key_label)) },
+                    placeholder = { Text(stringResource(R.string.cloud_sync_dialog_key_placeholder)) },
                     visualTransformation = if (showKey) {
                         VisualTransformation.None
                     } else {
@@ -82,7 +86,7 @@ fun CloudSyncDialog(
                         IconButton(onClick = { showKey = !showKey }) {
                             Icon(
                                 if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                if (showKey) "Hide" else "Show"
+                                if (showKey) stringResource(R.string.cloud_sync_dialog_hide) else stringResource(R.string.cloud_sync_dialog_show)
                             )
                         }
                     },
@@ -108,7 +112,7 @@ fun CloudSyncDialog(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Your connection string is stored encrypted on your device",
+                                text = stringResource(R.string.cloud_sync_dialog_hint_encrypted),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -117,12 +121,12 @@ fun CloudSyncDialog(
                         Divider()
                         
                         Text(
-                            text = "Get your credentials from Supabase:",
+                            text = stringResource(R.string.cloud_sync_dialog_hint_get_credentials),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "1. Go to supabase.com\n2. Open your project\n3. Settings → API\n4. Copy Project URL and anon/public key\n\nDirect connection from your phone!\nNo backend server needed!",
+                            text = stringResource(R.string.cloud_sync_dialog_hint_steps),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -180,13 +184,13 @@ fun CloudSyncDialog(
                                 isTestingConnection = false
                                 testResult = TestResult(
                                     success = true, 
-                                    message = "Connection successful! You can now save and enable sync."
+                                    message = context.getString(R.string.cloud_sync_dialog_test_success)
                                 )
                             } catch (e: Exception) {
                                 isTestingConnection = false
                                 testResult = TestResult(
                                     success = false,
-                                    message = "Connection failed: ${e.message}"
+                                    message = context.getString(R.string.cloud_sync_dialog_test_failed, e.message ?: "")
                                 )
                             }
                         }
@@ -201,7 +205,7 @@ fun CloudSyncDialog(
                         )
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text(if (isTestingConnection) "Testing..." else "Test Connection")
+                    Text(if (isTestingConnection) stringResource(R.string.cloud_sync_dialog_testing) else stringResource(R.string.cloud_sync_dialog_test_button))
                 }
             }
         },
@@ -210,12 +214,12 @@ fun CloudSyncDialog(
                 onClick = { onSave(supabaseUrl, supabaseKey) },
                 enabled = supabaseUrl.isNotBlank() && supabaseKey.isNotBlank()
             ) {
-                Text("Save")
+                Text(stringResource(R.string.cloud_sync_dialog_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cloud_sync_dialog_cancel))
             }
         }
     )

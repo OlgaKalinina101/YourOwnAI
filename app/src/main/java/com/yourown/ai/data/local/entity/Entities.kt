@@ -325,3 +325,47 @@ data class PersonaEntity(
     val createdAt: Long,
     val updatedAt: Long
 )
+
+/**
+ * User Biography Entity
+ * Сгенерированная биография пользователя на основе кластеров воспоминаний
+ */
+@Entity(tableName = "user_biography")
+data class BiographyEntity(
+    @PrimaryKey
+    val id: String = "default", // Всегда один экземпляр биографии
+    
+    val userValues: String = "",        // Что важно (ценности, убеждения)
+    val profile: String = "",           // Профиль пользователя
+    val painPoints: String = "",        // Что болит
+    val joys: String = "",              // Что радует
+    val fears: String = "",             // Что пугает
+    val loves: String = "",             // Что любит
+    val currentSituation: String = "",  // Что происходит сейчас
+    
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val processedClusters: Int = 0
+)
+
+/**
+ * Biography Chunk Entity
+ * Фрагменты биографии с эмбеддингами для семантического поиска
+ */
+@Entity(
+    tableName = "biography_chunks",
+    indices = [
+        Index(value = ["biographyId"]),
+        Index(value = ["section"])
+    ]
+)
+data class BiographyChunkEntity(
+    @PrimaryKey
+    val id: String, // e.g. "bio_chunk_values_1"
+    
+    val biographyId: String = "default", // Ссылка на биографию
+    val section: String,                  // values, profile, painPoints, joys, fears, loves, currentSituation
+    val text: String,                     // Текст фрагмента (одно предложение или абзац)
+    val embedding: String,                // JSON массив эмбеддинга
+    
+    val createdAt: Long = System.currentTimeMillis()
+)

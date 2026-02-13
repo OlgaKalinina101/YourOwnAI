@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for editing System Prompt
@@ -72,7 +74,7 @@ fun SystemPromptDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    placeholder = { Text("Ты цифровой партнёр...") },
+                    placeholder = { Text(stringResource(R.string.prompt_dialog_placeholder)) },
                     maxLines = Int.MAX_VALUE
                 )
                 
@@ -85,14 +87,14 @@ fun SystemPromptDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.prompt_dialog_cancel))
                     }
                     Button(
                         onClick = { onSave(text) },
                         modifier = Modifier.weight(1f),
                         enabled = text.isNotBlank()
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.prompt_dialog_save))
                     }
                 }
             }
@@ -132,12 +134,12 @@ fun ContextDialog(
                 ) {
                     Column {
                         Text(
-                            text = "Context",
+                            text = stringResource(R.string.prompt_dialog_context_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "What you want your AI to know about you",
+                            text = stringResource(R.string.prompt_dialog_context_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -145,7 +147,7 @@ fun ContextDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.prompt_dialog_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -162,22 +164,22 @@ fun ContextDialog(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "💡 Examples:",
+                            text = stringResource(R.string.prompt_dialog_examples_title),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "• My name is... I work as...",
+                            text = stringResource(R.string.prompt_dialog_example1),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "• My interests: ...",
+                            text = stringResource(R.string.prompt_dialog_example2),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "• My communication style: ...",
+                            text = stringResource(R.string.prompt_dialog_example3),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -191,7 +193,7 @@ fun ContextDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    placeholder = { Text("Tell your AI about yourself...") },
+                    placeholder = { Text(stringResource(R.string.prompt_dialog_context_placeholder)) },
                     maxLines = Int.MAX_VALUE
                 )
                 
@@ -204,13 +206,13 @@ fun ContextDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.prompt_dialog_cancel))
                     }
                     Button(
                         onClick = { onSave(text) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.prompt_dialog_save))
                     }
                 }
             }

@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yourown.ai.R
 
 @Composable
 fun PersonaSection(
@@ -26,7 +28,7 @@ fun PersonaSection(
     ) {
         // Section Header
         Text(
-            "Personas",
+            stringResource(R.string.persona_section_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -40,13 +42,13 @@ fun PersonaSection(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    "Manage Personas",
+                    stringResource(R.string.persona_manage_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
                 
                 Text(
-                    "Select a system prompt to customize its AI behavior",
+                    stringResource(R.string.persona_select_prompt_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -64,7 +66,7 @@ fun PersonaSection(
                 
                 if (apiPrompts.isEmpty()) {
                     Text(
-                        text = "No API system prompts available. Add one in System Prompts section.",
+                        text = stringResource(R.string.persona_no_api_prompts),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -75,7 +77,7 @@ fun PersonaSection(
         
         // Help text
         Text(
-            text = "Personas allow you to create different AI personalities with unique settings, memory scopes, and document access. Perfect for separating work, personal, or specialized conversations.",
+            text = stringResource(R.string.persona_help_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -129,7 +131,7 @@ private fun PersonaPromptItem(
                         shape = MaterialTheme.shapes.extraSmall
                     ) {
                         Text(
-                            text = "Configured",
+                            text = stringResource(R.string.persona_configured_badge),
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onTertiaryContainer

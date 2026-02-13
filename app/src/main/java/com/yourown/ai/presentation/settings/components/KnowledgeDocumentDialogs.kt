@@ -19,6 +19,8 @@ import com.yourown.ai.domain.model.KnowledgeDocument
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for managing knowledge documents list
@@ -56,12 +58,12 @@ fun KnowledgeDocumentsListDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Knowledge Documents",
+                            text = stringResource(R.string.knowledge_docs_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${documents.size} documents",
+                            text = stringResource(R.string.knowledge_docs_count, documents.size),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -69,7 +71,7 @@ fun KnowledgeDocumentsListDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.knowledge_docs_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -102,7 +104,7 @@ fun KnowledgeDocumentsListDialog(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Processing: ${processingStatus.documentName}",
+                                            text = stringResource(R.string.knowledge_docs_processing, processingStatus.documentName),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -113,7 +115,7 @@ fun KnowledgeDocumentsListDialog(
                                         )
                                     }
                                     Text(
-                                        text = "${processingStatus.progress}%",
+                                        text = stringResource(R.string.knowledge_docs_progress, processingStatus.progress),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -150,13 +152,13 @@ fun KnowledgeDocumentsListDialog(
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
-                                        text = "Deleting: ${processingStatus.documentName}",
+                                        text = stringResource(R.string.knowledge_docs_deleting, processingStatus.documentName),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier.weight(1f)
                                     )
                                     Text(
-                                        text = "${processingStatus.progress}%",
+                                        text = stringResource(R.string.knowledge_docs_progress, processingStatus.progress),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -192,7 +194,7 @@ fun KnowledgeDocumentsListDialog(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "✓ Processing completed!",
+                                    text = stringResource(R.string.knowledge_docs_completed),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary
@@ -223,7 +225,7 @@ fun KnowledgeDocumentsListDialog(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Processing failed",
+                                        text = stringResource(R.string.knowledge_docs_failed),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.error
@@ -249,7 +251,7 @@ fun KnowledgeDocumentsListDialog(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add Document")
+                    Text(stringResource(R.string.knowledge_docs_add))
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -271,12 +273,12 @@ fun KnowledgeDocumentsListDialog(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No documents yet",
+                                text = stringResource(R.string.knowledge_docs_empty),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Add your first document to get started",
+                                text = stringResource(R.string.knowledge_docs_empty_hint),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -348,19 +350,24 @@ private fun DocumentListItem(
                                 shape = MaterialTheme.shapes.small
                             ) {
                                 Text(
-                                    text = "For all",
+                                    text = stringResource(R.string.knowledge_docs_for_all),
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                             }
                         } else {
+                            val personaCountString = if (document.linkedPersonaIds.size > 1) {
+                                stringResource(R.string.knowledge_docs_personas_count, document.linkedPersonaIds.size)
+                            } else {
+                                stringResource(R.string.knowledge_docs_persona_count, document.linkedPersonaIds.size)
+                            }
                             Surface(
                                 color = MaterialTheme.colorScheme.tertiaryContainer,
                                 shape = MaterialTheme.shapes.small
                             ) {
                                 Text(
-                                    text = "${document.linkedPersonaIds.size} persona${if (document.linkedPersonaIds.size > 1) "s" else ""}",
+                                    text = personaCountString,
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -370,7 +377,7 @@ private fun DocumentListItem(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${document.sizeBytes / 1024} KB • ${formatDate(document.createdAt)}",
+                        text = stringResource(R.string.knowledge_docs_size_date, document.sizeBytes / 1024, formatDate(document.createdAt)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -389,14 +396,14 @@ private fun DocumentListItem(
                     IconButton(onClick = onEdit) {
                         Icon(
                             Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = stringResource(R.string.knowledge_docs_edit),
                             modifier = Modifier.size(20.dp)
                         )
                     }
                     IconButton(onClick = { showDeleteConfirm = true }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.knowledge_docs_delete),
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.error
                         )
@@ -409,8 +416,8 @@ private fun DocumentListItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Document?") },
-            text = { Text("Are you sure you want to delete \"${document.name}\"? This action cannot be undone.") },
+            title = { Text(stringResource(R.string.knowledge_docs_delete_title)) },
+            text = { Text(stringResource(R.string.knowledge_docs_delete_message, document.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -418,12 +425,12 @@ private fun DocumentListItem(
                         showDeleteConfirm = false
                     }
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.knowledge_docs_delete_confirm), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.knowledge_docs_delete_cancel))
                 }
             }
         )
@@ -488,14 +495,14 @@ fun EditDocumentDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (document?.id?.isEmpty() != false) "New Document" else "Edit Document",
+                        text = if (document?.id?.isEmpty() != false) stringResource(R.string.knowledge_docs_new_title) else stringResource(R.string.knowledge_docs_edit_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.knowledge_docs_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -507,8 +514,8 @@ fun EditDocumentDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Document Name") },
-                    placeholder = { Text("Enter document name") },
+                    label = { Text(stringResource(R.string.knowledge_docs_name_label)) },
+                    placeholder = { Text(stringResource(R.string.knowledge_docs_name_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -522,7 +529,7 @@ fun EditDocumentDialog(
                 ) {
                     Icon(Icons.Default.Upload, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Import from file")
+                    Text(stringResource(R.string.knowledge_docs_import))
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -548,7 +555,7 @@ fun EditDocumentDialog(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Link documents to Personas in Settings → Personas",
+                            text = stringResource(R.string.knowledge_docs_link_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -561,8 +568,8 @@ fun EditDocumentDialog(
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("Content") },
-                    placeholder = { Text("Enter text or import from file") },
+                    label = { Text(stringResource(R.string.knowledge_docs_content_label)) },
+                    placeholder = { Text(stringResource(R.string.knowledge_docs_content_placeholder)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
@@ -574,7 +581,7 @@ fun EditDocumentDialog(
                 
                 // Character count
                 Text(
-                    text = "${content.length} characters • ${content.toByteArray().size / 1024} KB",
+                    text = stringResource(R.string.knowledge_docs_stats, content.length, content.toByteArray().size / 1024),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -590,7 +597,7 @@ fun EditDocumentDialog(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.knowledge_docs_cancel))
                     }
                     Button(
                         onClick = {
@@ -599,7 +606,7 @@ fun EditDocumentDialog(
                         modifier = Modifier.weight(1f),
                         enabled = name.isNotBlank() && content.isNotBlank()
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.knowledge_docs_save))
                     }
                 }
             }

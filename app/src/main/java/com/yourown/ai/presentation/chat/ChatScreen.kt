@@ -718,7 +718,8 @@ fun ChatScreen(
             },
             onFilterChanged = { filterByLikes ->
                 viewModel.exportChat(filterByLikes = filterByLikes)
-            }
+            },
+            isLoading = uiState.isExporting
         )
     }
     

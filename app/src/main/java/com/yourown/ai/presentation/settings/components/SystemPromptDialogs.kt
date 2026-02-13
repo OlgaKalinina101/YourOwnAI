@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.yourown.ai.data.repository.PromptType
 import com.yourown.ai.domain.model.SystemPrompt
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog for managing list of system prompts
@@ -49,19 +51,23 @@ fun SystemPromptsListDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${if (promptType == PromptType.API) "API" else "Local"} Prompts",
+                        text = if (promptType == PromptType.API) {
+                            stringResource(R.string.system_prompts_title_api)
+                        } else {
+                            stringResource(R.string.system_prompts_title_local)
+                        },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     
                     Row {
                         IconButton(onClick = onAddNew) {
-                            Icon(Icons.Default.Add, "Add new prompt")
+                            Icon(Icons.Default.Add, stringResource(R.string.system_prompts_add_new))
                         }
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 Icons.Default.Close, 
-                                "Close",
+                                stringResource(R.string.system_prompts_close),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -87,14 +93,14 @@ fun SystemPromptsListDialog(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                             Text(
-                                text = "No prompts",
+                                text = stringResource(R.string.system_prompts_empty),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             OutlinedButton(onClick = onAddNew) {
                                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Add prompt")
+                                Text(stringResource(R.string.system_prompts_add_button))
                             }
                         }
                     }
@@ -167,7 +173,7 @@ private fun PromptListItem(
                             shape = MaterialTheme.shapes.extraSmall
                         ) {
                             Text(
-                                text = "Default",
+                                text = stringResource(R.string.system_prompts_badge_default),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary
@@ -181,7 +187,7 @@ private fun PromptListItem(
                             shape = MaterialTheme.shapes.extraSmall
                         ) {
                             Text(
-                                text = "Persona",
+                                text = stringResource(R.string.system_prompts_badge_persona),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -198,7 +204,7 @@ private fun PromptListItem(
                         ) {
                             Icon(
                                 Icons.Default.Star,
-                                "Set as default",
+                                stringResource(R.string.system_prompts_set_default),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -210,7 +216,7 @@ private fun PromptListItem(
                     ) {
                         Icon(
                             Icons.Default.Edit,
-                            "Edit",
+                            stringResource(R.string.system_prompts_edit),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -222,7 +228,7 @@ private fun PromptListItem(
                         ) {
                             Icon(
                                 Icons.Default.Delete,
-                                "Delete",
+                                stringResource(R.string.system_prompts_delete),
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
@@ -239,7 +245,7 @@ private fun PromptListItem(
             )
             
             Text(
-                text = "Used: ${prompt.usageCount} times",
+                text = stringResource(R.string.system_prompts_usage, prompt.usageCount),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -250,13 +256,13 @@ private fun PromptListItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete prompt?") },
+            title = { Text(stringResource(R.string.system_prompts_delete_title)) },
             text = { 
                 Text(
                     if (hasLinkedPersona) {
-                        "This will also delete the linked Persona and all its settings. This action cannot be undone."
+                        stringResource(R.string.system_prompts_delete_with_persona)
                     } else {
-                        "This action cannot be undone."
+                        stringResource(R.string.system_prompts_delete_message)
                     }
                 )
             },
@@ -270,12 +276,12 @@ private fun PromptListItem(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.system_prompts_delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.system_prompts_delete_cancel))
                 }
             }
         )
@@ -340,14 +346,18 @@ fun EditPromptDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (prompt == null) "New Persona" else "Edit Persona",
+                        text = if (prompt == null) {
+                            stringResource(R.string.system_prompts_edit_new)
+                        } else {
+                            stringResource(R.string.system_prompts_edit_title)
+                        },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.system_prompts_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -358,8 +368,8 @@ fun EditPromptDialog(
                     value = name,
                     onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Name") },
-                    placeholder = { Text("System 1") },
+                    label = { Text(stringResource(R.string.system_prompts_name_label)) },
+                    placeholder = { Text(stringResource(R.string.system_prompts_name_placeholder)) },
                     singleLine = true
                 )
                 
@@ -370,7 +380,7 @@ fun EditPromptDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    label = { Text("Prompt Content") },
+                    label = { Text(stringResource(R.string.system_prompts_content_label)) },
                     placeholder = { Text(defaultPromptPreview) },
                     minLines = 10
                 )
@@ -385,7 +395,7 @@ fun EditPromptDialog(
                         onCheckedChange = { isDefault = it }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Use as default")
+                    Text(stringResource(R.string.system_prompts_use_default))
                 }
                 
                 // Buttons
@@ -408,14 +418,14 @@ fun EditPromptDialog(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Reset to default")
+                            Text(stringResource(R.string.system_prompts_reset))
                         }
                     } else {
                         OutlinedButton(
                             onClick = onDismiss,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.system_prompts_cancel))
                         }
                     }
                     
@@ -426,7 +436,7 @@ fun EditPromptDialog(
                         modifier = Modifier.weight(1f),
                         enabled = name.isNotBlank() && content.isNotBlank()
                     ) {
-                        Text("Save")
+                        Text(stringResource(R.string.system_prompts_save))
                     }
                 }
             }

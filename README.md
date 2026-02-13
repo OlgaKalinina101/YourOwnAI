@@ -9,7 +9,7 @@
 
 YourOwnAI is a privacy-first Android application that gives you complete control over your AI assistant. Use your own API keys, store everything locally, and define your AI's personality exactly how you want it.
 
-**Latest:** 🎉 **Multimodal support** - attach images and documents to 26 different models! Plus speech-to-text, pinned favorites, and smart chat sorting. 🎹 **NEW: Keyboard sound & vibration** - immersive typing effects when AI responds!
+**Latest:** 🎉 **Multimodal support** - attach images and documents to 26 different models! Plus speech-to-text, pinned favorites, and smart chat sorting. 🎹 **NEW: Keyboard sound & vibration** - immersive typing effects when AI responds! 🌐 **Web/𝕏 Search** - real-time internet and X (Twitter) search! 🤖 **API Embeddings** - cloud-based embeddings (no local download needed)! 📊 **Memory Clustering & Biography** - AI groups memories, creates user profile, and cleans outdated facts!
 
 **Current Status:** 🚀 Beta - Feature-complete, actively polished
 
@@ -242,7 +242,9 @@ The app should feel like a **tool**, not a product with personality. It's your s
     - Unlimited images (20MB each)
     - 50 documents (PDF, TXT, MD, CSV, JSON, code files)
     - 48MB per file limit
+    - **𝕏 Search (NEW!)** - Real-time search across posts on X (Twitter)
 - **OpenRouter (NEW!)** - Access 200+ models with one API key:
+    - **Web Search (NEW!)** - Real-time internet search for up-to-date information
     - **Claude** (6 models) - Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5
         - 100 images + native PDF support (up to 100 pages)
         - 32MB total request size
@@ -309,6 +311,33 @@ The app should feel like a **tool**, not a product with personality. It's your s
   - Limit control (1-10 memories per request)
   - Manual memory management (view, edit, delete)
   - Smart context injection with configurable title & instructions
+- **Memory Clustering & Biography (NEW!)** 📊 - AI-powered memory organization and user profiling
+  - **Semantic Clustering** - groups similar memories using embeddings + keyword overlap
+    - Automatic detection of memory themes and patterns
+    - Visual cluster representation with size and coherence metrics
+    - Helps identify what the AI knows best about you
+  - **User Biography Generation** - AI creates structured profile from memory clusters
+    - **7 sections**: Values, Profile, Pain Points, Joys, Fears, Loves, Current Situation
+    - Iterative refinement - each cluster updates and enriches the biography
+    - Progress tracking with foreground service (continues in background)
+    - Configurable AI model selection (Deepseek, GPT, Grok, Claude, etc.)
+    - Biography persists and can be updated with new memories
+    - View, copy, or delete biography from UI
+  - **Memory Cleaning (NEW!)** 🧹 - AI-powered memory deduplication and pruning
+    - Uses biography + clusters to identify outdated/contradictory memories
+    - Merges similar memories under freshest date (aggregates information)
+    - Removes non-formative events and temporary emotions
+    - Goal: reduce memory count by 2-3x while preserving key information
+    - Confirmation dialog with recommendation to update biography first
+    - Detailed reasoning from AI about what was removed/merged
+    - Race condition protection - atomic batch operations for DB safety
+  - **Technical Highlights**:
+    - Cosine similarity + keyword matching for clustering (SemanticSearchUtil)
+    - Time-based memory grouping (days, weeks, months ago)
+    - Room database with embedding storage (FloatArray → JSON)
+    - Biography saved locally (Room) with last updated timestamp
+    - Foreground service for long-running biography generation (no interruption)
+    - Optimized batch DB operations to prevent CursorWindow crashes
 - **RAG (Retrieval Augmented Generation)** - knowledge documents
   - Upload text/markdown documents for AI context
   - Automatic chunking with configurable size (128-2048 chars)
@@ -322,6 +351,11 @@ The app should feel like a **tool**, not a product with personality. It's your s
   - mxbai-embed-large (~335 MB) - slower, high quality
   - Download queue with progress tracking
   - Automatic model selection for Memory & RAG
+  - **API Embeddings (NEW!)** - cloud-based embeddings (no local model needed):
+    - **OpenAI** - text-embedding-3-small (1536 dim), text-embedding-3-large (3072 dim), text-embedding-ada-002 (legacy)
+    - **OpenRouter** - text-embedding-3-small/large (OpenAI), voyage-3/voyage-3-lite (Voyage AI)
+    - Toggle between local and API embeddings in settings
+    - Automatic provider/model selection
 
 #### 🎨 Appearance & Accessibility
 - **Three themes** - Light, Dark, System
@@ -682,6 +716,36 @@ keytool -genkey -v -keystore yourownnai-release.keystore \
    - Memory Title - how memories are labeled in context
    - Memory Instructions - how AI should interpret memories
 
+### Memory Clustering & Biography (NEW!)
+1. **Access Memory Management**:
+   - Settings → Memory Section → "Memory Management" button
+2. **Cluster Memories**:
+   - Tap "Start Analysis" - AI groups similar memories by theme
+   - Clusters show size, keywords, and sample memories
+   - Visual representation helps understand memory patterns
+3. **Generate Biography**:
+   - After clustering, tap "Select Model" to choose AI
+   - Tap "Update Biography" to generate/refresh profile
+   - AI processes each cluster iteratively (continues in background)
+   - 7 sections created: Values, Profile, Pain Points, Joys, Fears, Loves, Current Situation
+   - Tap biography card to view full profile
+4. **Biography Actions**:
+   - **View** - See formatted biography with all sections
+   - **Copy** - Copy biography text to clipboard
+   - **Delete** - Remove biography (with confirmation)
+5. **Clean Memory** (optional):
+   - After updating biography, tap "Clean Memory"
+   - Confirmation dialog explains the process
+   - AI removes outdated/contradictory memories
+   - AI merges similar memories under freshest date
+   - Goal: reduce memory count by 2-3x
+   - View AI's reasoning for each removal/merge
+6. **Technical Notes**:
+   - Clustering uses cosine similarity + keyword matching
+   - Biography generation is cancellable (or continues if dialog closed)
+   - Memory cleaning uses atomic batch operations (prevents database crashes)
+   - All data stored locally in Room database
+
 ### Managing Knowledge Documents (RAG)
 1. **Upload documents** - Settings → RAG → "+" button
 2. **Add text/markdown** - paste or type content
@@ -871,17 +935,17 @@ YourOwnAI/
 
 ## 🌍 Supported AI Providers
 
-| Provider | Models | Multimodal | Notes |
-|----------|--------|------------|-------|
-| Deepseek | Deepseek Chat, Deepseek Reasoner | ❌ Text only | Fast, cost-effective reasoning |
-| OpenAI | GPT-5.2, GPT-5.1, GPT-4o | ✅ Images + PDF | Best quality, up to 500 images/50 files |
-| x.ai (Grok) | Grok 4.1, Grok 4, Grok 3, Grok Code + **Voice API** | ✅ Images + Files | Unlimited images, 50 docs (PDF, TXT, code) |
-| **OpenRouter** | **26 models total:** | | Access to 200+ models with one API key |
-| ↳ Claude | Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5 (6) | ✅ Images + PDF | 100 images, native PDF (100 pages), 32MB limit |
-| ↳ Llama 4 | Maverick, Scout (2) | ✅ Images | 10 images, native multimodal, 10M context (Scout) |
-| ↳ Gemini | 3 Pro/Flash, 2.5 Pro/Flash (4) | ✅ Images + PDF | 10 files, 100MB each, audio/video support |
-| ↳ GPT-4o | openai/gpt-4o-2024-05-13 (1) | ✅ Images + PDF | Same as OpenAI direct |
-| Local | Qwen 2.5 1.7B, Llama 3.2 3B | ❌ Text only | Completely offline via llama.cpp |
+| Provider | Models | Multimodal | Web/X Search | Notes |
+|----------|--------|------------|--------------|-------|
+| Deepseek | Deepseek Chat, Deepseek Reasoner | ❌ Text only | ❌ | Fast, cost-effective reasoning |
+| OpenAI | GPT-5.2, GPT-5.1, GPT-4o | ✅ Images + PDF | ❌ | Best quality, up to 500 images/50 files |
+| x.ai (Grok) | Grok 4.1, Grok 4, Grok 3, Grok Code + **Voice API** | ✅ Images + Files | ✅ 𝕏 Search | Unlimited images, 50 docs (PDF, TXT, code) |
+| **OpenRouter** | **26 models total:** | | ✅ Web Search | Access to 200+ models with one API key |
+| ↳ Claude | Sonnet 4.5/4/3.7, Opus 4.5, Haiku 4.5/3.5 (6) | ✅ Images + PDF | ✅ | 100 images, native PDF (100 pages), 32MB limit |
+| ↳ Llama 4 | Maverick, Scout (2) | ✅ Images | ✅ | 10 images, native multimodal, 10M context (Scout) |
+| ↳ Gemini | 3 Pro/Flash, 2.5 Pro/Flash (4) | ✅ Images + PDF | ✅ | 10 files, 100MB each, audio/video support |
+| ↳ GPT-4o | openai/gpt-4o-2024-05-13 (1) | ✅ Images + PDF | ✅ | Same as OpenAI direct |
+| Local | Qwen 2.5 1.7B, Llama 3.2 3B | ❌ Text only | ❌ | Completely offline via llama.cpp |
 
 **Multimodal Stats:**
 - 🎨 **26 models** support images and/or documents
@@ -1004,6 +1068,17 @@ YourOwnAI/
   - [x] Progress tracking in notification panel
   - [x] Can minimize/close app during export
   - [x] No ANR even on 10,000+ message chats
+- [x] **Memory Clustering & Biography (NEW!)** 📊
+  - [x] Semantic memory clustering (cosine similarity + keywords)
+  - [x] User biography generation from clusters (7 sections)
+  - [x] Iterative AI refinement with progress tracking
+  - [x] Foreground service for background generation
+  - [x] Biography persistence (Room database)
+  - [x] Biography UI (view, copy, delete)
+  - [x] Memory cleaning - AI-powered deduplication and pruning
+  - [x] Batch database operations (prevents CursorWindow crashes)
+  - [x] Time-based memory grouping in UI
+  - [x] Confirmation dialogs with recommendations
 - [ ] Usage tracking (tokens, cost)
 - [ ] More OpenRouter models (expand selection)
 
@@ -1109,11 +1184,34 @@ A: Deep Empathy analyzes your messages for strong emotional moments and helps th
 **Q: How does Memory work?**
 A: The AI automatically extracts key facts from your conversations and stores them. The system filters out non-meaningful responses (e.g., "Нет ключевой информации") to keep only actionable memories. When you chat, it retrieves relevant memories (using semantic search) and includes them in context. You can view, edit, or delete memories anytime. Memory has an age filter - by default, only memories older than 2 days are retrieved.
 
+**Q: What is Memory Clustering and Biography?**
+A: **Memory Clustering** groups your memories by similarity to help understand patterns. **Biography Generation** uses these clusters to create a structured profile of you (values, situation, emotions, etc.). The AI reads each cluster and builds/refines your biography iteratively. You can then use "Clean Memory" to remove outdated memories and merge duplicates based on the biography, reducing memory count by 2-3x. This helps AI maintain only the most relevant information about you.
+
+**Q: How do I create a User Biography?**
+A:
+1. Go to Settings → Memory → "Memory Management"
+2. Tap "Start Analysis" to cluster your memories
+3. Select an AI model (any API model works)
+4. Tap "Update Biography" to generate profile from clusters
+5. Wait for completion (runs in background as foreground service)
+6. Tap biography card to view your profile
+Biography includes: Values, Profile, Pain Points, Joys, Fears, Loves, Current Situation. You can copy, delete, or re-generate it anytime.
+
+**Q: What is Memory Cleaning and when should I use it?**
+A: Memory Cleaning uses your biography + memory clusters to intelligently prune your memories:
+- **Removes**: Outdated facts, contradictory information, non-formative events
+- **Merges**: Similar memories under the freshest date (aggregates info)
+- **Goal**: Reduce memory count by 2-3x while preserving key information
+**When to use**: After your biography is up-to-date and you have many memories (100+). The AI will explain its reasoning for every removal/merge.
+
 **Q: What is RAG?**
 A: Retrieval Augmented Generation. Upload text documents (personal notes, articles, guides) and the AI will use them to provide more informed responses. Documents are chunked, embedded, and retrieved using semantic search.
 
 **Q: Do Memory and RAG work offline?**
-A: No. These features require embedding models for semantic search and only work with API models (not local models). Embedding models are downloaded separately (all-MiniLM ~25MB or mxbai-embed ~335MB).
+A: No. These features require embedding models for semantic search and only work with API models (not local models). You can either:
+- **Download local embedding models** - all-MiniLM (~25MB) or mxbai-embed (~335MB)
+- **Use API embeddings** - OpenAI or OpenRouter (no download, requires API key)
+Toggle between local and API embeddings in Settings → Embedding Models.
 
 **Q: Can I customize the prompts?**
 A: Yes! Almost every prompt is customizable:
@@ -1239,6 +1337,20 @@ This approach ensures your app never freezes, no matter how large your chat is.
 
 **Q: Can I export liked messages only?**
 A: Yes! In the three-dot menu, select "Save liked messages" instead of "Save chat". Only messages you've liked (❤️) will be exported.
+
+**Q: What is Web Search and 𝕏 Search?**
+A: **Web Search** (OpenRouter) and **𝕏 Search** (x.ai Grok) allow AI to search the internet in real-time for up-to-date information:
+- **Web Search** - Search the web for current events, facts, and information
+- **𝕏 Search** - Search posts on X (Twitter) for trending topics and discussions
+Both are toggle options per conversation - enable when you need real-time data. The AI will automatically search when your question requires current information.
+
+**Q: What are API Embeddings?**
+A: API Embeddings let you use cloud-based embeddings (OpenAI or OpenRouter) instead of downloading local embedding models:
+- **Benefits**: No large downloads (~25-335MB), faster on weak devices, potentially higher quality
+- **Providers**: OpenAI (text-embedding-3-small/large) or OpenRouter (voyage-3/voyage-3-lite)
+- **How to use**: Settings → Embedding Models → Toggle "Use API Embeddings" → Select provider and model
+- **Cost**: Small API cost per embedding (usually fractions of a cent)
+Works for both Memory and RAG features. Toggle anytime to switch between local and API.
 
 **Q: Will this be on Google Play?**
 A: Yes, once we reach stable 1.0. For now, download APK from GitHub Releases.

@@ -16,9 +16,11 @@ import kotlin.math.sqrt
 object SemanticSearchUtil {
     
     /**
-     * Russian stop-words (common words without significant meaning)
+     * Multilingual stop-words (Russian, Ukrainian, English)
+     * Common words without significant meaning
      */
     private val STOP_WORDS = setOf(
+        // Russian
         "а", "и", "в", "на", "с", "у", "к", "о", "из", "за", "по", "от", "до",
         "что", "как", "это", "так", "ты", "я", "мы", "он", "она", "они", "вы",
         "не", "да", "но", "же", "ли", "бы", "то", "ещё", "еще", "уже", "вот",
@@ -26,7 +28,32 @@ object SemanticSearchUtil {
         "если", "когда", "чтобы", "потому", "очень", "только", "просто", "прям",
         "какие", "какой", "какая", "какое", "который", "которая", "которое",
         "хочешь", "хочу", "могу", "можешь", "буду", "будет", "есть", "был", "была",
-        "опять", "снова", "теперь", "сейчас", "тоже", "также", "быть", "этот"
+        "опять", "снова", "теперь", "сейчас", "тоже", "также", "быть", "этот",
+        "эти", "этим", "этих", "того", "тому", "том", "без", "для", "про", "при",
+        
+        // Ukrainian
+        "а", "і", "в", "на", "з", "у", "до", "від", "за", "по", "для", "про", "при",
+        "що", "як", "це", "так", "ти", "я", "ми", "він", "вона", "вони", "ви",
+        "не", "та", "але", "ж", "чи", "би", "те", "ще", "вже", "ось",
+        "все", "всі", "мені", "мене", "тобі", "тебе", "нам", "нас", "мій", "твій",
+        "якщо", "коли", "щоб", "тому", "дуже", "тільки", "просто",
+        "які", "який", "яка", "яке", "котрий", "котра", "котре",
+        "хочеш", "хочу", "можу", "можеш", "буду", "буде", "є", "був", "була",
+        "знову", "тепер", "зараз", "теж", "також", "бути", "цей", "ці", "цим", "цих",
+        "того", "тому", "тим", "без", "або",
+        
+        // English
+        "the", "is", "at", "which", "on", "a", "an", "and", "or", "but",
+        "in", "with", "to", "for", "of", "as", "by", "that", "this", "these",
+        "it", "be", "are", "was", "were", "been", "have", "has", "had",
+        "do", "does", "did", "will", "would", "could", "should", "may", "might",
+        "i", "you", "he", "she", "we", "they", "me", "him", "her", "us", "them",
+        "my", "your", "his", "her", "its", "our", "their",
+        "not", "no", "yes", "can", "from", "up", "down", "out", "about",
+        "into", "through", "over", "under", "again", "then", "once",
+        "here", "there", "when", "where", "why", "how", "all", "each",
+        "some", "such", "only", "own", "same", "so", "than", "too", "very",
+        "just", "now", "also", "more", "most", "much", "any", "both"
     )
     
     /**
@@ -141,12 +168,22 @@ object SemanticSearchUtil {
      * Filters out short fragments (less than 25 characters)
      */
     private fun splitToSentences(message: String): List<String> {
-        val sentences = message.split(Regex("[.!?]+"))
+        return splitTextToSentences(message, minLength = 25)
+    }
+    
+    /**
+     * Split text into sentences (public utility method)
+     * @param text Text to split
+     * @param minLength Minimum sentence length (0 = no filter)
+     * @return List of sentences
+     */
+    fun splitTextToSentences(text: String, minLength: Int = 0): List<String> {
+        val sentences = text.split(Regex("[.!?]+"))
             .map { it.trim() }
-            .filter { it.length > 25 } // Filter short fragments
+            .filter { it.isNotBlank() && it.length >= minLength }
         
-        return if (sentences.isEmpty()) {
-            listOf(message) // Fallback to full message if no sentences found
+        return if (sentences.isEmpty() && text.isNotBlank()) {
+            listOf(text) // Fallback to full text if no sentences found
         } else {
             sentences
         }

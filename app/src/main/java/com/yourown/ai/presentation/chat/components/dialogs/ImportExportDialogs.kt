@@ -37,12 +37,55 @@ fun ExportChatDialog(
     onDismiss: () -> Unit,
     onShare: () -> Unit,
     onSaveToFile: () -> Unit = {},
-    onFilterChanged: (Boolean) -> Unit = {}
+    onFilterChanged: (Boolean) -> Unit = {},
+    isLoading: Boolean = false
 ) {
     val clipboardManager = LocalClipboardManager.current
     var showCopiedSnackbar by remember { mutableStateOf(false) }
     var filterByLikes by remember { mutableStateOf(false) }
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    
+    // Show only preview (first ~5000 chars / ~10 message pairs) to avoid memory issues
+    val maxPreviewLength = 5000
+    val isPreview = chatText.length > maxPreviewLength
+    val previewText = remember(chatText) {
+        if (isPreview) {
+            chatText.take(maxPreviewLength) + "\n\n... (preview only)"
+        } else {
+            chatText
+        }
+    }
+    
+    // Parse markdown asynchronously
+    var annotatedText by remember { mutableStateOf<AnnotatedString?>(null) }
+    var isParsingMarkdown by remember { mutableStateOf(true) }
+    
+    // Get colors from theme
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val linkColor = MaterialTheme.colorScheme.primary
+    val quoteColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    val quoteBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+    val headingColor = MaterialTheme.colorScheme.primary
+    val bodyFontSize = MaterialTheme.typography.bodyLarge.fontSize
+    
+    LaunchedEffect(previewText) {
+        isParsingMarkdown = true
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            val parsed = parseMarkdownForExportSync(
+                text = previewText,
+                textColor = textColor,
+                linkColor = linkColor,
+                quoteColor = quoteColor,
+                quoteBorderColor = quoteBorderColor,
+                headingColor = headingColor,
+                bodyFontSize = bodyFontSize
+            )
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                annotatedText = parsed
+                isParsingMarkdown = false
+            }
+        }
+    }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -64,14 +107,14 @@ fun ExportChatDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Export chat",
+                        text = stringResource(R.string.export_dialog_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close, 
-                            "Close",
+                            stringResource(R.string.export_dialog_close),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -81,7 +124,7 @@ fun ExportChatDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(enabled = !isLoading) {
                             filterByLikes = !filterByLikes
                             onFilterChanged(filterByLikes)
                         },
@@ -93,10 +136,11 @@ fun ExportChatDialog(
                         onCheckedChange = {
                             filterByLikes = it
                             onFilterChanged(it)
-                        }
+                        },
+                        enabled = !isLoading
                     )
                     Text(
-                        text = "Export only liked messages",
+                        text = stringResource(R.string.export_filter_liked),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -110,14 +154,44 @@ fun ExportChatDialog(
                 
                 // Info text
                 Text(
-                    text = if (filterByLikes) {
-                        "Showing only liked messages"
-                    } else {
-                        "Chat exported with markdown formatting"
+                    text = when {
+                        filterByLikes -> stringResource(R.string.export_only_liked)
+                        isPreview -> stringResource(R.string.export_preview_only)
+                        else -> stringResource(R.string.export_markdown_formatting)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                
+                // Loading indicator (visible above content)
+                if (isLoading || isParsingMarkdown) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 3.dp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = stringResource(R.string.export_preparing),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
                 
                 // Chat content preview with markdown rendering
                 Surface(
@@ -127,28 +201,37 @@ fun ExportChatDialog(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    val scrollState = rememberScrollState()
-                    val annotatedText = parseMarkdownForExport(chatText)
-                    
-                    ClickableText(
-                        text = annotatedText,
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .verticalScroll(scrollState),
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        onClick = { offset ->
-                            annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
-                                .firstOrNull()?.let { annotation ->
-                                    try {
-                                        uriHandler.openUri(annotation.item)
-                                    } catch (e: Exception) {
-                                        // Handle invalid URL
+                    if (annotatedText != null) {
+                        val scrollState = rememberScrollState()
+                        
+                        ClickableText(
+                            text = annotatedText!!,
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .verticalScroll(scrollState),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            onClick = { offset ->
+                                annotatedText!!.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                                    .firstOrNull()?.let { annotation ->
+                                        try {
+                                            uriHandler.openUri(annotation.item)
+                                        } catch (e: Exception) {
+                                            // Handle invalid URL
+                                        }
                                     }
-                                }
+                            }
+                        )
+                    } else {
+                        // Show empty state while parsing
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
-                    )
+                    }
                 }
                 
                 // Copied snackbar
@@ -158,7 +241,7 @@ fun ExportChatDialog(
                         showCopiedSnackbar = false
                     }
                     Text(
-                        text = "✓ Copied to clipboard",
+                        text = stringResource(R.string.export_copied),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
@@ -185,7 +268,7 @@ fun ExportChatDialog(
                                 tint = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             Text(
-                                text = "Large chat (${chatText.length} chars). Use 'Save to File' for import.",
+                                text = stringResource(R.string.export_large_warning, chatText.length),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
@@ -206,7 +289,8 @@ fun ExportChatDialog(
                                 clipboardManager.setText(AnnotatedString(chatText))
                                 showCopiedSnackbar = true
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading && !isParsingMarkdown
                         ) {
                             Icon(
                                 Icons.Default.ContentCopy,
@@ -219,7 +303,8 @@ fun ExportChatDialog(
                         
                         Button(
                             onClick = onShare,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading && !isParsingMarkdown
                         ) {
                             Icon(
                                 Icons.Default.Share,
@@ -235,6 +320,7 @@ fun ExportChatDialog(
                     Button(
                         onClick = onSaveToFile,
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading && !isParsingMarkdown,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -257,13 +343,17 @@ fun ExportChatDialog(
 /**
  * Parse markdown for export dialog (simplified version for preview)
  * Supports: bold, italic, links, headings, blockquotes, horizontal rules
+ * Note: This is a sync function, call from background thread
  */
-@Composable
-private fun parseMarkdownForExport(text: String): AnnotatedString {
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val linkColor = MaterialTheme.colorScheme.primary
-    val quoteColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-    val quoteBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+private fun parseMarkdownForExportSync(
+    text: String,
+    textColor: androidx.compose.ui.graphics.Color,
+    linkColor: androidx.compose.ui.graphics.Color,
+    quoteColor: androidx.compose.ui.graphics.Color,
+    quoteBorderColor: androidx.compose.ui.graphics.Color,
+    headingColor: androidx.compose.ui.graphics.Color,
+    bodyFontSize: androidx.compose.ui.unit.TextUnit
+): AnnotatedString {
     
     return buildAnnotatedString {
         val lines = text.split("\n")
@@ -296,8 +386,8 @@ private fun parseMarkdownForExport(text: String): AnnotatedString {
                 
                 withStyle(SpanStyle(
                     fontWeight = FontWeight.Bold,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize * headingSize,
-                    color = MaterialTheme.colorScheme.primary
+                    fontSize = bodyFontSize * headingSize,
+                    color = headingColor
                 )) {
                     append(headingText)
                 }

@@ -344,6 +344,61 @@ object DatabaseModule {
         }
     }
     
+    /**
+     * Migration from version 18 to 19
+     * Add user_biography table for storing user biography generated from memory clusters
+     */
+    private val MIGRATION_18_19 = object : Migration(18, 19) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create user_biography table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS user_biography (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    userValues TEXT NOT NULL DEFAULT '',
+                    profile TEXT NOT NULL DEFAULT '',
+                    painPoints TEXT NOT NULL DEFAULT '',
+                    joys TEXT NOT NULL DEFAULT '',
+                    fears TEXT NOT NULL DEFAULT '',
+                    loves TEXT NOT NULL DEFAULT '',
+                    currentSituation TEXT NOT NULL DEFAULT '',
+                    lastUpdated INTEGER NOT NULL,
+                    processedClusters INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+        }
+    }
+    
+    /**
+     * Migration from version 19 to 20
+     * Add biography_chunks table for storing biography fragments with embeddings
+     */
+    private val MIGRATION_19_20 = object : Migration(19, 20) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create biography_chunks table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS biography_chunks (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    biographyId TEXT NOT NULL DEFAULT 'default',
+                    section TEXT NOT NULL,
+                    text TEXT NOT NULL,
+                    embedding TEXT NOT NULL,
+                    createdAt INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for fast lookups
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_biography_chunks_biographyId 
+                ON biography_chunks(biographyId)
+            """.trimIndent())
+            
+            database.execSQL("""
+                CREATE INDEX IF NOT EXISTS index_biography_chunks_section 
+                ON biography_chunks(section)
+            """.trimIndent())
+        }
+    }
+    
     @Provides
     @Singleton
     fun provideDatabase(
@@ -368,7 +423,9 @@ object DatabaseModule {
                 MIGRATION_14_15,
                 MIGRATION_15_16,
                 MIGRATION_16_17,
-                MIGRATION_17_18
+                MIGRATION_17_18,
+                MIGRATION_18_19,
+                MIGRATION_19_20
             )
             .fallbackToDestructiveMigration() // Keep for future migrations
             .build()
@@ -432,5 +489,17 @@ object DatabaseModule {
     @Singleton
     fun providePersonaDao(database: YourOwnAIDatabase): PersonaDao {
         return database.personaDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideBiographyDao(database: YourOwnAIDatabase): BiographyDao {
+        return database.biographyDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideBiographyChunkDao(database: YourOwnAIDatabase): BiographyChunkDao {
+        return database.biographyChunkDao()
     }
 }

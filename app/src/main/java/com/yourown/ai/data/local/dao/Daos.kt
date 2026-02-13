@@ -2,6 +2,7 @@ package com.yourown.ai.data.local.dao
 
 import androidx.room.*
 import com.yourown.ai.data.local.entity.*
+import com.yourown.ai.domain.model.UserBiography
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -253,4 +254,40 @@ interface PersonaDao {
     
     @Query("SELECT COUNT(*) FROM personas")
     suspend fun getPersonaCount(): Int
+}
+
+@Dao
+interface BiographyDao {
+    @Query("SELECT * FROM user_biography WHERE id = 'default'")
+    fun getBiography(): Flow<BiographyEntity?>
+    
+    @Query("SELECT * FROM user_biography WHERE id = 'default'")
+    suspend fun getBiographySync(): BiographyEntity?
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBiography(biography: BiographyEntity)
+    
+    @Query("DELETE FROM user_biography")
+    suspend fun deleteBiography()
+}
+
+@Dao
+interface BiographyChunkDao {
+    @Query("SELECT * FROM biography_chunks WHERE biographyId = :biographyId ORDER BY createdAt ASC")
+    suspend fun getChunksByBiographyId(biographyId: String): List<BiographyChunkEntity>
+    
+    @Query("SELECT * FROM biography_chunks WHERE biographyId = 'default'")
+    suspend fun getAllChunks(): List<BiographyChunkEntity>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChunk(chunk: BiographyChunkEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChunks(chunks: List<BiographyChunkEntity>)
+    
+    @Query("DELETE FROM biography_chunks WHERE biographyId = :biographyId")
+    suspend fun deleteChunksByBiographyId(biographyId: String)
+    
+    @Query("DELETE FROM biography_chunks")
+    suspend fun deleteAllChunks()
 }

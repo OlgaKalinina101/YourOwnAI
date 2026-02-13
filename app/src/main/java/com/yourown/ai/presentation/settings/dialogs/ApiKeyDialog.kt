@@ -7,10 +7,12 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIProvider
 
 /**
@@ -29,11 +31,11 @@ fun ApiKeyDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Key, null) },
-        title = { Text("Add ${provider.displayName} API Key") },
+        title = { Text(stringResource(R.string.api_key_dialog_title, provider.displayName)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Enter your API key to use ${provider.displayName}",
+                    text = stringResource(R.string.api_key_dialog_subtitle, provider.displayName),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -42,8 +44,8 @@ fun ApiKeyDialog(
                     value = apiKey,
                     onValueChange = { apiKey = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("API Key") },
-                    placeholder = { Text("sk-...") },
+                    label = { Text(stringResource(R.string.api_key_dialog_label)) },
+                    placeholder = { Text(stringResource(R.string.api_key_dialog_placeholder)) },
                     visualTransformation = if (showKey) {
                         VisualTransformation.None
                     } else {
@@ -53,7 +55,7 @@ fun ApiKeyDialog(
                         IconButton(onClick = { showKey = !showKey }) {
                             Icon(
                                 if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                if (showKey) "Hide key" else "Show key"
+                                if (showKey) stringResource(R.string.api_key_dialog_hide) else stringResource(R.string.api_key_dialog_show)
                             )
                         }
                     },
@@ -78,7 +80,7 @@ fun ApiKeyDialog(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Your key is stored encrypted on your device",
+                            text = stringResource(R.string.api_key_dialog_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -91,12 +93,12 @@ fun ApiKeyDialog(
                 onClick = { onSave(apiKey) },
                 enabled = apiKey.isNotBlank()
             ) {
-                Text("Save")
+                Text(stringResource(R.string.api_key_dialog_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.api_key_dialog_cancel))
             }
         }
     )

@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.yourown.ai.R
 
 /**
  * Dialog showing SQL schema for Supabase setup
@@ -180,11 +182,11 @@ CREATE INDEX IF NOT EXISTS idx_document_embeddings_document ON document_embeddin
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth(0.95f),
         icon = { Icon(Icons.Default.Code, null) },
-        title = { Text("Supabase SQL Schema") },
+        title = { Text(stringResource(R.string.sql_schema_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Copy these SQL commands and run them in Supabase SQL Editor:",
+                    text = stringResource(R.string.sql_schema_dialog_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -224,13 +226,13 @@ CREATE INDEX IF NOT EXISTS idx_document_embeddings_document ON document_embeddin
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "📝 How to run:",
+                            text = stringResource(R.string.sql_schema_dialog_instructions_title),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = "1. Copy SQL (button below)\n2. Open Supabase → SQL Editor\n3. Paste and click Run\n4. Wait for success message",
+                            text = stringResource(R.string.sql_schema_dialog_instructions_steps),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -247,12 +249,12 @@ CREATE INDEX IF NOT EXISTS idx_document_embeddings_document ON document_embeddin
             ) {
                 Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Copy SQL")
+                Text(stringResource(R.string.sql_schema_dialog_copy))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.sql_schema_dialog_close))
             }
         }
     )

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.yourown.ai.R
+import androidx.compose.ui.res.stringResource
 
 /**
  * Dialog with step-by-step instructions for Supabase setup (Russian)
@@ -106,7 +107,7 @@ fun CloudSyncInstructionsDialog(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "Close",
+                                contentDescription = stringResource(R.string.cloud_sync_instructions_close),
                                 modifier = Modifier.padding(8.dp),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
@@ -124,7 +125,7 @@ fun CloudSyncInstructionsDialog(
                             )
                         ) {
                             Text(
-                                text = "Pinch to zoom",
+                                text = stringResource(R.string.cloud_sync_instructions_zoom_hint),
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -139,7 +140,7 @@ fun CloudSyncInstructionsDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth(0.95f),
         icon = { Icon(Icons.Default.Help, null) },
-        title = { Text("Инструкция по настройке Supabase") },
+        title = { Text(stringResource(R.string.cloud_sync_instructions_title)) },
         text = {
             Column(
                 modifier = Modifier
@@ -150,8 +151,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 1
                 InstructionStepWithImage(
                     stepNumber = 1,
-                    title = "Зарегистрируйтесь на Supabase",
-                    description = "Перейдите на сайт Supabase и создайте аккаунт",
+                    title = stringResource(R.string.cloud_sync_instructions_step1_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step1_desc),
                     imageRes = R.drawable.step1_create_suprabase_account,
                     onImageClick = { fullScreenImageRes = it },
                     clickableUrl = "https://supabase.com",
@@ -180,7 +181,7 @@ fun CloudSyncInstructionsDialog(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "Ссылка скопирована в буфер обмена",
+                                text = stringResource(R.string.cloud_sync_instructions_url_copied),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -191,8 +192,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 2
                 InstructionStepWithImage(
                     stepNumber = 2,
-                    title = "Создайте организацию",
-                    description = "Нажмите кнопку + New Organization",
+                    title = stringResource(R.string.cloud_sync_instructions_step2_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step2_desc),
                     imageRes = R.drawable.step2_create_organization,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -200,8 +201,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 3
                 InstructionStepWithImage(
                     stepNumber = 3,
-                    title = "Назовите организацию",
-                    description = "Введите название вашей организации",
+                    title = stringResource(R.string.cloud_sync_instructions_step3_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step3_desc),
                     imageRes = R.drawable.step3_name_your_organization,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -209,8 +210,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 4
                 InstructionStepWithImage(
                     stepNumber = 4,
-                    title = "Сохраните пароль БД",
-                    description = "Скопируйте и сохраните пароль от базы данных в надежном месте, затем нажмите Create new project",
+                    title = stringResource(R.string.cloud_sync_instructions_step4_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step4_desc),
                     imageRes = R.drawable.step4_organization_setup,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -218,8 +219,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 5
                 InstructionStepWithImage(
                     stepNumber = 5,
-                    title = "Скопируйте учетные данные",
-                    description = "Проскрольте страницу вниз и скопируйте Project URL и Publishable API KEY. Сохраните их — они понадобятся для настройки приложения",
+                    title = stringResource(R.string.cloud_sync_instructions_step5_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step5_desc),
                     imageRes = R.drawable.step5_copy_credentials,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -227,8 +228,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 6
                 InstructionStepWithImage(
                     stepNumber = 6,
-                    title = "Откройте SQL Editor",
-                    description = "Проскрольте страницу вверх и перейдите в SQL Editor",
+                    title = stringResource(R.string.cloud_sync_instructions_step6_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step6_desc),
                     imageRes = R.drawable.step6_go_to_sql_editor,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -236,8 +237,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 7 with SQL copy button
                 InstructionStepWithSqlQuery(
                     stepNumber = 7,
-                    title = "Выполните SQL запрос",
-                    description = "Вставьте SQL запрос в форму Untitled query и нажмите Run",
+                    title = stringResource(R.string.cloud_sync_instructions_step7_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step7_desc),
                     imageRes = R.drawable.step7_run_sql_query,
                     context = context,
                     onImageClick = { fullScreenImageRes = it }
@@ -246,8 +247,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 8
                 InstructionStepWithImage(
                     stepNumber = 8,
-                    title = "Проверьте результат",
-                    description = "Убедитесь, что в разделе Results появилось подтверждение успешного выполнения",
+                    title = stringResource(R.string.cloud_sync_instructions_step8_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step8_desc),
                     imageRes = R.drawable.step8_sql_query_successfully,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -255,8 +256,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 9
                 InstructionStepWithImage(
                     stepNumber = 9,
-                    title = "Откройте настройки в приложении",
-                    description = "Вернитесь в приложение и зайдите в Settings → Cloud Sync → Supabase Configuration",
+                    title = stringResource(R.string.cloud_sync_instructions_step9_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step9_desc),
                     imageRes = R.drawable.clous_sync,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -264,8 +265,8 @@ fun CloudSyncInstructionsDialog(
                 // Step 10
                 InstructionStepWithImage(
                     stepNumber = 10,
-                    title = "Настройте подключение",
-                    description = "Вставьте сохраненные Project URL и Publishable API KEY. Нажмите Test Connection и дождитесь успешного подключения",
+                    title = stringResource(R.string.cloud_sync_instructions_step10_title),
+                    description = stringResource(R.string.cloud_sync_instructions_step10_desc),
                     imageRes = R.drawable.test_connection,
                     onImageClick = { fullScreenImageRes = it }
                 )
@@ -290,7 +291,7 @@ fun CloudSyncInstructionsDialog(
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
-                            text = "Готово! Подключение к облачной базе данных создано ✅",
+                            text = stringResource(R.string.cloud_sync_instructions_success),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -311,13 +312,13 @@ fun CloudSyncInstructionsDialog(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "📊 Отслеживание данных",
+                            text = stringResource(R.string.cloud_sync_instructions_data_tracking_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Text(
-                            text = "Приложение отслеживает примерный размер загруженных данных. Прогресс-бар показывает использование относительно 500 МБ бесплатного тарифа. Для точной информации проверьте Supabase Dashboard: Settings → Database → Database Size",
+                            text = stringResource(R.string.cloud_sync_instructions_data_tracking_text),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
@@ -334,13 +335,13 @@ fun CloudSyncInstructionsDialog(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "💰 Тарифы",
+                            text = stringResource(R.string.cloud_sync_instructions_pricing_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
-                            text = "Бесплатно: 500 МБ БД, 5 ГБ трафика\nPro ($25/мес): 8 ГБ БД, 250 ГБ трафика",
+                            text = stringResource(R.string.cloud_sync_instructions_pricing_text),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -350,7 +351,7 @@ fun CloudSyncInstructionsDialog(
         },
         confirmButton = {
             Button(onClick = onDismiss) {
-                Text("Понятно")
+                Text(stringResource(R.string.cloud_sync_instructions_ok))
             }
         }
     )
@@ -461,7 +462,7 @@ private fun InstructionStepWithImage(
                         }
                         Icon(
                             Icons.Default.ContentCopy,
-                            "Copy",
+                            stringResource(R.string.cloud_sync_instructions_copy_icon),
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.size(18.dp)
                         )
@@ -730,7 +731,7 @@ SELECT 'Schema created successfully! ✅' as status;
             ) {
                 Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Скопировать SQL запрос")
+                Text(stringResource(R.string.cloud_sync_instructions_copy_sql))
             }
             
             // Screenshot (clickable for full-screen)

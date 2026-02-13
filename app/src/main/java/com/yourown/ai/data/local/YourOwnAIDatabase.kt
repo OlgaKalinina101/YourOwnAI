@@ -19,6 +19,8 @@ import com.yourown.ai.data.local.entity.*
  * - SystemPrompts (системные промпты)
  * - KnowledgeDocuments (текстовые документы для контекста)
  * - Personas (профили с настройками AI)
+ * - UserBiography (биография пользователя)
+ * - BiographyChunks (фрагменты биографии с эмбеддингами)
  */
 @Database(
     entities = [
@@ -32,8 +34,10 @@ import com.yourown.ai.data.local.entity.*
         SystemPromptEntity::class,
         KnowledgeDocumentEntity::class,
         PersonaEntity::class,
+        BiographyEntity::class,
+        BiographyChunkEntity::class,
     ],
-    version = 18,  // Increased: added API Embeddings configuration to personas
+    version = 20,  // Increased: added BiographyChunks table
     exportSchema = true
 )
 abstract class YourOwnAIDatabase : RoomDatabase() {
@@ -47,6 +51,8 @@ abstract class YourOwnAIDatabase : RoomDatabase() {
     abstract fun systemPromptDao(): SystemPromptDao
     abstract fun knowledgeDocumentDao(): KnowledgeDocumentDao
     abstract fun personaDao(): PersonaDao
+    abstract fun biographyDao(): BiographyDao
+    abstract fun biographyChunkDao(): BiographyChunkDao
     
     companion object {
         const val DATABASE_NAME = "yourown_ai_database"
