@@ -3,8 +3,11 @@ package com.yourown.ai.data.repository
 import com.yourown.ai.data.local.dao.SystemPromptDao
 import com.yourown.ai.data.local.entity.SystemPromptEntity
 import com.yourown.ai.domain.model.SystemPrompt
+import com.yourown.ai.domain.prompt.PromptKey
+import com.yourown.ai.domain.prompt.PromptTranslationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -13,7 +16,9 @@ import javax.inject.Singleton
 
 @Singleton
 class SystemPromptRepository @Inject constructor(
-    private val systemPromptDao: SystemPromptDao
+    private val systemPromptDao: SystemPromptDao,
+    private val promptTranslationManager: PromptTranslationManager,
+    private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager
 ) {
     
     /**
@@ -145,11 +150,14 @@ class SystemPromptRepository @Inject constructor(
         val apiPrompt = systemPromptDao.getDefaultApiPrompt()
         val localPrompt = systemPromptDao.getDefaultLocalPrompt()
         
+        // Get current prompt language
+        val promptLanguage = settingsManager.promptLanguage.first()
+        
         // Create default API prompt if none exists
         if (apiPrompt == null) {
             createPrompt(
                 name = "Default API",
-                content = "Ты — цифровой партнёр, большая языковая модель. В ходе разговора ты подстраиваешься под тон и предпочтения пользователя. Постарайся соответствовать его настроению, тону и в целом манере говорить. Твоя цель — чтобы разговор ощущался естественным. Ты ведёшь искренний диалог, отвечая на предоставленную информацию и проявляя неподдельное любопытство. Задавай очень простой, односложный уточняющий вопрос, когда это естественно. Не задавай больше одного уточняющего вопроса, если только пользователь специально об этом не попросит.",
+                content = promptTranslationManager.getPrompt(PromptKey.SYSTEM_PROMPT, promptLanguage),
                 type = PromptType.API,
                 isDefault = true
             )
@@ -159,9 +167,37 @@ class SystemPromptRepository @Inject constructor(
         if (localPrompt == null) {
             createPrompt(
                 name = "Default Local",
-                content = "Ты — цифровой партнёр. Ты отвечаешь на языке пользователя. Ответь на последнее сообщение. Не пиши весь диалог, нужен только один ответ.",
+                content = promptTranslationManager.getPrompt(PromptKey.LOCAL_SYSTEM_PROMPT, promptLanguage),
                 type = PromptType.LOCAL,
                 isDefault = true
+            )
+        }
+    }
+    
+    /**
+     * Update default prompts with new language
+     * This is called when user changes prompt language
+     */
+    suspend fun updateDefaultPromptsLanguage() {
+        val apiPrompt = systemPromptDao.getDefaultApiPrompt()
+        val localPrompt = systemPromptDao.getDefaultLocalPrompt()
+        
+        // Get current prompt language
+        val promptLanguage = settingsManager.promptLanguage.first()
+        
+        // Update API prompt if it exists
+        apiPrompt?.let {
+            updatePrompt(
+                id = it.id,
+                content = promptTranslationManager.getPrompt(PromptKey.SYSTEM_PROMPT, promptLanguage)
+            )
+        }
+        
+        // Update Local prompt if it exists
+        localPrompt?.let {
+            updatePrompt(
+                id = it.id,
+                content = promptTranslationManager.getPrompt(PromptKey.LOCAL_SYSTEM_PROMPT, promptLanguage)
             )
         }
     }

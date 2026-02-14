@@ -12,8 +12,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.yourown.ai.domain.model.AIConfig
 import com.yourown.ai.domain.model.UserContext
 import com.yourown.ai.domain.model.UserGender
+import com.yourown.ai.domain.prompt.PromptKey
+import com.yourown.ai.domain.prompt.PromptTranslationManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -26,7 +29,9 @@ private val Context.aiConfigDataStore: DataStore<Preferences> by preferencesData
  */
 @Singleton
 class AIConfigRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val promptTranslationManager: PromptTranslationManager,
+    private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager
 ) {
     private val dataStore = context.aiConfigDataStore
     
@@ -64,34 +69,47 @@ class AIConfigRepository @Inject constructor(
     
     /**
      * Get AI configuration as Flow
+     * Combines preferences with current prompt language to provide localized default prompts
      */
-    val aiConfig: Flow<AIConfig> = dataStore.data.map { preferences ->
+    val aiConfig: Flow<AIConfig> = combine(
+        dataStore.data,
+        settingsManager.promptLanguage
+    ) { preferences, promptLanguage ->
         AIConfig(
-            systemPrompt = preferences[SYSTEM_PROMPT] ?: AIConfig.DEFAULT_SYSTEM_PROMPT,
-            localSystemPrompt = preferences[LOCAL_SYSTEM_PROMPT] ?: AIConfig.DEFAULT_LOCAL_SYSTEM_PROMPT,
-            memoryExtractionPrompt = preferences[MEMORY_EXTRACTION_PROMPT] ?: AIConfig.DEFAULT_MEMORY_EXTRACTION_PROMPT,
+            systemPrompt = preferences[SYSTEM_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.SYSTEM_PROMPT, promptLanguage),
+            localSystemPrompt = preferences[LOCAL_SYSTEM_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.LOCAL_SYSTEM_PROMPT, promptLanguage),
+            memoryExtractionPrompt = preferences[MEMORY_EXTRACTION_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.MEMORY_EXTRACTION_PROMPT, promptLanguage),
             temperature = preferences[TEMPERATURE] ?: 0.7f,
             topP = preferences[TOP_P] ?: 0.9f,
             maxTokens = preferences[MAX_TOKENS] ?: 4096,
             deepEmpathy = preferences[DEEP_EMPATHY] ?: false,
-            deepEmpathyPrompt = preferences[DEEP_EMPATHY_PROMPT] ?: AIConfig.DEFAULT_DEEP_EMPATHY_PROMPT,
-            deepEmpathyAnalysisPrompt = preferences[DEEP_EMPATHY_ANALYSIS_PROMPT] ?: AIConfig.DEFAULT_DEEP_EMPATHY_ANALYSIS_PROMPT,
+            deepEmpathyPrompt = preferences[DEEP_EMPATHY_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.DEEP_EMPATHY_PROMPT, promptLanguage),
+            deepEmpathyAnalysisPrompt = preferences[DEEP_EMPATHY_ANALYSIS_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.DEEP_EMPATHY_ANALYSIS_PROMPT, promptLanguage),
             memoryEnabled = preferences[MEMORY_ENABLED] ?: true,
             memoryLimit = preferences[MEMORY_LIMIT] ?: 5,
             memoryMinAgeDays = preferences[MEMORY_MIN_AGE_DAYS] ?: 2,
             memoryTitle = preferences[MEMORY_TITLE] ?: "Твои воспоминания",
-            memoryInstructions = preferences[MEMORY_INSTRUCTIONS] ?: AIConfig.DEFAULT_MEMORY_INSTRUCTIONS,
+            memoryInstructions = preferences[MEMORY_INSTRUCTIONS] 
+                ?: promptTranslationManager.getPrompt(PromptKey.MEMORY_INSTRUCTIONS, promptLanguage),
             ragEnabled = preferences[RAG_ENABLED] ?: false,
             ragChunkSize = preferences[RAG_CHUNK_SIZE] ?: 512,
             ragChunkOverlap = preferences[RAG_CHUNK_OVERLAP] ?: 64,
             ragChunkLimit = preferences[RAG_CHUNK_LIMIT] ?: 5,
             ragTitle = preferences[RAG_TITLE] ?: "Твоя библиотека текстов",
-            ragInstructions = preferences[RAG_INSTRUCTIONS] ?: AIConfig.DEFAULT_RAG_INSTRUCTIONS,
+            ragInstructions = preferences[RAG_INSTRUCTIONS] 
+                ?: promptTranslationManager.getPrompt(PromptKey.RAG_INSTRUCTIONS, promptLanguage),
             useApiEmbeddings = preferences[USE_API_EMBEDDINGS] ?: false,
             apiEmbeddingsProvider = preferences[API_EMBEDDINGS_PROVIDER] ?: "openai",
             apiEmbeddingsModel = preferences[API_EMBEDDINGS_MODEL] ?: "text-embedding-3-small",
-            contextInstructions = preferences[CONTEXT_INSTRUCTIONS] ?: AIConfig.DEFAULT_CONTEXT_INSTRUCTIONS,
-            swipeMessagePrompt = preferences[SWIPE_MESSAGE_PROMPT] ?: AIConfig.DEFAULT_SWIPE_MESSAGE_PROMPT,
+            contextInstructions = preferences[CONTEXT_INSTRUCTIONS] 
+                ?: promptTranslationManager.getPrompt(PromptKey.CONTEXT_INSTRUCTIONS, promptLanguage),
+            swipeMessagePrompt = preferences[SWIPE_MESSAGE_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.SWIPE_MESSAGE_PROMPT, promptLanguage),
             messageHistoryLimit = preferences[MESSAGE_HISTORY_LIMIT] ?: 10
         )
     }
@@ -175,6 +193,23 @@ class AIConfigRepository @Inject constructor(
     suspend fun resetDeepEmpathyAnalysisPrompt() {
         dataStore.edit { preferences ->
             preferences.remove(DEEP_EMPATHY_ANALYSIS_PROMPT)
+        }
+    }
+    
+    /**
+     * Reset all prompts to defaults (useful when changing prompt language)
+     */
+    suspend fun resetAllPromptsToDefaults() {
+        dataStore.edit { preferences ->
+            preferences.remove(SYSTEM_PROMPT)
+            preferences.remove(LOCAL_SYSTEM_PROMPT)
+            preferences.remove(MEMORY_EXTRACTION_PROMPT)
+            preferences.remove(DEEP_EMPATHY_PROMPT)
+            preferences.remove(DEEP_EMPATHY_ANALYSIS_PROMPT)
+            preferences.remove(MEMORY_INSTRUCTIONS)
+            preferences.remove(RAG_INSTRUCTIONS)
+            preferences.remove(CONTEXT_INSTRUCTIONS)
+            preferences.remove(SWIPE_MESSAGE_PROMPT)
         }
     }
     
@@ -414,32 +449,43 @@ class AIConfigRepository @Inject constructor(
      */
     suspend fun getAIConfig(): AIConfig {
         val preferences = dataStore.data.map { it }.first()
+        val promptLanguage = settingsManager.promptLanguage.first()
+        
         return AIConfig(
-            systemPrompt = preferences[SYSTEM_PROMPT] ?: AIConfig.DEFAULT_SYSTEM_PROMPT,
-            localSystemPrompt = preferences[LOCAL_SYSTEM_PROMPT] ?: AIConfig.DEFAULT_LOCAL_SYSTEM_PROMPT,
-            memoryExtractionPrompt = preferences[MEMORY_EXTRACTION_PROMPT] ?: AIConfig.DEFAULT_MEMORY_EXTRACTION_PROMPT,
+            systemPrompt = preferences[SYSTEM_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.SYSTEM_PROMPT, promptLanguage),
+            localSystemPrompt = preferences[LOCAL_SYSTEM_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.LOCAL_SYSTEM_PROMPT, promptLanguage),
+            memoryExtractionPrompt = preferences[MEMORY_EXTRACTION_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.MEMORY_EXTRACTION_PROMPT, promptLanguage),
             temperature = preferences[TEMPERATURE] ?: 0.7f,
             topP = preferences[TOP_P] ?: 0.9f,
             maxTokens = preferences[MAX_TOKENS] ?: 4096,
             deepEmpathy = preferences[DEEP_EMPATHY] ?: false,
-            deepEmpathyPrompt = preferences[DEEP_EMPATHY_PROMPT] ?: AIConfig.DEFAULT_DEEP_EMPATHY_PROMPT,
-            deepEmpathyAnalysisPrompt = preferences[DEEP_EMPATHY_ANALYSIS_PROMPT] ?: AIConfig.DEFAULT_DEEP_EMPATHY_ANALYSIS_PROMPT,
+            deepEmpathyPrompt = preferences[DEEP_EMPATHY_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.DEEP_EMPATHY_PROMPT, promptLanguage),
+            deepEmpathyAnalysisPrompt = preferences[DEEP_EMPATHY_ANALYSIS_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.DEEP_EMPATHY_ANALYSIS_PROMPT, promptLanguage),
             memoryEnabled = preferences[MEMORY_ENABLED] ?: true,
             memoryLimit = preferences[MEMORY_LIMIT] ?: 5,
             memoryMinAgeDays = preferences[MEMORY_MIN_AGE_DAYS] ?: 2,
             memoryTitle = preferences[MEMORY_TITLE] ?: "Твои воспоминания",
-            memoryInstructions = preferences[MEMORY_INSTRUCTIONS] ?: AIConfig.DEFAULT_MEMORY_INSTRUCTIONS,
+            memoryInstructions = preferences[MEMORY_INSTRUCTIONS] 
+                ?: promptTranslationManager.getPrompt(PromptKey.MEMORY_INSTRUCTIONS, promptLanguage),
             ragEnabled = preferences[RAG_ENABLED] ?: false,
             ragChunkSize = preferences[RAG_CHUNK_SIZE] ?: 512,
             ragChunkOverlap = preferences[RAG_CHUNK_OVERLAP] ?: 64,
             ragChunkLimit = preferences[RAG_CHUNK_LIMIT] ?: 5,
             ragTitle = preferences[RAG_TITLE] ?: "Твоя библиотека текстов",
-            ragInstructions = preferences[RAG_INSTRUCTIONS] ?: AIConfig.DEFAULT_RAG_INSTRUCTIONS,
+            ragInstructions = preferences[RAG_INSTRUCTIONS] 
+                ?: promptTranslationManager.getPrompt(PromptKey.RAG_INSTRUCTIONS, promptLanguage),
             useApiEmbeddings = preferences[USE_API_EMBEDDINGS] ?: false,
             apiEmbeddingsProvider = preferences[API_EMBEDDINGS_PROVIDER] ?: "openai",
             apiEmbeddingsModel = preferences[API_EMBEDDINGS_MODEL] ?: "text-embedding-3-small",
-            contextInstructions = preferences[CONTEXT_INSTRUCTIONS] ?: AIConfig.DEFAULT_CONTEXT_INSTRUCTIONS,
-            swipeMessagePrompt = preferences[SWIPE_MESSAGE_PROMPT] ?: AIConfig.DEFAULT_SWIPE_MESSAGE_PROMPT,
+            contextInstructions = preferences[CONTEXT_INSTRUCTIONS] 
+                ?: promptTranslationManager.getPrompt(PromptKey.CONTEXT_INSTRUCTIONS, promptLanguage),
+            swipeMessagePrompt = preferences[SWIPE_MESSAGE_PROMPT] 
+                ?: promptTranslationManager.getPrompt(PromptKey.SWIPE_MESSAGE_PROMPT, promptLanguage),
             messageHistoryLimit = preferences[MESSAGE_HISTORY_LIMIT] ?: 10
         )
     }

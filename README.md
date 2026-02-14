@@ -9,7 +9,7 @@
 
 YourOwnAI is a privacy-first Android application that gives you complete control over your AI assistant. Use your own API keys, store everything locally, and define your AI's personality exactly how you want it.
 
-**Latest:** 🎉 **Multimodal support** - attach images and documents to 26 different models! Plus speech-to-text, pinned favorites, and smart chat sorting. 🎹 **NEW: Keyboard sound & vibration** - immersive typing effects when AI responds! 🌐 **Web/𝕏 Search** - real-time internet and X (Twitter) search! 🤖 **API Embeddings** - cloud-based embeddings (no local download needed)! 📊 **Memory Clustering & Biography** - AI groups memories, creates user profile, and cleans outdated facts!
+**Latest:** 🎉 **Multimodal support** - attach images and documents to 26 different models! Plus speech-to-text, pinned favorites, and smart chat sorting. 🎹 **NEW: Keyboard sound & vibration** - immersive typing effects when AI responds! 🌐 **Web/𝕏 Search** - real-time internet and X (Twitter) search! 🤖 **API Embeddings** - cloud-based embeddings (no local download needed)! 📊 **Memory Clustering & Biography** - AI groups memories, creates user profile, and cleans outdated facts! 🌍 **Multi-language prompts** - all system prompts now available in Russian, English, and Ukrainian!
 
 **Current Status:** 🚀 Beta - Feature-complete, actively polished
 
@@ -289,6 +289,20 @@ The app should feel like a **tool**, not a product with personality. It's your s
 #### ⚙️ AI Configuration
 - **System prompt editor** - customize AI personality
 - **Local system prompt** - separate prompt for offline models
+- **Multi-language prompts (NEW!)** 🌍 - all system prompts available in 3 languages:
+  - **Russian (RU)** - default language
+  - **English (EN)** - full translation
+  - **Ukrainian (UK)** - full translation
+  - Settings → Language → "Язык промптов" dropdown
+  - Automatic localization of all prompts:
+    - System prompts (API + Local)
+    - Memory extraction prompt
+    - Deep Empathy prompts
+    - Context, Memory, RAG instructions
+    - Biography generation prompts
+    - Memory cleaning prompts
+  - Custom user-created prompts remain unchanged when switching language
+  - Default prompts (Default API, Default Local) update automatically
 - **User context** - persistent facts about you
 - **Temperature** (0.0-2.0) - control creativity vs consistency
 - **Top-P** (0.0-1.0) - nucleus sampling for diversity
@@ -363,6 +377,12 @@ The app should feel like a **tool**, not a product with personality. It's your s
 - **Three fonts** - Roboto, System, Monospace
 - **Four text sizes** - Small, Medium, Large, Extra Large
 - **Real-time theme switching** - no restart required
+- **Multi-language interface (NEW!)** 🌍 - app UI in 3 languages:
+  - **Russian (RU)** - default
+  - **English (EN)** - full translation
+  - **Ukrainian (UK)** - full translation
+  - Settings → Language → "Язык приложения" dropdown
+  - Automatic recreation of activity when changed
 
 ### 🚧 Coming Soon
 

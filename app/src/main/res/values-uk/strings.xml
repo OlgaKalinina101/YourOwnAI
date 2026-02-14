@@ -52,6 +52,10 @@
     <string name="home_new_chat_button">Новий чат</string>
     <string name="home_no_conversations">Поки немає розмов</string>
     <string name="home_no_conversations_subtitle">Почніть новий чат, щоб поговорити з вашим ШІ</string>
+    <string name="home_statistics_title">Статистика</string>
+    <string name="home_total_chats">Всього чатів: %d</string>
+    <string name="home_total_memories">Спогадів: %d</string>
+    <string name="home_total_documents">RAG документів: %d</string>
     <string name="home_getting_started">Початок роботи</string>
     <string name="home_step_api_key">Додайте API ключ у Налаштуваннях</string>
     <string name="home_step_create_conversation">Створіть нову розмову</string>
@@ -296,7 +300,7 @@
     <string name="cloud_sync_not_configured">Вкажіть URL проекту та API ключ</string>
     <string name="cloud_sync_instructions">Інструкції</string>
     <string name="cloud_sync_edit">Змінити</string>
-    <string name="cloud_sync_uploaded_data">Завантажені дані</string>
+    <string name="cloud_sync_uploaded_data">Розмір даних</string>
     <string name="cloud_sync_usage">%s / %d МБ</string>
     <string name="cloud_sync_free_tier">Безкоштовний план: %d%% використано</string>
     <string name="cloud_sync_estimated">Приблизно</string>
@@ -575,6 +579,11 @@
     <string name="language_russian">Русский</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_restart_required">Мову буде застосовано негайно</string>
+    <string name="language_app_language_title">Мова додатку</string>
+    <string name="language_app_language_subtitle">Мова інтерфейсу додатку</string>
+    <string name="language_prompt_language_title">Мова промптів</string>
+    <string name="language_prompt_language_subtitle">Мова системних промптів для AI</string>
+    <string name="language_custom_prompts_warning">⚠️ При зміні мови оновляться лише дефолтні промпти (Default API, Default Local). Окремо створені кастомні промпти залишаться без змін.</string>
     
     <!-- SQL Schema Dialog -->
     <string name="sql_schema_dialog_title">SQL схема Supabase</string>

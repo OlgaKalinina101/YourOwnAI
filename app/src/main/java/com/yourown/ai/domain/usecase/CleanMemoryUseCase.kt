@@ -1,6 +1,7 @@
 package com.yourown.ai.domain.usecase
 
 import com.yourown.ai.domain.model.*
+import com.yourown.ai.domain.prompt.MemoryCleaningPromptBuilder
 import com.yourown.ai.domain.service.AIService
 import com.yourown.ai.data.repository.MemoryRepository
 import kotlinx.coroutines.CancellationException
@@ -10,6 +11,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -27,7 +29,8 @@ import kotlin.coroutines.coroutineContext
 class CleanMemoryUseCase @Inject constructor(
     private val aiService: AIService,
     private val memoryRepository: MemoryRepository,
-    private val apiKeyRepository: com.yourown.ai.data.repository.ApiKeyRepository
+    private val apiKeyRepository: com.yourown.ai.data.repository.ApiKeyRepository,
+    private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager
 ) {
     
     private val _cleaningStatus = MutableStateFlow<MemoryCleaningStatus>(MemoryCleaningStatus.Idle)
@@ -60,6 +63,9 @@ class CleanMemoryUseCase @Inject constructor(
             var totalMerged = 0
             var totalMemories = 0
             
+            // Get current prompt language
+            val promptLanguage = settingsManager.promptLanguage.first()
+            
             // Process each cluster
             clusters.forEachIndexed { index, cluster ->
                 coroutineContext.ensureActive()
@@ -73,10 +79,22 @@ class CleanMemoryUseCase @Inject constructor(
                 totalMemories += cluster.memories.size
                 
                 // Generate prompt for cleaning this cluster
-                val prompt = buildCleaningPrompt(
+                val memoriesText = cluster.memories.joinToString("\n\n") { memWithAge ->
+                    val ageText = when {
+                        memWithAge.ageDays <= 7 -> "${memWithAge.ageDays} дней назад"
+                        memWithAge.ageDays <= 30 -> "${memWithAge.ageDays / 7} недель назад"
+                        memWithAge.ageDays <= 180 -> "${memWithAge.ageDays / 30} месяцев назад"
+                        else -> "Больше полугода назад"
+                    }
+                    "ID: ${memWithAge.memory.id}\n$ageText: ${memWithAge.memory.fact}"
+                }
+                
+                val prompt = MemoryCleaningPromptBuilder.buildCleaningPrompt(
                     biography = biography,
                     cluster = cluster,
-                    currentDate = currentDate
+                    currentDate = currentDate,
+                    memoriesText = memoriesText,
+                    language = promptLanguage
                 )
                 
                 // Call AI
@@ -110,112 +128,10 @@ class CleanMemoryUseCase @Inject constructor(
     }
     
     /**
-     * Build prompt for cleaning memories
+     * Reset status to Idle
      */
-    private fun buildCleaningPrompt(
-        biography: UserBiography,
-        cluster: MemoryCluster,
-        currentDate: String
-    ): String {
-        val memoriesText = cluster.memories.joinToString("\n\n") { memWithAge ->
-            val ageText = when {
-                memWithAge.ageDays <= 7 -> "${memWithAge.ageDays} дней назад"
-                memWithAge.ageDays <= 30 -> "${memWithAge.ageDays / 7} недель назад"
-                memWithAge.ageDays <= 180 -> "${memWithAge.ageDays / 30} месяцев назад"
-                else -> "Больше полугода назад"
-            }
-            "ID: ${memWithAge.memory.id}\n$ageText: ${memWithAge.memory.fact}"
-        }
-        
-        return """
-Ты — помощник цифрового партнёра, который наводит порядок в памяти на основе биографии.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📅 **Сегодня:** $currentDate
-
-👤 **Биография пользователя:**
-${biography.toFormattedText()}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📦 **Воспоминания для анализа** (кластер ${cluster.id + 1}, всего ${cluster.memories.size} записей):
-
-$memoriesText
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🎯 **ЦЕЛЬ:** Сократить память в 2-3 раза, оставив только значимое.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 **ЗАДАЧА 1: Удалить устаревшие**
-
-✅ **Удаляй:**
-   • Ситуативные мелочи ("сегодня устал", "вчера хорошо поспал")
-   • Временные планы, которые уже реализованы или отменены
-   • Решённые технические проблемы
-   • Противоречия биографии ("не знаю Python" ➔ биография: "Senior Python dev")
-   • Общие дубли (повторяется без новых деталей)
-
-❌ **НЕ удаляй (даже если старое!):**
-   • Формирующие события: первая встреча, начало проекта, важное решение
-   • Травмы и кризисы: объясняют страхи/паттерны из биографии
-   • Поворотные моменты: смена работы, переезд, прорыв
-   • Уникальную конкретику: детали, которых НЕТ в биографии
-
-   💡 Пример: Биография "работает с AI" ≠ дубль воспоминания "починил баг в DeepSeek API"
-      (первое — общее, второе — конкретный факт)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 **ЗАДАЧА 2: Объединить похожие**
-
-✅ **Объединяй:**
-   • Несколько воспоминаний об одном событии/проблеме
-   • Серию мелких достижений в одной области  
-   • Похожие эмоции/мысли в один период времени
-
-📐 **Правила объединения:**
-   • keepId = ID с самой СВЕЖЕЙ датой
-   • newFact = сжатая суть ВСЕХ воспоминаний (не копия одного!)
-   • Агрегируй: "3 раза работал с bug X" ➔ "Боролся с bug X, нашёл решение"
-   • Сохраняй ключевые детали, не делай простой append
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-⚖️ **ВАЖНЫЙ БАЛАНС:**
-   • Старое ≠ плохое (формирующие события важны)
-   • Новое ≠ важное (может быть ситуативная мелочь)
-   • Стратегия: **объединяй агрессивно, удаляй осторожно**
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📤 **ФОРМАТ ОТВЕТА** (строго JSON):
-
-```json
-{
-  "remove": ["id1", "id2", "id3"],
-  "merge": [
-    {
-      "ids": ["id4", "id5", "id6"],
-      "keepId": "id4",
-      "newFact": "Объединённое воспоминание (краткое, информативное)"
-    }
-  ],
-  "reasoning": "Краткое объяснение: что удалил и почему, что объединил"
-}
-```
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✓ **ЧЕКЛИСТ ПЕРЕД ОТПРАВКОЙ:**
-   □ Не удалил формирующие события?
-   □ Объединённые факты содержат суть ВСЕХ исходных?
-   □ Сохранил уникальные детали, которых нет в биографии?
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-""".trimIndent()
+    fun resetStatus() {
+        _cleaningStatus.value = MemoryCleaningStatus.Idle
     }
     
     /**
@@ -340,12 +256,5 @@ $memoriesText
             android.util.Log.e("MemoryCleaning", "Error parsing AI response", e)
             Pair(0, 0)
         }
-    }
-    
-    /**
-     * Reset status to Idle
-     */
-    fun resetStatus() {
-        _cleaningStatus.value = MemoryCleaningStatus.Idle
     }
 }

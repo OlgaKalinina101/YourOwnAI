@@ -2,6 +2,7 @@ package com.yourown.ai.di
 
 import android.content.Context
 import com.yourown.ai.data.local.preferences.SettingsManager
+import com.yourown.ai.domain.prompt.PromptTranslationManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,6 +20,14 @@ object AppModule {
         @ApplicationContext context: Context
     ): SettingsManager {
         return SettingsManager(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun providePromptTranslationManager(
+        settingsManager: SettingsManager
+    ): PromptTranslationManager {
+        return PromptTranslationManager(settingsManager)
     }
     
     @Provides

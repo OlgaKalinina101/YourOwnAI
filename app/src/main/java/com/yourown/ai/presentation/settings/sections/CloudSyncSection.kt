@@ -24,6 +24,7 @@ import java.util.*
 @Composable
 fun CloudSyncSection(
     syncSettings: CloudSyncSettings,
+    syncableDataSizeMB: Float = 0f, // Current size of data to be synced
     onToggleSync: (Boolean) -> Unit,
     onEditConnectionString: () -> Unit,
     onToggleAutoSync: (Boolean) -> Unit,
@@ -33,7 +34,7 @@ fun CloudSyncSection(
     isSyncing: Boolean = false
 ) {
     val databaseTotalMB = 500f // Free tier limit
-    val databaseUsageMB = syncSettings.uploadedDataMB // From tracked uploads
+    val databaseUsageMB = syncableDataSizeMB // Real-time calculated size
     
     SettingsSection(
         title = stringResource(R.string.cloud_sync_title),

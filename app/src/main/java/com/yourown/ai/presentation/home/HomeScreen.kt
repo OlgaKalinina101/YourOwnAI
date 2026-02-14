@@ -189,24 +189,52 @@ fun HomeScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Title
-                Text(
-                    text = stringResource(R.string.home_no_conversations),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Subtitle
-                Text(
-                    text = stringResource(R.string.home_no_conversations_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+                // Title - показываем статистику если есть чаты, иначе "No conversations yet"
+                if (uiState.conversations.isNotEmpty()) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_total_chats, uiState.conversations.size),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Text(
+                            text = stringResource(R.string.home_total_memories, uiState.totalMemoriesCount),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Text(
+                            text = stringResource(R.string.home_total_documents, uiState.totalDocumentsCount),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.home_no_conversations),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Subtitle
+                    Text(
+                        text = stringResource(R.string.home_no_conversations_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 

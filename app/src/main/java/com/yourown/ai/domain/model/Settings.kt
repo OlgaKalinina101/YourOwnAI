@@ -210,8 +210,7 @@ data class CloudSyncSettings(
     val autoSyncEnabled: Boolean = false,
     val syncIntervalMinutes: Int = 30,
     val lastSyncTimestamp: Long = 0L,
-    val syncOnlyOnWifi: Boolean = true,
-    val uploadedDataMB: Float = 0f // Tracked uploaded data size in MB
+    val syncOnlyOnWifi: Boolean = true
 ) {
     val isConfigured: Boolean
         get() = supabaseUrl.isNotBlank() && supabaseKey.isNotBlank()

@@ -4,7 +4,13 @@ import com.yourown.ai.data.local.entity.*
 import com.yourown.ai.domain.model.*
 
 /**
- * Mappers between Supabase DTOs and local entities
+ * Mappers between Supabase DTOs and local entities (Optimized)
+ * 
+ * Optimized for Free Tier - removed:
+ * - System Prompts (stored locally)
+ * - Knowledge Documents (RAG stored locally)
+ * - Document Embeddings (RAG stored locally)
+ * - Embeddings from Memories (generated locally)
  */
 
 // ===== ConversationDto ↔ ConversationEntity =====
@@ -15,14 +21,14 @@ fun ConversationDto.toEntity(): ConversationEntity {
         title = title,
         createdAt = created_at,
         updatedAt = updated_at,
-        model = model ?: "",
-        provider = "openai", // Default, will be updated on use
+        model = model,
+        provider = provider,
         systemPrompt = "", // Legacy field
         systemPromptId = null,
         personaId = persona_id,
         sourceConversationId = source_conversation_id,
         isPinned = false,
-        isArchived = false
+        isArchived = is_archived
     )
 }
 
@@ -30,11 +36,11 @@ fun ConversationEntity.toDto(deviceId: String): ConversationDto {
     return ConversationDto(
         id = id,
         title = title,
+        model = model,
+        provider = provider,
         created_at = createdAt,
         updated_at = updatedAt,
-        model = model,
-        temperature = null,
-        max_tokens = null,
+        is_archived = isArchived,
         source_conversation_id = sourceConversationId,
         persona_id = personaId,
         device_id = deviceId,
@@ -50,7 +56,7 @@ fun MessageDto.toEntity(): MessageEntity {
         conversationId = conversation_id,
         role = role,
         content = content,
-        createdAt = timestamp,
+        createdAt = created_at,
         model = model,
         swipeMessageText = swipe_message_text,
         imageAttachments = image_attachments,
@@ -65,10 +71,8 @@ fun MessageEntity.toDto(deviceId: String): MessageDto {
         conversation_id = conversationId,
         role = role,
         content = content,
-        timestamp = createdAt,
+        created_at = createdAt,
         model = model,
-        user_context = null,
-        persona_id = null,
         swipe_message_text = swipeMessageText,
         image_attachments = imageAttachments,
         file_attachments = fileAttachments,
@@ -78,43 +82,23 @@ fun MessageEntity.toDto(deviceId: String): MessageDto {
     )
 }
 
-// ===== MemoryDto ↔ MemoryEntity =====
+// ===== MemoryDto ↔ MemoryEntity (WITHOUT embeddings) =====
 
 fun MemoryDto.toEntity(): MemoryEntity {
-    // Convert ByteArray embedding to String (comma-separated floats)
-    val embeddingString = embedding?.let { bytes ->
-        // Parse ByteArray as floats and convert to comma-separated string
-        val floats = bytes.toList().chunked(4).map { chunk ->
-            if (chunk.size == 4) {
-                java.nio.ByteBuffer.wrap(chunk.toByteArray()).float
-            } else {
-                0f
-            }
-        }
-        floats.joinToString(",")
-    }
-    
     return MemoryEntity(
         id = id,
         conversationId = conversation_id,
         messageId = message_id,
         fact = fact,
         createdAt = created_at,
-        embedding = embeddingString,
+        embedding = null, // Embeddings not synced - generated locally
         personaId = persona_id,
         isArchived = false
     )
 }
 
 fun MemoryEntity.toDto(deviceId: String): MemoryDto {
-    // Convert comma-separated floats to ByteArray
-    val embeddingBytes = embedding?.let { str ->
-        val floats = str.split(",").mapNotNull { it.toFloatOrNull() }
-        val buffer = java.nio.ByteBuffer.allocate(floats.size * 4)
-        floats.forEach { buffer.putFloat(it) }
-        buffer.array()
-    }
-    
+    // Note: embeddings are NOT synced to save space
     return MemoryDto(
         id = id,
         conversation_id = conversationId,
@@ -122,7 +106,6 @@ fun MemoryEntity.toDto(deviceId: String): MemoryDto {
         fact = fact,
         created_at = createdAt,
         persona_id = personaId,
-        embedding = embeddingBytes,
         device_id = deviceId,
         synced_at = System.currentTimeMillis()
     )
@@ -226,109 +209,6 @@ fun PersonaEntity.toDto(deviceId: String): PersonaDto {
         api_embeddings_model = apiEmbeddingsModel,
         created_at = createdAt,
         updated_at = updatedAt,
-        device_id = deviceId,
-        synced_at = System.currentTimeMillis()
-    )
-}
-
-// ===== SystemPromptDto ↔ SystemPromptEntity =====
-
-fun SystemPromptDto.toEntity(): SystemPromptEntity {
-    return SystemPromptEntity(
-        id = id,
-        name = name,
-        content = content,
-        promptType = type,
-        isDefault = is_default,
-        createdAt = created_at,
-        updatedAt = updated_at,
-        usageCount = 0
-    )
-}
-
-fun SystemPromptEntity.toDto(deviceId: String): SystemPromptDto {
-    return SystemPromptDto(
-        id = id,
-        name = name,
-        content = content,
-        type = promptType,
-        is_default = isDefault,
-        created_at = createdAt,
-        updated_at = updatedAt,
-        device_id = deviceId,
-        synced_at = System.currentTimeMillis()
-    )
-}
-
-// ===== KnowledgeDocumentDto ↔ KnowledgeDocumentEntity =====
-
-fun KnowledgeDocumentDto.toEntity(): KnowledgeDocumentEntity {
-    return KnowledgeDocumentEntity(
-        id = id,
-        name = name,
-        content = content,
-        createdAt = created_at,
-        updatedAt = updated_at,
-        linkedPersonaIds = linked_persona_ids ?: "[]"
-    )
-}
-
-fun KnowledgeDocumentEntity.toDto(deviceId: String): KnowledgeDocumentDto {
-    return KnowledgeDocumentDto(
-        id = id,
-        name = name,
-        content = content,
-        created_at = createdAt,
-        updated_at = updatedAt,
-        linked_persona_ids = linkedPersonaIds,
-        device_id = deviceId,
-        synced_at = System.currentTimeMillis()
-    )
-}
-
-// ===== DocumentEmbeddingDto ↔ DocumentChunkEntity =====
-
-fun DocumentEmbeddingDto.toEntity(): DocumentChunkEntity {
-    // Convert ByteArray embedding to JSON string
-    val embeddingString = embedding?.let { bytes ->
-        val floats = bytes.toList().chunked(4).map { chunk ->
-            if (chunk.size == 4) {
-                java.nio.ByteBuffer.wrap(chunk.toByteArray()).float
-            } else {
-                0f
-            }
-        }
-        com.google.gson.Gson().toJson(floats)
-    }
-    
-    return DocumentChunkEntity(
-        id = id,
-        documentId = document_id,
-        content = chunk_text,
-        chunkIndex = chunk_index,
-        embedding = embeddingString
-    )
-}
-
-fun DocumentChunkEntity.toDto(deviceId: String): DocumentEmbeddingDto {
-    // Convert JSON string to ByteArray
-    val embeddingBytes = embedding?.let { json ->
-        try {
-            val floats = com.google.gson.Gson().fromJson(json, Array<Float>::class.java)
-            val buffer = java.nio.ByteBuffer.allocate(floats.size * 4)
-            floats.forEach { buffer.putFloat(it) }
-            buffer.array()
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
-    return DocumentEmbeddingDto(
-        id = id,
-        document_id = documentId,
-        chunk_text = content,
-        chunk_index = chunkIndex,
-        embedding = embeddingBytes,
         device_id = deviceId,
         synced_at = System.currentTimeMillis()
     )

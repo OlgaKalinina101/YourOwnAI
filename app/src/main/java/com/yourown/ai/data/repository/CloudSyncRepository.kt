@@ -121,35 +121,39 @@ class CloudSyncRepository @Inject constructor(
     }
     
     /**
-     * Create tables in Supabase (via SQL Editor)
+     * Create tables in Supabase (via SQL Editor) - OPTIMIZED FOR FREE TIER
      * 
      * Note: Supabase SDK doesn't support DDL operations directly.
      * Tables should be created via Supabase Dashboard → SQL Editor
      * 
      * This method provides the SQL commands for user to copy-paste
+     * Schema is optimized to save space - only essential data synced
      */
     suspend fun createTables(): Result<String> = withContext(Dispatchers.IO) {
         try {
             val sqlCommands = """
+                -- YourOwnAI Cloud Sync - Optimized Schema
                 -- Run these commands in Supabase Dashboard → SQL Editor
+                
+                -- Syncs only: Conversations, Messages, Memories (NO embeddings), Personas
+                -- NOT synced: System Prompts, RAG Documents, Embeddings
                 
                 -- 1. Conversations table
                 CREATE TABLE IF NOT EXISTS conversations (
                     id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
-                    system_prompt TEXT NOT NULL,
-                    system_prompt_id TEXT,
                     model TEXT NOT NULL,
                     provider TEXT NOT NULL,
                     created_at BIGINT NOT NULL,
                     updated_at BIGINT NOT NULL,
                     is_archived BOOLEAN DEFAULT FALSE,
+                    persona_id TEXT,
                     source_conversation_id TEXT,
                     device_id TEXT,
                     synced_at BIGINT
                 );
                 
-                -- 2. Messages table
+                -- 2. Messages table (optimized - no request_logs)
                 CREATE TABLE IF NOT EXISTS messages (
                     id TEXT PRIMARY KEY,
                     conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -157,14 +161,6 @@ class CloudSyncRepository @Inject constructor(
                     content TEXT NOT NULL,
                     created_at BIGINT NOT NULL,
                     model TEXT,
-                    temperature REAL,
-                    top_p REAL,
-                    deep_empathy BOOLEAN,
-                    memory_enabled BOOLEAN,
-                    message_history_limit INTEGER,
-                    system_prompt TEXT,
-                    request_logs TEXT,
-                    swipe_message_id TEXT,
                     swipe_message_text TEXT,
                     image_attachments TEXT,
                     file_attachments TEXT,
@@ -173,7 +169,7 @@ class CloudSyncRepository @Inject constructor(
                     synced_at BIGINT
                 );
                 
-                -- 3. Memories table
+                -- 3. Memories table (optimized - NO embeddings)
                 CREATE TABLE IF NOT EXISTS memories (
                     id TEXT PRIMARY KEY,
                     conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -181,7 +177,6 @@ class CloudSyncRepository @Inject constructor(
                     fact TEXT NOT NULL,
                     created_at BIGINT NOT NULL,
                     persona_id TEXT,
-                    embedding BYTEA,
                     device_id TEXT,
                     synced_at BIGINT
                 );
@@ -192,44 +187,38 @@ class CloudSyncRepository @Inject constructor(
                     system_prompt_id TEXT NOT NULL,
                     name TEXT NOT NULL,
                     description TEXT,
+                    is_for_api BOOLEAN DEFAULT TRUE,
+                    temperature REAL DEFAULT 0.7,
+                    top_p REAL DEFAULT 0.9,
+                    max_tokens INTEGER DEFAULT 4096,
+                    deep_empathy BOOLEAN DEFAULT FALSE,
+                    memory_enabled BOOLEAN DEFAULT FALSE,
+                    rag_enabled BOOLEAN DEFAULT FALSE,
+                    message_history_limit INTEGER DEFAULT 10,
+                    deep_empathy_prompt TEXT,
+                    deep_empathy_analysis_prompt TEXT,
+                    memory_extraction_prompt TEXT,
+                    context_instructions TEXT,
+                    memory_instructions TEXT,
+                    rag_instructions TEXT,
+                    swipe_message_prompt TEXT,
+                    memory_limit INTEGER DEFAULT 5,
+                    memory_min_age_days INTEGER DEFAULT 2,
+                    memory_title TEXT,
+                    rag_chunk_size INTEGER DEFAULT 512,
+                    rag_chunk_overlap INTEGER DEFAULT 64,
+                    rag_chunk_limit INTEGER DEFAULT 5,
+                    rag_title TEXT,
+                    preferred_model_id TEXT,
+                    preferred_provider TEXT,
+                    linked_document_ids TEXT,
+                    use_only_persona_memories BOOLEAN DEFAULT FALSE,
+                    share_memories_globally BOOLEAN DEFAULT TRUE,
+                    use_api_embeddings BOOLEAN DEFAULT FALSE,
+                    api_embeddings_provider TEXT DEFAULT 'openai',
+                    api_embeddings_model TEXT DEFAULT 'text-embedding-3-small',
                     created_at BIGINT NOT NULL,
                     updated_at BIGINT NOT NULL,
-                    device_id TEXT,
-                    synced_at BIGINT
-                );
-                
-                -- 5. System prompts table
-                CREATE TABLE IF NOT EXISTS system_prompts (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    type TEXT NOT NULL,
-                    is_default BOOLEAN DEFAULT FALSE,
-                    created_at BIGINT NOT NULL,
-                    updated_at BIGINT NOT NULL,
-                    device_id TEXT,
-                    synced_at BIGINT
-                );
-                
-                -- 6. Knowledge documents table
-                CREATE TABLE IF NOT EXISTS knowledge_documents (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    created_at BIGINT NOT NULL,
-                    updated_at BIGINT NOT NULL,
-                    linked_persona_ids TEXT,
-                    device_id TEXT,
-                    synced_at BIGINT
-                );
-                
-                -- 7. Document embeddings table
-                CREATE TABLE IF NOT EXISTS document_embeddings (
-                    id TEXT PRIMARY KEY,
-                    document_id TEXT NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
-                    chunk_text TEXT NOT NULL,
-                    chunk_index INTEGER NOT NULL,
-                    embedding BYTEA,
                     device_id TEXT,
                     synced_at BIGINT
                 );
@@ -239,16 +228,14 @@ class CloudSyncRepository @Inject constructor(
                 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at);
                 CREATE INDEX IF NOT EXISTS idx_memories_conversation ON memories(conversation_id);
                 CREATE INDEX IF NOT EXISTS idx_memories_persona ON memories(persona_id);
-                CREATE INDEX IF NOT EXISTS idx_document_embeddings_document ON document_embeddings(document_id);
+                CREATE INDEX IF NOT EXISTS idx_conversations_persona ON conversations(persona_id);
+                CREATE INDEX IF NOT EXISTS idx_personas_updated ON personas(updated_at);
                 
-                -- Enable Row Level Security (optional but recommended)
-                ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE personas ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE system_prompts ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE knowledge_documents ENABLE ROW LEVEL SECURITY;
-                ALTER TABLE document_embeddings ENABLE ROW LEVEL SECURITY;
+                -- Optional: Enable Row Level Security
+                -- ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+                -- ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+                -- ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
+                -- ALTER TABLE personas ENABLE ROW LEVEL SECURITY;
             """.trimIndent()
             
             Log.i(TAG, "SQL commands ready for Supabase SQL Editor")
@@ -260,7 +247,13 @@ class CloudSyncRepository @Inject constructor(
     }
     
     /**
-     * Sync all data to Supabase
+     * Sync all data to Supabase (Optimized for Free Tier)
+     * 
+     * Syncs only:
+     * - Conversations (basic fields)
+     * - Messages (without request_logs)
+     * - Memories (WITHOUT embeddings)
+     * - Personas (all fields)
      */
     suspend fun syncToCloud(): Result<SyncResult> = withContext(Dispatchers.IO) {
         try {
@@ -280,98 +273,64 @@ class CloudSyncRepository @Inject constructor(
             }
             Log.d(TAG, "Found ${allMessages.size} messages to sync")
             
-            // Step 3: Get all memories from Room (including embeddings)
+            // Step 3: Get all memories from Room (WITHOUT embeddings for sync)
             val allMemories = memoryRepository.getAllMemoryEntities()
-            Log.d(TAG, "Found ${allMemories.size} memories to sync")
+            Log.d(TAG, "Found ${allMemories.size} memories to sync (embeddings NOT included)")
             
-            // Step 4: Get all knowledge documents (RAG)
-            val allDocuments = knowledgeDocumentRepository.getAllDocuments().first()
-            Log.d(TAG, "Found ${allDocuments.size} knowledge documents to sync")
-            
-            // Step 5: Get all document embeddings/chunks (RAG)
-            val allChunks = documentEmbeddingRepository.getAllChunks()
-            Log.d(TAG, "Found ${allChunks.size} document chunks (embeddings) to sync")
-            
-            // Step 6: Get all personas
+            // Step 4: Get all personas
             val allPersonas = personaRepository.getAllPersonasEntities()
             Log.d(TAG, "Found ${allPersonas.size} personas to sync")
             
-            // Step 7: Get all system prompts
-            val allSystemPrompts = systemPromptRepository.getAllPromptsEntities()
-            Log.d(TAG, "Found ${allSystemPrompts.size} system prompts to sync")
+            // Note: System Prompts, Knowledge Documents, and Document Embeddings are NOT synced
+            // They are stored and managed locally only
             
-            // Step 8: Calculate actual data size
+            // Step 5: Calculate actual data size
             // Estimate based on JSON serialization size:
             // - Conversation: ~0.5 KB (id, title, timestamps, settings)
             // - Message: content length + 200 bytes overhead
-            // - Memory: fact length + embedding (if exists: 384 floats = 1536 bytes) + 150 bytes overhead
-            // - Document: content length + 300 bytes overhead (metadata)
-            // - Chunk: text length + embedding size (384 floats = 1536 bytes) + 200 bytes overhead
-            // - Persona: ~1 KB (settings, prompt, metadata)
-            // - SystemPrompt: content length + 200 bytes overhead
+            // - Memory: fact length + 150 bytes overhead (NO embeddings)
+            // - Persona: ~3-5KB (settings, prompts, metadata)
             
             val conversationsSize = conversations.size * 512L // 0.5 KB per conversation
             val messagesSize: Long = allMessages.sumOf { message: Message ->
                 ((message.content?.length ?: 0) + 200).toLong()
             }
             
-            // Memories: включая embeddings если они есть
+            // Memories: WITHOUT embeddings
             val memoriesSize: Long = allMemories.sumOf { memory: MemoryEntity ->
-                val hasEmbedding = !memory.embedding.isNullOrEmpty()
-                val embeddingSize = if (hasEmbedding) 1536L else 0L // 384 floats × 4 bytes
-                (memory.fact.length + embeddingSize + 150).toLong()
-            }
-            
-            val documentsSize: Long = allDocuments.sumOf { doc: KnowledgeDocument ->
-                (doc.content.length + 300).toLong()
-            }
-            val chunksSize: Long = allChunks.sumOf { chunk: DocumentChunkEntity ->
-                (chunk.content.length + 1536 + 200).toLong() // text + embedding (384 floats) + overhead
+                (memory.fact.length + 150).toLong()
             }
             
             val personasSize: Long = allPersonas.sumOf { persona: PersonaEntity ->
-                (persona.systemPrompt.length + 1024).toLong() // system prompt + settings
+                (persona.systemPrompt.length + 
+                 persona.deepEmpathyPrompt.length + 
+                 persona.deepEmpathyAnalysisPrompt.length +
+                 persona.memoryExtractionPrompt.length +
+                 persona.contextInstructions.length +
+                 persona.memoryInstructions.length +
+                 persona.ragInstructions.length +
+                 persona.swipeMessagePrompt.length + 
+                 1024).toLong() // prompts + settings
             }
             
-            val systemPromptsSize: Long = allSystemPrompts.sumOf { prompt: SystemPromptEntity ->
-                (prompt.content.length + 200).toLong()
-            }
-            
-            val totalBytes = conversationsSize + messagesSize + memoriesSize + documentsSize + 
-                           chunksSize + personasSize + systemPromptsSize
+            val totalBytes = conversationsSize + messagesSize + memoriesSize + personasSize
             val totalMB = totalBytes / (1024f * 1024f)
             
             Log.i(TAG, "Total data size: ${String.format("%.3f", totalMB)} MB")
             Log.i(TAG, "├── ${conversations.size} conversations")
             Log.i(TAG, "├── ${allMessages.size} messages")
-            Log.i(TAG, "├── ${allMemories.size} memories (with embeddings)")
-            Log.i(TAG, "├── ${allDocuments.size} documents (RAG)")
-            Log.i(TAG, "├── ${allChunks.size} document embeddings (RAG)")
-            Log.i(TAG, "├── ${allPersonas.size} personas")
-            Log.i(TAG, "└── ${allSystemPrompts.size} system prompts")
+            Log.i(TAG, "├── ${allMemories.size} memories (NO embeddings)")
+            Log.i(TAG, "└── ${allPersonas.size} personas")
+            Log.i(TAG, "NOT syncing: System Prompts, RAG Documents, RAG Embeddings (stored locally)")
             
-            // Step 9: Upload to Supabase
+            // Step 6: Upload to Supabase
             val deviceId = getDeviceId()
             
-            // System Prompts (upload first for foreign keys)
-            if (allSystemPrompts.isNotEmpty()) {
-                val systemPromptDtos = allSystemPrompts.map { prompt: SystemPromptEntity -> prompt.toDto(deviceId) }
-                try {
-                    // Split into batches of 100 to avoid payload size limits
-                    systemPromptDtos.chunked(100).forEach { batch ->
-                        client.from("system_prompts").upsert(batch)
-                    }
-                    Log.d(TAG, "✅ Uploaded ${allSystemPrompts.size} system prompts")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to upload system prompts: ${e.message}")
-                }
-            }
-            
-            // Personas (need prompts to exist)
+            // Personas (upload first, before conversations that might reference them)
             if (allPersonas.isNotEmpty()) {
                 val personaDtos = allPersonas.map { persona: PersonaEntity -> persona.toDto(deviceId) }
                 try {
-                    personaDtos.chunked(100).forEach { batch ->
+                    personaDtos.chunked(50).forEach { batch -> // Smaller batches due to large prompt fields
                         client.from("personas").upsert(batch)
                     }
                     Log.d(TAG, "✅ Uploaded ${allPersonas.size} personas")
@@ -406,49 +365,17 @@ class CloudSyncRepository @Inject constructor(
                 }
             }
             
-            // Memories (with embeddings)
+            // Memories (WITHOUT embeddings)
             if (allMemories.isNotEmpty()) {
                 val memoryDtos = allMemories.map { memory: MemoryEntity -> memory.toDto(deviceId) }
                 try {
-                    memoryDtos.chunked(50).forEach { batch -> // Smaller batches due to embeddings
+                    memoryDtos.chunked(100).forEach { batch ->
                         client.from("memories").upsert(batch)
                     }
-                    Log.d(TAG, "✅ Uploaded ${allMemories.size} memories")
+                    Log.d(TAG, "✅ Uploaded ${allMemories.size} memories (NO embeddings)")
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to upload memories: ${e.message}")
                 }
-            }
-            
-            // Knowledge Documents
-            if (allDocuments.isNotEmpty()) {
-                val documentDtos = allDocuments.map { doc: KnowledgeDocument -> doc.toEntity().toDto(deviceId) }
-                try {
-                    documentDtos.chunked(50).forEach { batch ->
-                        client.from("knowledge_documents").upsert(batch)
-                    }
-                    Log.d(TAG, "✅ Uploaded ${allDocuments.size} documents")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to upload documents: ${e.message}")
-                }
-            }
-            
-            // Document Embeddings (can be large)
-            if (allChunks.isNotEmpty()) {
-                val embeddingDtos = allChunks.map { chunk: DocumentChunkEntity -> chunk.toDto(deviceId) }
-                try {
-                    embeddingDtos.chunked(50).forEach { batch -> // Small batches due to embeddings
-                        client.from("document_embeddings").upsert(batch)
-                    }
-                    Log.d(TAG, "✅ Uploaded ${allChunks.size} embeddings")
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to upload embeddings: ${e.message}")
-                }
-            }
-            
-            // Track uploaded data size
-            if (totalMB > 0) {
-                cloudSyncPreferences.addUploadedDataMB(totalMB)
-                Log.d(TAG, "Added ${String.format("%.3f", totalMB)} MB to uploaded data tracker")
             }
             
             Log.i(TAG, "✅ Sync to Supabase completed: ${String.format("%.3f", totalMB)} MB")
@@ -456,10 +383,7 @@ class CloudSyncRepository @Inject constructor(
                 conversationsSynced = conversations.size,
                 messagesSynced = allMessages.size,
                 memoriesSynced = allMemories.size,
-                documentsSynced = allDocuments.size,
-                embeddingsSynced = allChunks.size,
-                personasSynced = allPersonas.size,
-                systemPromptsSynced = allSystemPrompts.size
+                personasSynced = allPersonas.size
             ))
         } catch (e: Exception) {
             Log.e(TAG, "Sync to Supabase failed", e)
@@ -469,8 +393,14 @@ class CloudSyncRepository @Inject constructor(
     }
     
     /**
-     * Sync data from Supabase
-     * Downloads all data from cloud and merges with local data
+     * Sync data from Supabase (Optimized for Free Tier)
+     * Downloads only essential data from cloud and merges with local data
+     * 
+     * Syncs only:
+     * - Conversations
+     * - Messages
+     * - Memories (WITHOUT embeddings)
+     * - Personas
      * 
      * Conflict resolution: Last-write-wins based on updated_at timestamp
      */
@@ -478,29 +408,16 @@ class CloudSyncRepository @Inject constructor(
         try {
             val client = supabaseClient ?: initializeClient().getOrThrow()
             
-            Log.d(TAG, "Starting sync from Supabase...")
+            Log.d(TAG, "Starting sync from Supabase (optimized)...")
             
             var conversationsSynced = 0
             var messagesSynced = 0
             var memoriesSynced = 0
-            var documentsSynced = 0
-            var embeddingsSynced = 0
             var personasSynced = 0
-            var systemPromptsSynced = 0
             
             // ========== 1. FETCH ALL DATA FROM SUPABASE ==========
             
-            // System Prompts (need to fetch first for persona mapping)
-            val cloudSystemPrompts = try {
-                client.from("system_prompts")
-                    .select(columns = Columns.ALL)
-                    .decodeList<SystemPromptDto>()
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to fetch system prompts: ${e.message}")
-                emptyList()
-            }
-            
-            // Personas (need prompts for mapping)
+            // Personas
             val cloudPersonas = try {
                 client.from("personas")
                     .select(columns = Columns.ALL)
@@ -530,7 +447,7 @@ class CloudSyncRepository @Inject constructor(
                 emptyList()
             }
             
-            // Memories
+            // Memories (WITHOUT embeddings)
             val cloudMemories = try {
                 client.from("memories")
                     .select(columns = Columns.ALL)
@@ -540,31 +457,13 @@ class CloudSyncRepository @Inject constructor(
                 emptyList()
             }
             
-            // Knowledge Documents
-            val cloudDocuments = try {
-                client.from("knowledge_documents")
-                    .select(columns = Columns.ALL)
-                    .decodeList<KnowledgeDocumentDto>()
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to fetch documents: ${e.message}")
-                emptyList()
-            }
-            
-            // Document Embeddings
-            val cloudEmbeddings = try {
-                client.from("document_embeddings")
-                    .select(columns = Columns.ALL)
-                    .decodeList<DocumentEmbeddingDto>()
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to fetch embeddings: ${e.message}")
-                emptyList()
-            }
-            
             Log.d(TAG, "Fetched from cloud: ${cloudConversations.size} convs, ${cloudMessages.size} msgs, " +
-                    "${cloudMemories.size} memories, ${cloudDocuments.size} docs, ${cloudEmbeddings.size} embeddings, " +
-                    "${cloudPersonas.size} personas, ${cloudSystemPrompts.size} prompts")
+                    "${cloudMemories.size} memories (NO embeddings), ${cloudPersonas.size} personas")
             
             // ========== 2. GET LOCAL DATA ==========
+            
+            val localPersonas = personaRepository.getAllPersonas().first()
+            val localPersonasMap = localPersonas.associateBy { it.id }
             
             val localConversations = conversationRepository.getAllConversations().first()
             val localConversationsMap = localConversations.associateBy { it.id }
@@ -575,45 +474,11 @@ class CloudSyncRepository @Inject constructor(
             val localMemories = memoryRepository.getAllMemoryEntities()
             val localMemoriesMap = localMemories.associateBy { it.id }
             
-            val localDocuments = knowledgeDocumentRepository.getAllDocuments().first()
-            val localDocumentsMap = localDocuments.associateBy { it.id }
-            
-            val localChunks = documentEmbeddingRepository.getAllChunks()
-            val localChunksMap = localChunks.associateBy { it.id }
-            
-            val localPersonas = personaRepository.getAllPersonas().first()
-            val localPersonasMap = localPersonas.associateBy { it.id }
-            
+            // Note: System Prompts are fetched from local to map persona systemPromptId -> content
             val localSystemPrompts = systemPromptRepository.getAllPrompts().first()
             val localSystemPromptsMap = localSystemPrompts.associateBy { it.id }
             
-            // ========== 3. MERGE SYSTEM PROMPTS ==========
-            
-            for (cloudPrompt in cloudSystemPrompts) {
-                val localPrompt = localSystemPromptsMap[cloudPrompt.id]
-                
-                val shouldUpdate = if (localPrompt == null) {
-                    true // New record from cloud
-                } else {
-                    // Compare timestamps (cloud wins if newer or equal)
-                    cloudPrompt.updated_at >= localPrompt.updatedAt
-                }
-                
-                if (shouldUpdate) {
-                    val entity = cloudPrompt.toEntity()
-                    systemPromptRepository.upsertSystemPrompt(entity)
-                    systemPromptsSynced++
-                    if (localPrompt == null) {
-                        Log.d(TAG, "Inserted new system prompt: ${cloudPrompt.name}")
-                    } else {
-                        Log.d(TAG, "Updated system prompt: ${cloudPrompt.name} (cloud: ${cloudPrompt.updated_at} >= local: ${localPrompt.updatedAt})")
-                    }
-                }
-            }
-            
-            // ========== 4. MERGE PERSONAS ==========
-            
-            val systemPromptsMapById = systemPromptRepository.getAllPrompts().first().associateBy { it.id }
+            // ========== 3. MERGE PERSONAS ==========
             
             for (cloudPersona in cloudPersonas) {
                 val localPersona = localPersonasMap[cloudPersona.id]
@@ -625,8 +490,8 @@ class CloudSyncRepository @Inject constructor(
                 }
                 
                 if (shouldUpdate) {
-                    // Get system prompt content for mapping
-                    val systemPromptContent = systemPromptsMapById[cloudPersona.system_prompt_id]?.content ?: ""
+                    // Get system prompt content from LOCAL storage (prompts not synced to cloud)
+                    val systemPromptContent = localSystemPromptsMap[cloudPersona.system_prompt_id]?.content ?: ""
                     val entity = cloudPersona.toEntity(systemPromptContent)
                     personaRepository.upsertPersona(entity)
                     personasSynced++
@@ -638,7 +503,7 @@ class CloudSyncRepository @Inject constructor(
                 }
             }
             
-            // ========== 5. MERGE CONVERSATIONS ==========
+            // ========== 4. MERGE CONVERSATIONS ==========
             
             for (cloudConv in cloudConversations) {
                 val localConv = localConversationsMap[cloudConv.id]
@@ -661,16 +526,16 @@ class CloudSyncRepository @Inject constructor(
                 }
             }
             
-            // ========== 6. MERGE MESSAGES ==========
+            // ========== 5. MERGE MESSAGES ==========
             
             for (cloudMsg in cloudMessages) {
                 val localMsg = localMessagesMap[cloudMsg.id]
                 
-                // Messages don't have updated_at, so use timestamp
+                // Messages don't have updated_at, so use created_at
                 val shouldUpdate = if (localMsg == null) {
                     true
                 } else {
-                    cloudMsg.timestamp >= localMsg.createdAt
+                    cloudMsg.created_at >= localMsg.createdAt
                 }
                 
                 if (shouldUpdate) {
@@ -682,7 +547,7 @@ class CloudSyncRepository @Inject constructor(
             
             Log.d(TAG, "Merged ${messagesSynced} messages")
             
-            // ========== 7. MERGE MEMORIES ==========
+            // ========== 6. MERGE MEMORIES (WITHOUT embeddings) ==========
             
             for (cloudMem in cloudMemories) {
                 val localMem = localMemoriesMap[cloudMem.id]
@@ -701,65 +566,76 @@ class CloudSyncRepository @Inject constructor(
                 }
             }
             
-            Log.d(TAG, "Merged ${memoriesSynced} memories")
-            
-            // ========== 8. MERGE KNOWLEDGE DOCUMENTS ==========
-            
-            for (cloudDoc in cloudDocuments) {
-                val localDoc = localDocumentsMap[cloudDoc.id]
-                
-                val shouldUpdate = if (localDoc == null) {
-                    true
-                } else {
-                    cloudDoc.updated_at >= localDoc.updatedAt
-                }
-                
-                if (shouldUpdate) {
-                    val entity = cloudDoc.toEntity()
-                    knowledgeDocumentRepository.upsertDocument(entity)
-                    documentsSynced++
-                    if (localDoc == null) {
-                        Log.d(TAG, "Inserted new document: ${cloudDoc.name}")
-                    } else {
-                        Log.d(TAG, "Updated document: ${cloudDoc.name}")
-                    }
-                }
-            }
-            
-            // ========== 9. MERGE DOCUMENT EMBEDDINGS ==========
-            
-            for (cloudEmb in cloudEmbeddings) {
-                val localEmb = localChunksMap[cloudEmb.id]
-                
-                // Embeddings don't have updated_at, just insert if not exists
-                if (localEmb == null) {
-                    val entity = cloudEmb.toEntity()
-                    documentEmbeddingRepository.upsertChunk(entity)
-                    embeddingsSynced++
-                }
-            }
-            
-            Log.d(TAG, "Merged ${embeddingsSynced} embeddings")
+            Log.d(TAG, "Merged ${memoriesSynced} memories (embeddings will be generated locally)")
             
             // ========== DONE ==========
             
             Log.i(TAG, "✅ Sync from Supabase completed successfully")
-            Log.i(TAG, "Downloaded: $conversationsSynced conversations, $messagesSynced messages, $memoriesSynced memories")
-            Log.i(TAG, "Downloaded: $documentsSynced documents, $embeddingsSynced embeddings")
-            Log.i(TAG, "Downloaded: $personasSynced personas, $systemPromptsSynced system prompts")
+            Log.i(TAG, "Downloaded: $conversationsSynced conversations, $messagesSynced messages, $memoriesSynced memories, $personasSynced personas")
             
             Result.success(SyncResult(
                 conversationsSynced = conversationsSynced,
                 messagesSynced = messagesSynced,
                 memoriesSynced = memoriesSynced,
-                documentsSynced = documentsSynced,
-                embeddingsSynced = embeddingsSynced,
-                personasSynced = personasSynced,
-                systemPromptsSynced = systemPromptsSynced
+                personasSynced = personasSynced
             ))
         } catch (e: Exception) {
             Log.e(TAG, "Sync from Supabase failed", e)
             e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Calculate current syncable data size (without actually syncing)
+     * Returns size in MB
+     */
+    suspend fun calculateSyncableDataSize(): Result<Float> = withContext(Dispatchers.IO) {
+        try {
+            // Get all data that would be synced
+            val conversations = conversationRepository.getAllConversations().first()
+            
+            val allMessages = mutableListOf<Message>()
+            conversations.forEach { conversation ->
+                val messages = messageRepository.getMessagesByConversation(conversation.id).first()
+                allMessages.addAll(messages)
+            }
+            
+            val allMemories = memoryRepository.getAllMemoryEntities()
+            val allPersonas = personaRepository.getAllPersonasEntities()
+            
+            // Calculate sizes (same logic as syncToCloud)
+            val conversationsSize = conversations.size * 512L
+            val messagesSize: Long = allMessages.sumOf { message: Message ->
+                ((message.content?.length ?: 0) + 200).toLong()
+            }
+            val memoriesSize: Long = allMemories.sumOf { memory: MemoryEntity ->
+                (memory.fact.length + 150).toLong()
+            }
+            val personasSize: Long = allPersonas.sumOf { persona: PersonaEntity ->
+                (persona.systemPrompt.length + 
+                 persona.deepEmpathyPrompt.length + 
+                 persona.deepEmpathyAnalysisPrompt.length +
+                 persona.memoryExtractionPrompt.length +
+                 persona.contextInstructions.length +
+                 persona.memoryInstructions.length +
+                 persona.ragInstructions.length +
+                 persona.swipeMessagePrompt.length + 
+                 1024).toLong()
+            }
+            
+            val totalBytes = conversationsSize + messagesSize + memoriesSize + personasSize
+            val totalMB = totalBytes / (1024f * 1024f)
+            
+            Log.d(TAG, "Calculated syncable data size: ${String.format("%.3f", totalMB)} MB")
+            Log.d(TAG, "├── ${conversations.size} conversations")
+            Log.d(TAG, "├── ${allMessages.size} messages")
+            Log.d(TAG, "├── ${allMemories.size} memories")
+            Log.d(TAG, "└── ${allPersonas.size} personas")
+            
+            Result.success(totalMB)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to calculate data size", e)
             Result.failure(e)
         }
     }
@@ -776,18 +652,14 @@ class CloudSyncRepository @Inject constructor(
 }
 
 /**
- * Result of sync operation
+ * Result of sync operation (Optimized)
  */
 data class SyncResult(
     val conversationsSynced: Int,
     val messagesSynced: Int,
     val memoriesSynced: Int,
-    val documentsSynced: Int,
-    val embeddingsSynced: Int = 0,
-    val personasSynced: Int = 0,
-    val systemPromptsSynced: Int = 0
+    val personasSynced: Int = 0
 ) {
     val totalSynced: Int
-        get() = conversationsSynced + messagesSynced + memoriesSynced + documentsSynced + 
-                embeddingsSynced + personasSynced + systemPromptsSynced
+        get() = conversationsSynced + messagesSynced + memoriesSynced + personasSynced
 }

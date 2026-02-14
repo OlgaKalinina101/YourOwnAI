@@ -52,6 +52,10 @@
     <string name="home_new_chat_button">New Chat</string>
     <string name="home_no_conversations">No conversations yet</string>
     <string name="home_no_conversations_subtitle">Start a new chat to begin talking with your AI</string>
+    <string name="home_statistics_title">Statistics</string>
+    <string name="home_total_chats">Total chats: %d</string>
+    <string name="home_total_memories">Memories: %d</string>
+    <string name="home_total_documents">RAG documents: %d</string>
     <string name="home_getting_started">Getting Started</string>
     <string name="home_step_api_key">Add your API key in Settings</string>
     <string name="home_step_create_conversation">Create a new conversation</string>
@@ -296,7 +300,7 @@
     <string name="cloud_sync_not_configured">Set your Project URL and API Key</string>
     <string name="cloud_sync_instructions">Instructions</string>
     <string name="cloud_sync_edit">Edit</string>
-    <string name="cloud_sync_uploaded_data">Uploaded Data</string>
+    <string name="cloud_sync_uploaded_data">Current Data Size</string>
     <string name="cloud_sync_usage">%s / %d MB</string>
     <string name="cloud_sync_free_tier">Free tier: %d%% used</string>
     <string name="cloud_sync_estimated">Estimated</string>
@@ -338,7 +342,7 @@
     <string name="cloud_sync_instructions_copy_icon">Copy</string>
     <string name="cloud_sync_instructions_success">Done! Cloud database connection created ✅</string>
     <string name="cloud_sync_instructions_data_tracking_title">📊 Data Tracking</string>
-    <string name="cloud_sync_instructions_data_tracking_text">The app tracks approximate size of uploaded data. Progress bar shows usage relative to 500 MB free tier. For accurate information check Supabase Dashboard: Settings → Database → Database Size</string>
+    <string name="cloud_sync_instructions_data_tracking_text">The app calculates current size of your syncable data (conversations, messages, memories, personas). Progress bar shows estimated usage relative to 500 MB free tier. Embeddings and RAG documents are NOT synced (stored locally only). For accurate cloud usage check Supabase Dashboard: Settings → Database → Database Size</string>
     <string name="cloud_sync_instructions_pricing_title">💰 Pricing</string>
     <string name="cloud_sync_instructions_pricing_text">Free: 500 MB DB, 5 GB bandwidth\nPro ($25/month): 8 GB DB, 250 GB bandwidth</string>
     <string name="cloud_sync_instructions_step1_title">Register on Supabase</string>
@@ -575,6 +579,11 @@
     <string name="language_russian">Русский</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_restart_required">Language will be applied immediately</string>
+    <string name="language_app_language_title">App Language</string>
+    <string name="language_app_language_subtitle">Interface language</string>
+    <string name="language_prompt_language_title">Prompt Language</string>
+    <string name="language_prompt_language_subtitle">AI system prompts language</string>
+    <string name="language_custom_prompts_warning">⚠️ When changing language, only default prompts (Default API, Default Local) will be updated. Separately created custom prompts will remain unchanged.</string>
     
     <!-- SQL Schema Dialog -->
     <string name="sql_schema_dialog_title">Supabase SQL Schema</string>

@@ -4,21 +4,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Data Transfer Objects for Supabase sync
+ * Data Transfer Objects for Supabase sync (Optimized)
  * These match the Supabase table structure (snake_case)
+ * 
+ * Optimized for Free Tier:
+ * - Removed System Prompts (stored locally)
+ * - Removed Knowledge Documents (RAG stored locally)
+ * - Removed Document Embeddings (RAG stored locally)
+ * - Removed embeddings from Memories (generated locally)
  */
 
 @Serializable
 data class ConversationDto(
     val id: String,
     val title: String,
+    val model: String,
+    val provider: String,
     val created_at: Long,
     val updated_at: Long,
-    val model: String? = null,
-    val temperature: Float? = null,
-    val max_tokens: Int? = null,
-    val source_conversation_id: String? = null,
+    val is_archived: Boolean = false,
     val persona_id: String? = null,
+    val source_conversation_id: String? = null,
     val device_id: String? = null,
     val synced_at: Long? = null
 )
@@ -29,10 +35,8 @@ data class MessageDto(
     val conversation_id: String,
     val role: String,
     val content: String,
-    val timestamp: Long,
+    val created_at: Long,
     val model: String? = null,
-    val user_context: String? = null,
-    val persona_id: String? = null,
     val swipe_message_text: String? = null,
     val image_attachments: String? = null,
     val file_attachments: String? = null,
@@ -49,31 +53,9 @@ data class MemoryDto(
     val fact: String,
     val created_at: Long,
     val persona_id: String? = null,
-    val embedding: ByteArray? = null, // BYTEA in PostgreSQL
     val device_id: String? = null,
     val synced_at: Long? = null
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as MemoryDto
-
-        if (id != other.id) return false
-        if (embedding != null) {
-            if (other.embedding == null) return false
-            if (!embedding.contentEquals(other.embedding)) return false
-        } else if (other.embedding != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + (embedding?.contentHashCode() ?: 0)
-        return result
-    }
-}
+)
 
 @Serializable
 data class PersonaDto(
@@ -133,60 +115,3 @@ data class PersonaDto(
     val device_id: String? = null,
     val synced_at: Long? = null
 )
-
-@Serializable
-data class SystemPromptDto(
-    val id: String,
-    val name: String,
-    val content: String,
-    val type: String,
-    val is_default: Boolean = false,
-    val created_at: Long,
-    val updated_at: Long,
-    val device_id: String? = null,
-    val synced_at: Long? = null
-)
-
-@Serializable
-data class KnowledgeDocumentDto(
-    val id: String,
-    val name: String,
-    val content: String,
-    val created_at: Long,
-    val updated_at: Long,
-    val linked_persona_ids: String? = null,
-    val device_id: String? = null,
-    val synced_at: Long? = null
-)
-
-@Serializable
-data class DocumentEmbeddingDto(
-    val id: String,
-    val document_id: String,
-    val chunk_text: String,
-    val chunk_index: Int,
-    val embedding: ByteArray? = null,
-    val device_id: String? = null,
-    val synced_at: Long? = null
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as DocumentEmbeddingDto
-
-        if (id != other.id) return false
-        if (embedding != null) {
-            if (other.embedding == null) return false
-            if (!embedding.contentEquals(other.embedding)) return false
-        } else if (other.embedding != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + (embedding?.contentHashCode() ?: 0)
-        return result
-    }
-}

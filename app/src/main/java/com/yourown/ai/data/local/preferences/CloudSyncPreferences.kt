@@ -42,7 +42,6 @@ class CloudSyncPreferences @Inject constructor(
         private const val KEY_SYNC_INTERVAL_MINUTES = "sync_interval_minutes"
         private const val KEY_LAST_SYNC_TIMESTAMP = "last_sync_timestamp"
         private const val KEY_SYNC_ONLY_ON_WIFI = "sync_only_on_wifi"
-        private const val KEY_UPLOADED_DATA_MB = "uploaded_data_mb"
     }
     
     private fun loadSettings(): CloudSyncSettings {
@@ -53,8 +52,7 @@ class CloudSyncPreferences @Inject constructor(
             autoSyncEnabled = encryptedPreferences.getBoolean(KEY_AUTO_SYNC_ENABLED, false),
             syncIntervalMinutes = encryptedPreferences.getInt(KEY_SYNC_INTERVAL_MINUTES, 30),
             lastSyncTimestamp = encryptedPreferences.getLong(KEY_LAST_SYNC_TIMESTAMP, 0L),
-            syncOnlyOnWifi = encryptedPreferences.getBoolean(KEY_SYNC_ONLY_ON_WIFI, true),
-            uploadedDataMB = encryptedPreferences.getFloat(KEY_UPLOADED_DATA_MB, 0f)
+            syncOnlyOnWifi = encryptedPreferences.getBoolean(KEY_SYNC_ONLY_ON_WIFI, true)
         )
     }
     
@@ -105,35 +103,6 @@ class CloudSyncPreferences @Inject constructor(
     suspend fun setSyncOnlyOnWifi(enabled: Boolean) {
         encryptedPreferences.edit()
             .putBoolean(KEY_SYNC_ONLY_ON_WIFI, enabled)
-            .apply()
-        _cloudSyncSettings.value = loadSettings()
-    }
-    
-    /**
-     * Update uploaded data size (adds to existing value)
-     */
-    suspend fun addUploadedDataMB(sizeMB: Float) {
-        val currentSize = encryptedPreferences.getFloat(KEY_UPLOADED_DATA_MB, 0f)
-        val newSize = currentSize + sizeMB
-        encryptedPreferences.edit()
-            .putFloat(KEY_UPLOADED_DATA_MB, newSize)
-            .apply()
-        _cloudSyncSettings.value = loadSettings()
-    }
-    
-    /**
-     * Get current uploaded data size
-     */
-    fun getUploadedDataMB(): Float {
-        return encryptedPreferences.getFloat(KEY_UPLOADED_DATA_MB, 0f)
-    }
-    
-    /**
-     * Reset uploaded data counter (for testing or manual reset)
-     */
-    suspend fun resetUploadedDataMB() {
-        encryptedPreferences.edit()
-            .putFloat(KEY_UPLOADED_DATA_MB, 0f)
             .apply()
         _cloudSyncSettings.value = loadSettings()
     }

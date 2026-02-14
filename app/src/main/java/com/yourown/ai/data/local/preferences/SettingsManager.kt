@@ -49,6 +49,9 @@ class SettingsManager @Inject constructor(
         
         // Keyboard sound settings
         private val KEYBOARD_SOUND_VOLUME = floatPreferencesKey("keyboard_sound_volume")
+        
+        // Prompt language
+        private val PROMPT_LANGUAGE = stringPreferencesKey("prompt_language")
     }
     
     // Theme Mode
@@ -189,6 +192,17 @@ class SettingsManager @Inject constructor(
     suspend fun setKeyboardSoundVolume(volume: Float) {
         dataStore.edit { preferences ->
             preferences[KEYBOARD_SOUND_VOLUME] = volume.coerceIn(0f, 1f)
+        }
+    }
+    
+    // Prompt Language
+    val promptLanguage: Flow<String> = dataStore.data.map { preferences ->
+        preferences[PROMPT_LANGUAGE] ?: "ru" // Default: Russian
+    }
+    
+    suspend fun setPromptLanguage(language: String) {
+        dataStore.edit { preferences ->
+            preferences[PROMPT_LANGUAGE] = language
         }
     }
 }

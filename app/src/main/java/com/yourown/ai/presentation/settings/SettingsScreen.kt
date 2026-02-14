@@ -164,6 +164,7 @@ fun SettingsScreen(
             // Cloud Sync Section
             CloudSyncSection(
                 syncSettings = uiState.cloudSyncSettings,
+                syncableDataSizeMB = uiState.syncableDataSizeMB,
                 onToggleSync = viewModel::toggleCloudSync,
                 onEditConnectionString = viewModel::showCloudSyncDialog,
                 onToggleAutoSync = viewModel::toggleAutoSync,
@@ -174,7 +175,10 @@ fun SettingsScreen(
             )
             
             // Language Section
-            LanguageSection()
+            LanguageSection(
+                promptLanguage = uiState.promptLanguage,
+                onPromptLanguageChange = viewModel::updatePromptLanguage
+            )
             
             Spacer(modifier = Modifier.height(16.dp))
         }

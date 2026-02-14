@@ -1,23 +1,34 @@
--- YourOwnAI Cloud Sync - Supabase Schema
+-- YourOwnAI Cloud Sync - Supabase Schema (Optimized for Free Tier)
 -- Copy and run this in Supabase Dashboard → SQL Editor
+--
+-- This schema syncs only essential data:
+-- ✅ Conversations (basic fields)
+-- ✅ Messages (without request_logs, with attachments)
+-- ✅ Memories (WITHOUT embeddings - generated locally)
+-- ✅ Personas (all fields - important for functionality)
+--
+-- NOT synced (to save space):
+-- ❌ System Prompts (stored only locally)
+-- ❌ Knowledge Documents (RAG - stored only locally)
+-- ❌ Document Embeddings (RAG - stored only locally)
+-- ❌ Memory embeddings (generated locally on each device)
 
 -- 1. Conversations table
 CREATE TABLE IF NOT EXISTS conversations (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
-    system_prompt TEXT NOT NULL,
-    system_prompt_id TEXT,
     model TEXT NOT NULL,
     provider TEXT NOT NULL,
     created_at BIGINT NOT NULL,
     updated_at BIGINT NOT NULL,
     is_archived BOOLEAN DEFAULT FALSE,
+    persona_id TEXT,
     source_conversation_id TEXT,
     device_id TEXT,
     synced_at BIGINT
 );
 
--- 2. Messages table
+-- 2. Messages table (optimized - no request_logs)
 CREATE TABLE IF NOT EXISTS messages (
     id TEXT PRIMARY KEY,
     conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -25,14 +36,6 @@ CREATE TABLE IF NOT EXISTS messages (
     content TEXT NOT NULL,
     created_at BIGINT NOT NULL,
     model TEXT,
-    temperature REAL,
-    top_p REAL,
-    deep_empathy BOOLEAN,
-    memory_enabled BOOLEAN,
-    message_history_limit INTEGER,
-    system_prompt TEXT,
-    request_logs TEXT,
-    swipe_message_id TEXT,
     swipe_message_text TEXT,
     image_attachments TEXT,
     file_attachments TEXT,
@@ -41,7 +44,7 @@ CREATE TABLE IF NOT EXISTS messages (
     synced_at BIGINT
 );
 
--- 3. Memories table
+-- 3. Memories table (optimized - NO embeddings)
 CREATE TABLE IF NOT EXISTS memories (
     id TEXT PRIMARY KEY,
     conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -49,12 +52,11 @@ CREATE TABLE IF NOT EXISTS memories (
     fact TEXT NOT NULL,
     created_at BIGINT NOT NULL,
     persona_id TEXT,
-    embedding BYTEA,
     device_id TEXT,
     synced_at BIGINT
 );
 
--- 4. Personas table
+-- 4. Personas table (full sync - important for functionality)
 CREATE TABLE IF NOT EXISTS personas (
     id TEXT PRIMARY KEY,
     system_prompt_id TEXT NOT NULL,
@@ -95,7 +97,7 @@ CREATE TABLE IF NOT EXISTS personas (
     preferred_model_id TEXT,
     preferred_provider TEXT,
     
-    -- Document Links
+    -- Document Links (stored as JSON array string)
     linked_document_ids TEXT,
     
     -- Memory Scope
@@ -113,51 +115,16 @@ CREATE TABLE IF NOT EXISTS personas (
     synced_at BIGINT
 );
 
--- 5. System prompts table
-CREATE TABLE IF NOT EXISTS system_prompts (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    content TEXT NOT NULL,
-    type TEXT NOT NULL,
-    is_default BOOLEAN DEFAULT FALSE,
-    created_at BIGINT NOT NULL,
-    updated_at BIGINT NOT NULL,
-    device_id TEXT,
-    synced_at BIGINT
-);
-
--- 6. Knowledge documents table
-CREATE TABLE IF NOT EXISTS knowledge_documents (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at BIGINT NOT NULL,
-    updated_at BIGINT NOT NULL,
-    linked_persona_ids TEXT,
-    device_id TEXT,
-    synced_at BIGINT
-);
-
--- 7. Document embeddings table
-CREATE TABLE IF NOT EXISTS document_embeddings (
-    id TEXT PRIMARY KEY,
-    document_id TEXT NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
-    chunk_text TEXT NOT NULL,
-    chunk_index INTEGER NOT NULL,
-    embedding BYTEA,
-    device_id TEXT,
-    synced_at BIGINT
-);
-
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_device ON messages(device_id);
 CREATE INDEX IF NOT EXISTS idx_memories_conversation ON memories(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_memories_persona ON memories(persona_id);
-CREATE INDEX IF NOT EXISTS idx_document_embeddings_document ON document_embeddings(document_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_device ON conversations(device_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at);
+CREATE INDEX IF NOT EXISTS idx_conversations_persona ON conversations(persona_id);
+CREATE INDEX IF NOT EXISTS idx_personas_updated ON personas(updated_at);
 
 -- Enable Row Level Security (RLS) - OPTIONAL
 -- This ensures users can only access their own data
@@ -167,9 +134,7 @@ CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at
 -- ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE personas ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE system_prompts ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE knowledge_documents ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE document_embeddings ENABLE ROW LEVEL SECURITY;
 
 -- Success message
-SELECT 'Schema created successfully! ✅' as status;
+SELECT 'Optimized schema created successfully! ✅' as status;
+SELECT 'This schema is optimized for Supabase Free Tier (500 MB, 5 GB bandwidth/month)' as info;

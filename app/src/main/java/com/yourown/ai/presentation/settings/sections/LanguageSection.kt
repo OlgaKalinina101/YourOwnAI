@@ -2,29 +2,29 @@ package com.yourown.ai.presentation.settings.sections
 
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import com.yourown.ai.R
+import com.yourown.ai.presentation.settings.components.DropdownSettingString
 import com.yourown.ai.presentation.settings.components.SettingsSection
-import java.util.Locale
 
 /**
- * Language Section - choose app language
+ * Language Section - choose app language and prompt language
  * Note: setApplicationLocales() automatically recreates the activity
  */
 @Composable
-fun LanguageSection() {
+fun LanguageSection(
+    promptLanguage: String = "ru",
+    onPromptLanguageChange: (String) -> Unit = {}
+) {
     val context = LocalContext.current
     
     // Get current locale from AppCompat or system default
@@ -46,95 +46,51 @@ fun LanguageSection() {
     LaunchedEffect(currentLocale) {
         selectedLanguage = currentLocale
     }
-    var showRestartSnackbar by remember { mutableStateOf(false) }
+    
+    // Available languages
+    val languages = listOf(
+        "en" to stringResource(R.string.language_english),
+        "ru" to stringResource(R.string.language_russian),
+        "uk" to stringResource(R.string.language_ukrainian)
+    )
     
     SettingsSection(
         title = stringResource(R.string.language_section_title),
         icon = Icons.Default.Language,
         subtitle = stringResource(R.string.language_section_subtitle)
     ) {
-        // English
-        LanguageItem(
-            languageName = stringResource(R.string.language_english),
-            languageCode = "en",
-            isSelected = selectedLanguage == "en",
-            onClick = {
-                Log.d("LanguageSection", "English clicked, current: $selectedLanguage")
-                selectedLanguage = "en"
+        // App Language Dropdown
+        DropdownSettingString(
+            title = stringResource(R.string.language_app_language_title),
+            subtitle = stringResource(R.string.language_app_language_subtitle),
+            value = selectedLanguage,
+            options = languages,
+            onValueChange = { code ->
+                Log.d("LanguageSection", "App language changed to: $code")
+                selectedLanguage = code
                 AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags("en")
+                    LocaleListCompat.forLanguageTags(code)
                 )
-                Log.d("LanguageSection", "Locale set to English")
             }
         )
         
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
         
-        // Russian
-        LanguageItem(
-            languageName = stringResource(R.string.language_russian),
-            languageCode = "ru",
-            isSelected = selectedLanguage == "ru",
-            onClick = {
-                Log.d("LanguageSection", "Russian clicked, current: $selectedLanguage")
-                selectedLanguage = "ru"
-                AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags("ru")
-                )
-                Log.d("LanguageSection", "Locale set to Russian")
-            }
+        // Prompt Language Dropdown
+        DropdownSettingString(
+            title = stringResource(R.string.language_prompt_language_title),
+            subtitle = stringResource(R.string.language_prompt_language_subtitle),
+            value = promptLanguage,
+            options = languages,
+            onValueChange = onPromptLanguageChange
         )
         
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        
-        // Ukrainian
-        LanguageItem(
-            languageName = stringResource(R.string.language_ukrainian),
-            languageCode = "uk",
-            isSelected = selectedLanguage == "uk",
-            onClick = {
-                Log.d("LanguageSection", "Ukrainian clicked, current: $selectedLanguage")
-                selectedLanguage = "uk"
-                AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags("uk")
-                )
-                Log.d("LanguageSection", "Locale set to Ukrainian")
-            }
-        )
-    }
-}
-
-@Composable
-private fun LanguageItem(
-    languageName: String,
-    languageCode: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        // Info text
         Text(
-            text = languageName,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            text = stringResource(R.string.language_custom_prompts_warning),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.padding(top = 12.dp)
         )
-        
-        if (isSelected) {
-            Icon(
-                Icons.Default.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-        } else {
-            RadioButton(
-                selected = false,
-                onClick = onClick
-            )
-        }
     }
 }

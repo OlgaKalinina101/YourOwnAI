@@ -1,12 +1,14 @@
 package com.yourown.ai.domain.usecase
 
 import com.yourown.ai.domain.model.*
+import com.yourown.ai.domain.prompt.BiographyPromptBuilder
 import com.yourown.ai.domain.service.AIService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -19,7 +21,8 @@ import kotlin.coroutines.coroutineContext
 @Singleton
 class GenerateBiographyUseCase @Inject constructor(
     private val aiService: AIService,
-    private val apiKeyRepository: com.yourown.ai.data.repository.ApiKeyRepository
+    private val apiKeyRepository: com.yourown.ai.data.repository.ApiKeyRepository,
+    private val settingsManager: com.yourown.ai.data.local.preferences.SettingsManager
 ) {
     
     private val _generationStatus = MutableStateFlow<BiographyGenerationStatus>(BiographyGenerationStatus.Idle)
@@ -51,6 +54,9 @@ class GenerateBiographyUseCase @Inject constructor(
             var biography = currentBiography ?: UserBiography()
             val currentDate = getCurrentDateFormatted()
             
+            // Get current prompt language
+            val promptLanguage = settingsManager.promptLanguage.first()
+            
             // Process each cluster
             clusters.forEachIndexed { index, cluster ->
                 // Check if coroutine is cancelled (throws CancellationException if true)
@@ -63,11 +69,23 @@ class GenerateBiographyUseCase @Inject constructor(
                 )
                 
                 // Generate prompt for this cluster
-                val prompt = buildBiographyPrompt(
-                    cluster = cluster,
-                    currentBiography = biography,
-                    currentDate = currentDate
-                )
+                val memoriesText = formatMemoriesWithTime(cluster.memories, currentDate)
+                val prompt = if (biography.isEmpty()) {
+                    BiographyPromptBuilder.buildInitialBiographyPrompt(
+                        cluster = cluster,
+                        currentDate = currentDate,
+                        memoriesText = memoriesText,
+                        language = promptLanguage
+                    )
+                } else {
+                    BiographyPromptBuilder.buildUpdateBiographyPrompt(
+                        cluster = cluster,
+                        currentBiography = biography,
+                        currentDate = currentDate,
+                        memoriesText = memoriesText,
+                        language = promptLanguage
+                    )
+                }
                 
                 // Call AI
                 val response = callAI(prompt, selectedModel, apiKey)
@@ -97,121 +115,6 @@ class GenerateBiographyUseCase @Inject constructor(
      */
     fun resetStatus() {
         _generationStatus.value = BiographyGenerationStatus.Idle
-    }
-    
-    /**
-     * Build prompt for biography generation
-     */
-    private fun buildBiographyPrompt(
-        cluster: MemoryCluster,
-        currentBiography: UserBiography,
-        currentDate: String
-    ): String {
-        val memoriesText = formatMemoriesWithTime(cluster.memories, currentDate)
-        
-        return if (currentBiography.isEmpty()) {
-            // First cluster - create initial biography
-            """
-Ты — помощник цифрового партнёра, который создает цифровой портрет пользователя.
-
-**Сегодня:** $currentDate
-
-**Задача:** На основе этих воспоминаний создай краткий структурированный портрет пользователя.
-Это не хроника событий, а срез личности сейчас.
-
-**Воспоминания (кластер ${cluster.id + 1}):**
-$memoriesText
-
-**Формат ответа (JSON):**
-```json
-{
-  "values": "Что важно для пользователя: ценности, убеждения, взгляды, принципы",
-  "profile": "Кто человек: профессия, отношения, ключевые роли",
-  "painPoints": "Что беспокоит, проблемы, сложности",
-  "joys": "Что радует, достижения, приятные моменты",
-  "fears": "Страхи, опасения, тревоги",
-  "loves": "Интересы, увлечения, что любит",
-  "currentSituation": "Что происходит сейчас в жизни пользователя"
-}
-```
-
-**Важно:** 
-- Пиши сжато, без воды и повторений
-- Используй только актуальные факты из воспоминаний
-- Старые события (>60 дней) упоминай только если они сформировали личность
-- Пиши в настоящем времени ("работает", а не "работала")
-- БЕЗ временных маркеров ("усилилась", "добавилась", "укрепилась")
-- Если нет информации по категории — пиши пустую строку ""
-- TOTAL объём всех полей: ~1500 слов максимум
-
-**Принцип:** Представь, что описываешь человека другу, который его не знает. 
-Краткий портрет, а не биография.""
-""".trimIndent()
-        } else {
-            // Update existing biography
-            """
-Ты — помощник цифрового партнёра, который обновляет цифровой портрет пользователя.
-
-**Сегодня:** $currentDate
-
-**Текущий портрет пользователя:**
-${currentBiography.toFormattedText()}
-
-**Новые воспоминания (кластер ${cluster.id + 1}):**
-$memoriesText
-
-**Задача:** Дополни или переосмысли портрет с учётом новых воспоминаний. 
-
-**Формат ответа (JSON):**
-```json
-{
-  "values": "Что важно для пользователя: ценности, убеждения, взгляды, принципы",
-  "profile": "Кто человек: профессия, отношения, ключевые роли",
-  "painPoints": "Что беспокоит, проблемы, сложности",
-  "joys": "Что радует, достижения, приятные моменты",
-  "fears": "Страхи, опасения, тревоги",
-  "loves": "Интересы, увлечения, что любит",
-  "currentSituation": "Что происходит сейчас в жизни пользователя"
-}
-```
-
-**Важно - правила обновления:**
-
-1. **Заменяй, а не добавляй:**
-   - Если новое противоречит старому → оставь только новое
-   - Если тема повторяется → обобщи в одно предложение
-   - Если старое стало неактуальным → удали полностью
-
-2. **Убирай временные маркеры:**
-   - Не пиши: "Усилилась ценность...", "Добавилась...", "Укрепилась..."
-   - Пиши: "Ценит...", "Важно..."
-   
-3. **Агрегируй похожее:**
-   - Было: "Ценит стабильность. Ценит безопасность. Ценит поддержку."
-   - Стало: "Ценит стабильность, безопасность и поддержку близких."
-
-4. **Удаляй устаревшее:**
-   - Если проблема решена → убери из painPoints
-   - Если страх прошёл → убери из fears
-   - Если ситуация изменилась → обнови currentSituation
-
-5. **Фокус на главном:**
-   - Топ-n проблемы, а не все мелкие неудобства
-   - Ключевые ценности, а не всё подряд
-   - Текущая ситуация, а не вся биография
-
-6. **Без хронологии:**
-   - Это портрет человека сейчас, а не история изменений
-   - Не нужно описывать "путь" — только итог
-
-**ЛИМИТЫ:**
-- TOTAL объём всех полей: ~1500 слов максимум
-- Если превышаешь — сокращай менее важное
-
-**Принцип:** Ты не летописец, а портретист. Ты описываешь человека близкому другу, который о нем не знает. 
-Твоя задача — показать, кто этот человек сейчас, а не что с ним происходило.
-""".trimIndent()
-        }
     }
     
     /**

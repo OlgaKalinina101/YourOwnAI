@@ -73,7 +73,9 @@ data class ChatUiState(
     val isExporting: Boolean = false,
     val exportProgress: Float = 0f,
     val exportProgressMessage: String = "",
-    val searchStatusMessage: String? = null
+    val searchStatusMessage: String? = null,
+    val totalMemoriesCount: Int = 0,
+    val totalDocumentsCount: Int = 0
 )
 
 /**
@@ -100,6 +102,8 @@ class ChatViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val llamaService: LlamaService,
     private val keyboardSoundManager: com.yourown.ai.domain.service.KeyboardSoundManager,
+    private val memoryRepository: com.yourown.ai.data.repository.MemoryRepository,
+    private val knowledgeDocumentRepository: com.yourown.ai.data.repository.KnowledgeDocumentRepository,
     // New managers
     private val conversationManager: ChatConversationManager,
     private val messageHandler: ChatMessageHandler,
@@ -120,6 +124,7 @@ class ChatViewModel @Inject constructor(
         initializeDefaultPrompts()
         observePinnedModels()
         observeKeyboardSoundSettings()
+        observeMemoriesAndDocuments()
     }
     
     private fun initializeDefaultPrompts() {
@@ -297,6 +302,19 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             settingsManager.keyboardSoundVolume.collect { volume ->
                 keyboardSoundManager.setSoundVolume(volume)
+            }
+        }
+    }
+    
+    private fun observeMemoriesAndDocuments() {
+        viewModelScope.launch {
+            memoryRepository.getAllMemoryEntities().let { memories ->
+                _uiState.update { it.copy(totalMemoriesCount = memories.size) }
+            }
+        }
+        viewModelScope.launch {
+            knowledgeDocumentRepository.getAllDocuments().collect { documents ->
+                _uiState.update { it.copy(totalDocumentsCount = documents.size) }
             }
         }
     }

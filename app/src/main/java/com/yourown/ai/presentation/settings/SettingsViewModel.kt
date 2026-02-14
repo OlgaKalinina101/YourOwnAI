@@ -78,12 +78,15 @@ data class SettingsUiState(
     val recalculationProgressPercent: Float = 0f, // 0.0 to 1.0
     // Sound & Haptics
     val keyboardSoundVolume: Float = 0f,
+    // Language
+    val promptLanguage: String = "ru",
     // Cloud Sync
     val cloudSyncSettings: CloudSyncSettings = CloudSyncSettings(),
     val showCloudSyncDialog: Boolean = false,
     val showSqlSchemaDialog: Boolean = false,
     val showCloudSyncInstructionsDialog: Boolean = false,
-    val isSyncing: Boolean = false
+    val isSyncing: Boolean = false,
+    val syncableDataSizeMB: Float = 0f // Current size of data that would be synced
 )
 
 @HiltViewModel
@@ -134,6 +137,7 @@ class SettingsViewModel @Inject constructor(
         observeApiKeys()
         initializeDefaultPrompts()
         observeSoundSettings()
+        observePromptLanguage()
         observeCloudSyncSettings()
         observeMemoryClustering()
         observeBiography()
@@ -1267,12 +1271,46 @@ class SettingsViewModel @Inject constructor(
         keyboardSoundManager.playTestSound()
     }
     
+    // ===== Language Settings =====
+    
+    private fun observePromptLanguage() {
+        viewModelScope.launch {
+            settingsManager.promptLanguage.collect { language ->
+                _uiState.update { it.copy(promptLanguage = language) }
+            }
+        }
+    }
+    
+    fun updatePromptLanguage(language: String) {
+        viewModelScope.launch {
+            // Reset all prompts to defaults when language changes
+            aiConfigRepository.resetAllPromptsToDefaults()
+            // Update language
+            settingsManager.setPromptLanguage(language)
+            // Update default system prompts in database to new language
+            systemPromptRepository.updateDefaultPromptsLanguage()
+        }
+    }
+    
     // ===== Cloud Sync =====
     
     private fun observeCloudSyncSettings() {
         viewModelScope.launch {
             cloudSyncPreferences.cloudSyncSettings.collect { settings ->
                 _uiState.update { it.copy(cloudSyncSettings = settings) }
+                // Calculate syncable data size when settings change
+                if (settings.isConfigured) {
+                    calculateSyncableDataSize()
+                }
+            }
+        }
+    }
+    
+    private fun calculateSyncableDataSize() {
+        viewModelScope.launch {
+            val result = cloudSyncRepository.calculateSyncableDataSize()
+            result.onSuccess { sizeMB ->
+                _uiState.update { it.copy(syncableDataSizeMB = sizeMB) }
             }
         }
     }
@@ -1356,6 +1394,9 @@ class SettingsViewModel @Inject constructor(
                 // Update last sync timestamp
                 val now = System.currentTimeMillis()
                 cloudSyncPreferences.updateLastSyncTimestamp(now)
+                
+                // Recalculate data size after sync
+                calculateSyncableDataSize()
                 
                 _uiState.update { it.copy(isSyncing = false) }
                 android.util.Log.i("SettingsViewModel", "Sync completed successfully")
