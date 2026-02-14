@@ -21,7 +21,8 @@ fun ContextSection(
     hasContext: Boolean,
     uiState: SettingsUiState,
     viewModel: SettingsViewModel,
-    onEditContext: () -> Unit
+    onEditContext: () -> Unit,
+    onShowHelp: () -> Unit = {}
 ) {
     SettingsSection(
         title = stringResource(R.string.context_section_title),
@@ -44,7 +45,7 @@ fun ContextSection(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    IconButton(onClick = { /* TODO: Show help */ }) {
+                    IconButton(onClick = onShowHelp) {
                         Icon(Icons.Default.HelpOutline, stringResource(R.string.context_help_icon), modifier = Modifier.size(20.dp))
                     }
                 }

@@ -444,6 +444,18 @@
     <string name="context_swipe_message_title">Swipe Message Prompt</string>
     <string name="context_swipe_message_subtitle">How AI sees replied messages</string>
     
+    <!-- Context Help Dialog -->
+    <string name="context_help_dialog_title">About User Context</string>
+    <string name="context_help_what_title">What is User Context?</string>
+    <string name="context_help_what_text">User Context is information about you that AI will always know. It\'s added to every conversation automatically, helping AI provide more personalized and relevant responses.</string>
+    <string name="context_help_why_title">Why use it?</string>
+    <string name="context_help_why_text">• More personalized responses\n• AI remembers your preferences\n• No need to repeat yourself\n• Better understanding of your needs\n• Context persists across all chats</string>
+    <string name="context_help_examples_title">What to include?</string>
+    <string name="context_help_examples_text">• Your name, age, profession\n• Interests and hobbies\n• Preferences (language, style)\n• Current goals or projects\n• Important people in your life\n• Anything you want AI to always remember</string>
+    <string name="context_help_privacy_title">Privacy &amp; Security</string>
+    <string name="context_help_privacy_text">Your context is stored locally on device and sent to AI providers only during conversations. Not synced to cloud by default.</string>
+    <string name="context_help_got_it">Got it!</string>
+    
     <!-- Memory Section -->
     <string name="memory_section_title">Memory</string>
     <string name="memory_section_subtitle">AI remembers important things automatically</string>
@@ -828,4 +840,52 @@
     <string name="export_filter_liked">Export only liked messages</string>
     <string name="export_copied">✓ Copied to clipboard</string>
     <string name="export_large_warning">Large chat (%d chars). Use \'Save to File\' for import.</string>
+    
+    <!-- Empty State -->
+    <string name="empty_state_start_conversation">Start your conversation</string>
+    <string name="empty_state_select_model">Select a model to begin</string>
+    <string name="empty_state_type_message">Type a message below to start chatting with your AI</string>
+    <string name="empty_state_download_model">Download a local model or add an API key in Settings</string>
+    
+    <!-- Help Hints (?) -->
+    <!-- AI Configuration Section -->
+    <string name="hint_temperature">Temperature is how your AI picks words for answers.\n\n• Low (0.0–0.3): AI chooses predictable, safe words — more consistent\n• Medium (0.4–0.7): AI balances creativity and consistency\n• High (0.8–1.0): AI explores unexpected words — more creative and varied</string>
+    <string name="hint_top_p">Top-p is how your AI selects from word options.\n\n• Low (0.1–0.5): AI picks only from the most likely words — focused\n• Medium (0.6–0.9): AI considers more word options — balanced\n• High (0.9–1.0): AI sees all possible words — more diverse and surprising</string>
+    <string name="hint_message_history">Message history is how many conversation turns your AI remembers when responding.\n\n• Fewer pairs (1–3): AI focuses only on recent context — faster, cheaper\n• More pairs (4–10): AI sees longer conversation flow — better context understanding\n\nNote: Local models always use only the last message due to device limitations.</string>
+    <string name="hint_max_tokens">Max tokens is how long your AI can make each response.\n\n• Fewer tokens (256–1024): AI gives brief answers\n• More tokens (2048–8192): AI can write detailed, comprehensive responses\n\n1 token ≈ ¾ of a word in English</string>
+    
+    <!-- API Keys Section -->
+    <string name="hint_api_key_deepseek">Deepseek is a cloud AI provider offering fast and efficient models.\n\nTo use Deepseek:\n1. Go to https://platform.deepseek.com\n2. Sign up or log in\n3. Create an API key\n4. Add credits to your balance\n5. Paste your key here</string>
+    <string name="hint_api_key_openai">OpenAI is a cloud AI provider offering powerful models like GPT-4.\n\nTo use OpenAI:\n1. Go to https://platform.openai.com\n2. Sign up or log in\n3. Create an API key\n4. Add credits to your balance\n5. Paste your key here</string>
+    <string name="hint_api_key_openrouter">OpenRouter gives access to multiple AI providers through one API key.\n\nTo use OpenRouter:\n1. Go to https://openrouter.ai\n2. Sign up or log in\n3. Create an API key\n4. Add credits to your balance\n5. Paste your key here</string>
+    <string name="hint_api_key_xai">x.ai (Grok) is the AI provider created by xAI, offering Grok models.\n\nTo use x.ai:\n1. Go to https://x.ai\n2. Sign up or log in\n3. Create an API key\n4. Add credits to your balance\n5. Paste your key here</string>
+    
+    <!-- Memory Section -->
+    <string name="hint_memory_enabled">Memory is what allows your AI to remember important facts about you automatically.\n\nWhen enabled:\n• AI extracts key facts from conversations\n• AI stores them as memories\n• AI recalls relevant memories when responding\n\nThis helps AI understand you better over time.</string>
+    <string name="hint_memory_extraction_prompt">Memory extraction prompt is what your AI uses to identify important facts worth remembering.\n\nThe {text} placeholder is where your AI sees the conversation.\n\nYour AI decides:\n• What facts are important\n• How to phrase memories\n• What to ignore</string>
+    <string name="hint_memory_limit">Memory limit is how many memories your AI can recall when responding.\n\n• Fewer memories (3–5): AI focuses on most relevant facts\n• More memories (6–10): AI sees broader context about you\n\nNote: AI always picks the most relevant memories using semantic search.</string>
+    <string name="hint_memory_age_filter">Memory age filter is how old memories must be before your AI can recall them.\n\n• 0 days: AI recalls all memories immediately\n• 2–7 days: AI lets recent facts settle before recalling\n• 14+ days: AI recalls only established long-term facts\n\nThis prevents AI from over-focusing on recent conversations.</string>
+    <string name="hint_memory_instructions">Memory instructions is what your AI understands about how to use recalled memories.\n\nThis tells AI:\n• How to interpret memories\n• When to mention them\n• How to incorporate them naturally</string>
+    
+    <!-- RAG Section -->
+    <string name="hint_rag_enabled">RAG (Retrieval-Augmented Generation) is what allows your AI to use knowledge documents when responding.\n\nWhen enabled:\n• AI searches through your documents\n• AI finds relevant fragments\n• AI incorporates that knowledge into answers\n\nThis helps AI respond with accurate information from your documents.</string>
+    <string name="hint_rag_chunk_limit">RAG chunk limit is how many document fragments your AI can read when responding.\n\n• Fewer chunks (3–5): AI focuses on most relevant fragments\n• More chunks (6–15): AI sees broader knowledge context\n\nNote: AI always picks the most relevant fragments using semantic search.</string>
+    <string name="hint_rag_chunk_size">Chunk size is how much text your AI reads in each document fragment.\n\n• Smaller chunks (200–500): AI finds precise matches, but may miss context\n• Larger chunks (500–1500): AI sees more context per fragment\n\nNote: Changing this requires recalculating embeddings for existing documents.</string>
+    <string name="hint_rag_chunk_overlap">Chunk overlap is how many characters your AI sees repeated between adjacent fragments.\n\n• No overlap (0): Clear fragment boundaries\n• Some overlap (50–200): AI doesn\'t miss information at boundaries\n\nThis ensures important information at fragment edges isn\'t lost.</string>
+    <string name="hint_rag_instructions">RAG instructions is what your AI understands about how to use document knowledge.\n\nThis tells AI:\n• How to interpret fragments\n• When to use document knowledge\n• How to cite or incorporate information</string>
+    
+    <!-- Context Section -->
+    <string name="hint_context_your_context">Your context is what you want your AI to always know about you.\n\nExample:\n• Your name and background\n• Your interests and goals\n• Your communication preferences\n• Important facts about your life\n\nAI sees this in every conversation, along with any enhanced context (memories + RAG).</string>
+    <string name="hint_context_instructions">Context instructions is what your AI understands about using enhanced context.\n\nEnhanced context combines:\n• Your context\n• Recalled memories\n• RAG knowledge fragments\n\nThis tells AI how to weave all these pieces together naturally.</string>
+    <string name="hint_swipe_message_prompt">Swipe message prompt is what your AI sees when you reply to a specific message.\n\nThe {replied_message} placeholder shows AI which message you\'re referring to.\n\nThis helps AI:\n• Focus on that specific point\n• Provide relevant follow-up\n• Understand conversation flow</string>
+    
+    <!-- Preanalysis Section -->
+    <string name="hint_deep_empathy">Deep Empathy is what allows your AI to understand emotional focus in conversations.\n\nWhen enabled:\n• AI analyzes conversation for emotional themes\n• AI identifies what matters most to you\n• AI tracks dialogue focus points\n• AI responds with deeper emotional awareness\n\nThis helps AI hear not just what you say, but what you mean.</string>
+    <string name="hint_deep_empathy_prompt">Deep Empathy prompt is what your AI uses to track dialogue focus.\n\nThe {dialogue_focus} placeholder is where AI receives focus points from analysis.\n\nThis tells AI:\n• What emotional themes are present\n• What you\'re really focusing on\n• How to respond with awareness</string>
+    <string name="hint_deep_empathy_analysis_prompt">Analysis prompt is what your AI uses to find focus points in conversations.\n\nThe {text} placeholder is where AI sees the dialogue.\n\nYour AI identifies:\n• Emotional themes\n• What matters to you\n• Underlying meanings\n\nThe output is structured JSON that feeds into the Deep Empathy prompt.</string>
+    
+    <!-- Embedding Section -->
+    <string name="hint_embedding_use_api">Use API Embeddings is how your AI creates vector representations of text.\n\n• API embeddings (enabled): AI uses cloud provider for embeddings — requires API key, faster, more accurate\n• Local embeddings (disabled): AI uses on-device model — works offline, slower, uses device resources\n\nEmbeddings power semantic search in memories and RAG.</string>
+    <string name="hint_embedding_provider">Embedding provider is which cloud service your AI uses to create embeddings.\n\nDifferent providers offer:\n• Different embedding quality\n• Different dimensions (vector size)\n• Different pricing\n\nNote: Changing provider requires recalculating all embeddings.</string>
+    <string name="hint_embedding_model">Embedding model is which specific model your AI uses to create embeddings.\n\nFor local models:\n• Download size varies\n• Processing speed varies\n• Dimensions (vector size) vary\n\nNote: Changing model requires recalculating all embeddings.</string>
 </resources>

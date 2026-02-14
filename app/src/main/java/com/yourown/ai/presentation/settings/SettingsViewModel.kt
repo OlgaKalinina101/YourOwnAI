@@ -57,6 +57,7 @@ data class SettingsUiState(
     val showDeepEmpathyAnalysisDialog: Boolean = false,
     val showEmbeddingRequiredDialog: Boolean = false,
     val showContextDialog: Boolean = false,
+    val showContextHelpDialog: Boolean = false,
     val showApiKeyDialog: Boolean = false,
     val showLocalModelsDialog: Boolean = false,
     val showEmbeddingModelsDialog: Boolean = false,
@@ -553,6 +554,14 @@ class SettingsViewModel @Inject constructor(
     
     fun hideContextInstructionsDialog() {
         _uiState.update { it.copy(showContextInstructionsDialog = false) }
+    }
+    
+    fun showContextHelpDialog() {
+        _uiState.update { it.copy(showContextHelpDialog = true) }
+    }
+    
+    fun hideContextHelpDialog() {
+        _uiState.update { it.copy(showContextHelpDialog = false) }
     }
     
     fun showSwipeMessagePromptDialog() {

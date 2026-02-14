@@ -454,9 +454,9 @@ fun EmptyState(
         
         Text(
             text = if (hasModel) {
-                "Start your conversation"
+                stringResource(R.string.empty_state_start_conversation)
             } else {
-                "Select a model to begin"
+                stringResource(R.string.empty_state_select_model)
             },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
@@ -467,9 +467,9 @@ fun EmptyState(
         
         Text(
             text = if (hasModel) {
-                "Type a message below to start chatting with your AI"
+                stringResource(R.string.empty_state_type_message)
             } else {
-                "Download a local model or add an API key in Settings"
+                stringResource(R.string.empty_state_download_model)
             },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

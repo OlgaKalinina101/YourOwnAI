@@ -16,6 +16,7 @@ import com.yourown.ai.R
 import com.yourown.ai.presentation.settings.dialogs.ApiKeyDialog
 import com.yourown.ai.presentation.settings.dialogs.AppearanceDialog
 import com.yourown.ai.presentation.settings.dialogs.ContextDialog
+import com.yourown.ai.presentation.settings.dialogs.ContextHelpDialog
 import com.yourown.ai.presentation.settings.dialogs.LocalModelsDialog
 import com.yourown.ai.presentation.settings.dialogs.EmbeddingModelsDialog
 import com.yourown.ai.presentation.settings.sections.*
@@ -103,7 +104,8 @@ fun SettingsScreen(
                 hasContext = uiState.userContext.content.isNotEmpty(),
                 uiState = uiState,
                 viewModel = viewModel,
-                onEditContext = viewModel::showContextDialog
+                onEditContext = viewModel::showContextDialog,
+                onShowHelp = viewModel::showContextHelpDialog
             )
             
             // Embedding Models Section
@@ -400,6 +402,13 @@ fun SettingsScreen(
             onDismiss = viewModel::hideContextInstructionsDialog,
             onSave = viewModel::updateContextInstructions,
             onReset = viewModel::resetContextInstructions
+        )
+    }
+    
+    // Context Help Dialog
+    if (uiState.showContextHelpDialog) {
+        ContextHelpDialog(
+            onDismiss = viewModel::hideContextHelpDialog
         )
     }
     

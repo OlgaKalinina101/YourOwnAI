@@ -374,6 +374,46 @@ object DatabaseModule {
      */
     private val MIGRATION_19_20 = object : Migration(19, 20) {
         override fun migrate(database: SupportSQLiteDatabase) {
+            // Fix potential issue with 'values' column name (reserved SQL keyword)
+            // Check if table has 'values' column and rename to 'userValues'
+            try {
+                // Try to query 'values' column
+                database.query("SELECT values FROM user_biography LIMIT 1")
+                // If successful, we have old 'values' column, need to recreate table
+                
+                // Create temp table with correct schema
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS user_biography_new (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        userValues TEXT NOT NULL DEFAULT '',
+                        profile TEXT NOT NULL DEFAULT '',
+                        painPoints TEXT NOT NULL DEFAULT '',
+                        joys TEXT NOT NULL DEFAULT '',
+                        fears TEXT NOT NULL DEFAULT '',
+                        loves TEXT NOT NULL DEFAULT '',
+                        currentSituation TEXT NOT NULL DEFAULT '',
+                        lastUpdated INTEGER NOT NULL,
+                        processedClusters INTEGER NOT NULL DEFAULT 0
+                    )
+                """.trimIndent())
+                
+                // Copy data from old table, renaming 'values' to 'userValues'
+                database.execSQL("""
+                    INSERT INTO user_biography_new 
+                    (id, userValues, profile, painPoints, joys, fears, loves, currentSituation, lastUpdated, processedClusters)
+                    SELECT id, values, profile, painPoints, joys, fears, loves, currentSituation, lastUpdated, processedClusters
+                    FROM user_biography
+                """.trimIndent())
+                
+                // Drop old table
+                database.execSQL("DROP TABLE user_biography")
+                
+                // Rename new table
+                database.execSQL("ALTER TABLE user_biography_new RENAME TO user_biography")
+            } catch (e: Exception) {
+                // Table either doesn't exist or already has correct schema, continue
+            }
+            
             // Create biography_chunks table
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS biography_chunks (

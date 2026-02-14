@@ -34,7 +34,8 @@ fun PreanalysisSection(
             title = stringResource(R.string.preanalysis_deep_empathy),
             subtitle = stringResource(R.string.preanalysis_deep_empathy_subtitle),
             checked = config.deepEmpathy,
-            onCheckedChange = { onToggleDeepEmpathy() }
+            onCheckedChange = { onToggleDeepEmpathy() },
+            hintResId = R.string.hint_deep_empathy
         )
         
         // Deep Empathy Settings (shown when Deep Empathy is enabled)

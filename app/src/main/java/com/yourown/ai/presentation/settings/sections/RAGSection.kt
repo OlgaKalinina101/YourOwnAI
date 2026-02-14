@@ -43,7 +43,8 @@ fun RAGSection(
             title = stringResource(R.string.rag_enabled_title),
             subtitle = stringResource(R.string.rag_enabled_subtitle),
             checked = config.ragEnabled,
-            onCheckedChange = { onToggleRAG() }
+            onCheckedChange = { onToggleRAG() },
+            hintResId = R.string.hint_rag_enabled
         )
         
         // RAG Settings (show only when RAG is enabled)
@@ -242,7 +243,8 @@ fun RAGSection(
                 value = config.ragChunkLimit.toFloat(),
                 valueRange = AIConfig.MIN_RAG_CHUNK_LIMIT.toFloat()..AIConfig.MAX_RAG_CHUNK_LIMIT.toFloat(),
                 onValueChange = { onRAGChunkLimitChange(it.toInt()) },
-                valueFormatter = { ragChunkLimitFormatter.format(it.toInt()) }
+                valueFormatter = { ragChunkLimitFormatter.format(it.toInt()) },
+                hintResId = R.string.hint_rag_chunk_limit
             )
             
             // Advanced RAG Settings
@@ -278,7 +280,8 @@ fun RAGSection(
                         val rounded = (value / 10).toInt() * 10
                         onChunkSizeChange(rounded.toFloat())
                     },
-                    valueFormatter = { chunkSizeFormatter.format(it.toInt()) }
+                    valueFormatter = { chunkSizeFormatter.format(it.toInt()) },
+                    hintResId = R.string.hint_rag_chunk_size
                 )
                 
                 // Chunk Overlap
@@ -293,7 +296,8 @@ fun RAGSection(
                         val rounded = (value / 10).toInt() * 10
                         onChunkOverlapChange(rounded.toFloat())
                     },
-                    valueFormatter = { chunkOverlapFormatter.format(it.toInt()) }
+                    valueFormatter = { chunkOverlapFormatter.format(it.toInt()) },
+                    hintResId = R.string.hint_rag_chunk_overlap
                 )
                 
                 // Warning about recalculating embeddings

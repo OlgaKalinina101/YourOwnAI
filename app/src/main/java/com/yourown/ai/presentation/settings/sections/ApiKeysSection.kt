@@ -14,6 +14,7 @@ import com.yourown.ai.R
 import com.yourown.ai.domain.model.AIProvider
 import com.yourown.ai.domain.model.ApiKeyInfo
 import com.yourown.ai.presentation.settings.components.SettingsSection
+import com.yourown.ai.presentation.settings.components.HelpDialog
 
 /**
  * API Keys Section - configure API providers
@@ -78,6 +79,8 @@ private fun ApiKeyItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    var showHelpDialog by remember { mutableStateOf(false) }
+    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -112,9 +115,26 @@ private fun ApiKeyItem(
                 }
             }
             
-            IconButton(onClick = { /* TODO: Show help */ }) {
+            IconButton(onClick = { showHelpDialog = true }) {
                 Icon(Icons.Default.HelpOutline, stringResource(R.string.settings_api_keys_title), modifier = Modifier.size(20.dp))
             }
+        }
+    }
+    
+    if (showHelpDialog) {
+        val hintResId = when (keyInfo.provider) {
+            AIProvider.DEEPSEEK -> R.string.hint_api_key_deepseek
+            AIProvider.OPENAI -> R.string.hint_api_key_openai
+            AIProvider.OPENROUTER -> R.string.hint_api_key_openrouter
+            AIProvider.XAI -> R.string.hint_api_key_xai
+            else -> null
+        }
+        
+        if (hintResId != null) {
+            HelpDialog(
+                hintResId = hintResId,
+                onDismiss = { showHelpDialog = false }
+            )
         }
     }
 }

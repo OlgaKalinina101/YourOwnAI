@@ -38,7 +38,8 @@ fun MemorySection(
             title = stringResource(R.string.memory_enabled_title),
             subtitle = stringResource(R.string.memory_enabled_subtitle),
             checked = config.memoryEnabled,
-            onCheckedChange = { onToggleMemory() }
+            onCheckedChange = { onToggleMemory() },
+            hintResId = R.string.hint_memory_enabled
         )
         
         // Memory Extraction Prompt
@@ -60,7 +61,8 @@ fun MemorySection(
                 value = config.memoryLimit.toFloat(),
                 valueRange = AIConfig.MIN_MEMORY_LIMIT.toFloat()..AIConfig.MAX_MEMORY_LIMIT.toFloat(),
                 onValueChange = { onMemoryLimitChange(it.toInt()) },
-                valueFormatter = { memoryLimitFormatter.format(it.toInt()) }
+                valueFormatter = { memoryLimitFormatter.format(it.toInt()) },
+                hintResId = R.string.hint_memory_limit
             )
             
             // Advanced Memory Settings
@@ -91,7 +93,8 @@ fun MemorySection(
                     value = config.memoryMinAgeDays.toFloat(),
                     valueRange = AIConfig.MIN_MEMORY_MIN_AGE_DAYS.toFloat()..AIConfig.MAX_MEMORY_MIN_AGE_DAYS.toFloat(),
                     onValueChange = { viewModel.updateMemoryMinAgeDays(it.toInt()) },
-                    valueFormatter = { memoryAgeFormatter.format(it.toInt()) }
+                    valueFormatter = { memoryAgeFormatter.format(it.toInt()) },
+                    hintResId = R.string.hint_memory_age_filter
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))

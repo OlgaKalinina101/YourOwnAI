@@ -60,7 +60,8 @@ fun AIConfigurationSection(
             subtitle = stringResource(R.string.settings_temperature_subtitle),
             value = config.temperature,
             valueRange = AIConfig.MIN_TEMPERATURE..AIConfig.MAX_TEMPERATURE,
-            onValueChange = onTemperatureChange
+            onValueChange = onTemperatureChange,
+            hintResId = R.string.hint_temperature
         )
         
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
@@ -71,7 +72,8 @@ fun AIConfigurationSection(
             subtitle = stringResource(R.string.settings_top_p_subtitle),
             value = config.topP,
             valueRange = AIConfig.MIN_TOP_P..AIConfig.MAX_TOP_P,
-            onValueChange = onTopPChange
+            onValueChange = onTopPChange,
+            hintResId = R.string.hint_top_p
         )
         
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
@@ -83,7 +85,8 @@ fun AIConfigurationSection(
             value = config.messageHistoryLimit,
             options = (AIConfig.MIN_MESSAGE_HISTORY..AIConfig.MAX_MESSAGE_HISTORY).toList(),
             onValueChange = onMessageHistoryChange,
-            valueSuffix = stringResource(R.string.settings_pairs)
+            valueSuffix = stringResource(R.string.settings_pairs),
+            hintResId = R.string.hint_message_history
         )
         
         HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
@@ -95,7 +98,8 @@ fun AIConfigurationSection(
             value = config.maxTokens,
             options = listOf(256, 512, 1024, 2048, 4096, 8192),
             onValueChange = onMaxTokensChange,
-            valueSuffix = stringResource(R.string.settings_tokens)
+            valueSuffix = stringResource(R.string.settings_tokens),
+            hintResId = R.string.hint_max_tokens
         )
     }
 }

@@ -236,6 +236,26 @@ data class ModelCapabilities(
                 )
                 
                 // OpenRouter GPT-4o via OpenRouter proxy
+                "openai/gpt-4o:extended" -> ModelCapabilities(
+                    supportsVision = true,
+                    supportsDocuments = true,
+                    supportsWebSearch = true,
+                    imageSupport = ImageSupport(
+                        maxImages = 500,
+                        supportedFormats = listOf("jpeg", "jpg", "png", "gif", "webp"),
+                        maxSizePerImageMB = 50,
+                        maxTotalPayloadMB = 50,
+                        supportsDetail = true
+                    ),
+                    documentSupport = DocumentSupport(
+                        maxDocuments = 50,
+                        supportedFormats = listOf("pdf", "txt"),
+                        maxSizePerDocumentMB = 50
+                    ),
+                    totalAttachmentsLimit = 500,
+                    notes = "GPT-4o Extended: 128K context, 2x faster, 50% cheaper. Same multimodal capabilities. Web search via :online."
+                )
+                
                 "openai/gpt-4o-2024-05-13" -> ModelCapabilities(
                     supportsVision = true,
                     supportsDocuments = true,

@@ -275,6 +275,11 @@ enum class OpenRouterModel(
     ),
 
     // OpenAI GPT-4o Series
+    GPT_4O_EXTENDED(
+        modelId = "openai/gpt-4o:extended",
+        displayName = "GPT-4o Extended",
+        description = "128K context, twice as fast, 50% cheaper than GPT-4 Turbo"
+    ),
     GPT_4O_2024_05_13(
         modelId = "openai/gpt-4o-2024-05-13",
         displayName = "GPT-4o (2024-05-13)",
