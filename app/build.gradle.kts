@@ -113,6 +113,7 @@ dependencies {
 
     // Hilt (Dependency Injection)
     implementation("com.google.dagger:hilt-android:2.54")
+    implementation("com.google.firebase:protolite-well-known-types:18.0.1")
     ksp("com.google.dagger:hilt-android-compiler:2.54")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
@@ -161,6 +162,17 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt:2.1.3")
     implementation("io.github.jan-tennert.supabase:realtime-kt:2.1.3")
     implementation("io.ktor:ktor-client-android:2.3.7")
+    
+    // Ktor Server for Local Network Sync
+    implementation("io.ktor:ktor-server-core:2.3.7")
+    implementation("io.ktor:ktor-server-netty:2.3.7")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
+    implementation("io.ktor:ktor-serialization-gson:2.3.7")
+    implementation("io.ktor:ktor-server-call-logging:2.3.7")
+    implementation("io.ktor:ktor-server-cors:2.3.7")
+    
+    // QR Code generation
+    implementation("com.google.zxing:core:3.5.3")
     
     // Kotlinx Serialization (for Supabase DTOs)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")

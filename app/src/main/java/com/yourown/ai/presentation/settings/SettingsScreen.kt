@@ -176,6 +176,15 @@ fun SettingsScreen(
                 isSyncing = uiState.isSyncing
             )
             
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Local Network Sync Section
+            LocalSyncSection(
+                serverStatus = uiState.localSyncServerStatus,
+                onStartServer = viewModel::startLocalSyncServer,
+                onStopServer = viewModel::stopLocalSyncServer
+            )
+            
             // Language Section
             LanguageSection(
                 promptLanguage = uiState.promptLanguage,

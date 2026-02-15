@@ -95,6 +95,22 @@ data class ModelCapabilities(
                     notes = "GPT-4.1: Up to 500 images, 50MB total payload. Web search via Responses API."
                 )
                 
+                // o3 - Reasoning model with vision support
+                "o3", "o3-2025-04-16" -> ModelCapabilities(
+                    supportsVision = true,
+                    supportsDocuments = false,
+                    supportsWebSearch = false,
+                    imageSupport = ImageSupport(
+                        maxImages = 100, // Conservative estimate for reasoning model
+                        supportedFormats = listOf("jpeg", "jpg", "png", "gif", "webp"),
+                        maxSizePerImageMB = 50,
+                        maxTotalPayloadMB = 50,
+                        supportsDetail = true
+                    ),
+                    totalAttachmentsLimit = 100,
+                    notes = "o3: Reasoning model for complex tasks. 200K context, 100K max output. Text and image input."
+                )
+                
                 // DeepSeek Models - Direct API
                 "deepseek-chat" -> ModelCapabilities(
                     supportsVision = false,
@@ -236,44 +252,42 @@ data class ModelCapabilities(
                 )
                 
                 // OpenRouter GPT-4o via OpenRouter proxy
-                "openai/gpt-4o:extended" -> ModelCapabilities(
+                "openai/gpt-4o" -> ModelCapabilities(
                     supportsVision = true,
-                    supportsDocuments = true,
+                    supportsDocuments = false, // OpenRouter doesn't support PDF for gpt-4o
                     supportsWebSearch = true,
                     imageSupport = ImageSupport(
-                        maxImages = 500,
+                        maxImages = 100, // Conservative estimate for OpenRouter proxy
                         supportedFormats = listOf("jpeg", "jpg", "png", "gif", "webp"),
-                        maxSizePerImageMB = 50,
-                        maxTotalPayloadMB = 50,
-                        supportsDetail = true
+                        maxSizePerImageMB = 20,
+                        maxTotalPayloadMB = 100,
+                        supportsDetail = false // OpenRouter doesn't support 'detail' parameter
                     ),
-                    documentSupport = DocumentSupport(
-                        maxDocuments = 50,
-                        supportedFormats = listOf("pdf", "txt"),
-                        maxSizePerDocumentMB = 50
-                    ),
-                    totalAttachmentsLimit = 500,
-                    notes = "GPT-4o Extended: 128K context, 2x faster, 50% cheaper. Same multimodal capabilities. Web search via :online."
+                    totalAttachmentsLimit = 100,
+                    notes = "GPT-4o (via OpenRouter): Latest version with vision support. Web search via :online."
+                )
+                
+                "openai/gpt-4o:extended" -> ModelCapabilities(
+                    supportsVision = false, // Extended variant does NOT support vision on OpenRouter
+                    supportsDocuments = false,
+                    supportsWebSearch = true,
+                    totalAttachmentsLimit = 0,
+                    notes = "GPT-4o Extended (via OpenRouter): 128K context, text only. Extended context variant without multimodal support. Web search via :online."
                 )
                 
                 "openai/gpt-4o-2024-05-13" -> ModelCapabilities(
                     supportsVision = true,
-                    supportsDocuments = true,
+                    supportsDocuments = false, // OpenRouter proxy doesn't support PDF
                     supportsWebSearch = true,
                     imageSupport = ImageSupport(
-                        maxImages = 500,
+                        maxImages = 100, // Conservative estimate for OpenRouter proxy
                         supportedFormats = listOf("jpeg", "jpg", "png", "gif", "webp"),
-                        maxSizePerImageMB = 50,
-                        maxTotalPayloadMB = 50,
-                        supportsDetail = true
+                        maxSizePerImageMB = 20, // Conservative estimate
+                        maxTotalPayloadMB = 100,
+                        supportsDetail = false // OpenRouter doesn't support 'detail' parameter
                     ),
-                    documentSupport = DocumentSupport(
-                        maxDocuments = 50,
-                        supportedFormats = listOf("pdf", "txt"),
-                        maxSizePerDocumentMB = 50
-                    ),
-                    totalAttachmentsLimit = 500,
-                    notes = "GPT-4o (OpenRouter): Same as OpenAI direct. Up to 500 images or files, 50MB total. Web search via :online."
+                    totalAttachmentsLimit = 100,
+                    notes = "GPT-4o (via OpenRouter): Vision support. Web search via :online. Note: OpenRouter format differs from OpenAI direct."
                 )
                 
                 // x.ai Grok Models - Full multimodal support

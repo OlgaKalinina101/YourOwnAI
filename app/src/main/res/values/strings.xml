@@ -365,6 +365,21 @@
     <string name="cloud_sync_instructions_step9_desc">Return to app and go to Settings → Cloud Sync → Supabase Configuration</string>
     <string name="cloud_sync_instructions_step10_title">Configure connection</string>
     <string name="cloud_sync_instructions_step10_desc">Paste saved Project URL and Publishable API KEY. Click Test Connection and wait for successful connection</string>
+
+    <!-- Local Sync Section -->
+    <string name="local_sync_title">Local Network Sync</string>
+    <string name="local_sync_status_running">Running</string>
+    <string name="local_sync_status_stopped">Stopped</string>
+    <string name="local_sync_description">Access your AI from desktop browser with full chat functionality</string>
+    <string name="local_sync_network_note">Desktop must be on the same WiFi network&#10;or use Mobile Hotspot from this phone</string>
+    <string name="local_sync_device_label">Device</string>
+    <string name="local_sync_port_label">Port</string>
+    <string name="local_sync_conversations_label">Conversations</string>
+    <string name="local_sync_memories_label">Memories</string>
+    <string name="local_sync_link_copied">Link copied to clipboard!</string>
+    <string name="local_sync_copy_icon">Copy</string>
+    <string name="local_sync_stop_server">Stop Server</string>
+    <string name="local_sync_start_server">Start Server</string>
     
     <!-- Voice Chat -->
     <string name="voice_chat_title">Voice Chat</string>

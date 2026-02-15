@@ -153,6 +153,14 @@ The app should feel like a **tool**, not a product with personality. It's your s
   - Encrypted credential storage
   - Setup instructions with screenshots (Russian UI)
   - Free tier: 500MB storage on Supabase
+- **Local Network Sync – Desktop Web Client (NEW!)**
+  - Turn your phone into a tiny local web server (no desktop install required)
+  - Open `http://<phone-ip>:<port>` in any modern desktop browser on the same Wi‑Fi or phone hotspot
+  - View all conversations, memories, models, personas, and documents directly from the phone
+  - Write and send messages from desktop with full streaming, markdown, and attachments (images + files)
+  - Phone remains the **single source of truth** – all data, models, prompts, and RAG stay on the device
+  - Works entirely over your local network – nothing is sent to any external backend
+  - Quick link shows in `Settings → Local Network Sync` (tap to copy URL to clipboard)
 - **No backend** - direct communication with AI providers
 - **No tracking** - zero analytics, telemetry, or user profiling
 - **Onboarding customization** - theme, colors, fonts, text size

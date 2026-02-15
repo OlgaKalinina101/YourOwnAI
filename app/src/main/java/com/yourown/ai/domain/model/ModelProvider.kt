@@ -87,6 +87,13 @@ enum class OpenAIModel(
         modelId = "gpt-4o-2024-08-06",
         displayName = "GPT-4o",
         description = "Fast, intelligent, flexible"
+    ),
+    
+    // o3 Series (Reasoning Models)
+    O3(
+        modelId = "o3",
+        displayName = "o3",
+        description = "Reasoning model for complex tasks"
     );
     
     fun toModelProvider(): ModelProvider.API {
@@ -275,10 +282,15 @@ enum class OpenRouterModel(
     ),
 
     // OpenAI GPT-4o Series
+    GPT_4O(
+        modelId = "openai/gpt-4o",
+        displayName = "GPT-4o (Latest)",
+        description = "Latest GPT-4o with multimodal support"
+    ),
     GPT_4O_EXTENDED(
         modelId = "openai/gpt-4o:extended",
         displayName = "GPT-4o Extended",
-        description = "128K context, twice as fast, 50% cheaper than GPT-4 Turbo"
+        description = "128K context, text only (no vision)"
     ),
     GPT_4O_2024_05_13(
         modelId = "openai/gpt-4o-2024-05-13",

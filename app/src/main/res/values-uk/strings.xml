@@ -365,7 +365,7 @@
     <string name="cloud_sync_instructions_step9_desc">Поверніться в додаток та зайдіть у Settings → Cloud Sync → Supabase Configuration</string>
     <string name="cloud_sync_instructions_step10_title">Налаштуйте підключення</string>
     <string name="cloud_sync_instructions_step10_desc">Вставте збережені Project URL та Publishable API KEY. Натисніть Test Connection та дочекайтеся успішного підключення</string>
-    
+
     <!-- Voice Chat -->
     <string name="voice_chat_title">Голосовий чат</string>
     <string name="voice_chat_speak">Натисніть, щоб говорити</string>

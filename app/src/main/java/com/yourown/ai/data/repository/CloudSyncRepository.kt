@@ -531,11 +531,13 @@ class CloudSyncRepository @Inject constructor(
             for (cloudMsg in cloudMessages) {
                 val localMsg = localMessagesMap[cloudMsg.id]
                 
-                // Messages don't have updated_at, so use created_at
+                // Only insert new messages or update if content changed
                 val shouldUpdate = if (localMsg == null) {
                     true
                 } else {
-                    cloudMsg.created_at >= localMsg.createdAt
+                    // Use > instead of >= to avoid re-processing identical messages
+                    cloudMsg.created_at > localMsg.createdAt || 
+                    cloudMsg.content != (localMsg.content ?: "")
                 }
                 
                 if (shouldUpdate) {
@@ -548,25 +550,38 @@ class CloudSyncRepository @Inject constructor(
             Log.d(TAG, "Merged ${messagesSynced} messages")
             
             // ========== 6. MERGE MEMORIES (WITHOUT embeddings) ==========
+            // IMPORTANT: Cloud memories do NOT contain embeddings (stripped to save space).
+            // We must NOT re-upsert memories that already exist locally with the same content,
+            // because that would trigger unnecessary embedding regeneration.
+            // Only insert NEW memories or update if the fact text actually changed.
             
+            var memoriesSkipped = 0
             for (cloudMem in cloudMemories) {
                 val localMem = localMemoriesMap[cloudMem.id]
                 
-                // Memories don't have updated_at, use created_at
                 val shouldUpdate = if (localMem == null) {
-                    true
+                    true // New memory from cloud - insert it
                 } else {
-                    cloudMem.created_at >= localMem.createdAt
+                    // Only update if fact content actually changed
+                    // Skip if same content - this preserves local embeddings!
+                    cloudMem.fact != localMem.fact
                 }
                 
                 if (shouldUpdate) {
                     val entity = cloudMem.toEntity()
                     memoryRepository.upsertMemory(entity)
                     memoriesSynced++
+                    if (localMem == null) {
+                        Log.d(TAG, "Inserted new memory: ${cloudMem.id}")
+                    } else {
+                        Log.d(TAG, "Updated memory (fact changed): ${cloudMem.id}")
+                    }
+                } else {
+                    memoriesSkipped++
                 }
             }
             
-            Log.d(TAG, "Merged ${memoriesSynced} memories (embeddings will be generated locally)")
+            Log.d(TAG, "Merged ${memoriesSynced} memories, skipped ${memoriesSkipped} (unchanged, embeddings preserved)")
             
             // ========== DONE ==========
             

@@ -365,6 +365,21 @@
     <string name="cloud_sync_instructions_step9_desc">Вернитесь в приложение и зайдите в Settings → Cloud Sync → Supabase Configuration</string>
     <string name="cloud_sync_instructions_step10_title">Настройте подключение</string>
     <string name="cloud_sync_instructions_step10_desc">Вставьте сохраненные Project URL и Publishable API KEY. Нажмите Test Connection и дождитесь успешного подключения</string>
+
+    <!-- Local Sync Section -->
+    <string name="local_sync_title">Синхронизация по сети</string>
+    <string name="local_sync_status_running">Running</string>
+    <string name="local_sync_status_stopped">Stop</string>
+    <string name="local_sync_description">Доступ к AI из браузера на компьютере с полной функциональностью чата</string>
+    <string name="local_sync_network_note">Компьютер должен быть в той же Wi-Fi сети\nили используйте мобильную точку доступа с этого телефона</string>
+    <string name="local_sync_device_label">Устройство</string>
+    <string name="local_sync_port_label">Порт</string>
+    <string name="local_sync_conversations_label">Чаты</string>
+    <string name="local_sync_memories_label">Воспоминания</string>
+    <string name="local_sync_link_copied">Ссылка скопирована в буфер обмена!</string>
+    <string name="local_sync_copy_icon">Копировать</string>
+    <string name="local_sync_stop_server">Остановить сервер</string>
+    <string name="local_sync_start_server">Запустить сервер</string>
     
     <!-- Voice Chat -->
     <string name="voice_chat_title">Голосовой чат</string>

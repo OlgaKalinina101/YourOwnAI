@@ -50,7 +50,8 @@ object MultimodalMessageBuilder {
         role: String,
         text: String,
         imageBase64List: List<String> = emptyList(),
-        imageDetail: String = "auto"
+        imageDetail: String = "auto",
+        supportsDetail: Boolean = true // Whether the model supports 'detail' parameter
     ): MultimodalChatMessage {
         val contentParts = mutableListOf<Map<String, Any>>()
         
@@ -59,13 +60,18 @@ object MultimodalMessageBuilder {
         
         // Add image parts
         imageBase64List.forEach { base64 ->
+            val imageUrlMap = mutableMapOf<String, String>(
+                "url" to "data:image/jpeg;base64,$base64"
+            )
+            // Only add 'detail' parameter if model supports it
+            if (supportsDetail) {
+                imageUrlMap["detail"] = imageDetail
+            }
+            
             contentParts.add(
                 mapOf(
                     "type" to "image_url",
-                    "image_url" to mapOf(
-                        "url" to "data:image/jpeg;base64,$base64",
-                        "detail" to imageDetail
-                    )
+                    "image_url" to imageUrlMap
                 )
             )
         }
@@ -81,7 +87,8 @@ object MultimodalMessageBuilder {
         text: String,
         imageBase64List: List<String> = emptyList(),
         fileData: List<Pair<String, String>> = emptyList(), // Pair<base64, filename>
-        imageDetail: String = "auto"
+        imageDetail: String = "auto",
+        supportsDetail: Boolean = true // Whether the model supports 'detail' parameter
     ): MultimodalChatMessage {
         val contentParts = mutableListOf<Map<String, Any>>()
         
@@ -90,13 +97,18 @@ object MultimodalMessageBuilder {
         
         // Add image parts
         imageBase64List.forEach { base64 ->
+            val imageUrlMap = mutableMapOf<String, String>(
+                "url" to "data:image/jpeg;base64,$base64"
+            )
+            // Only add 'detail' parameter if model supports it
+            if (supportsDetail) {
+                imageUrlMap["detail"] = imageDetail
+            }
+            
             contentParts.add(
                 mapOf(
                     "type" to "image_url",
-                    "image_url" to mapOf(
-                        "url" to "data:image/jpeg;base64,$base64",
-                        "detail" to imageDetail
-                    )
+                    "image_url" to imageUrlMap
                 )
             )
         }

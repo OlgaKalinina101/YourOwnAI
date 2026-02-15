@@ -8,6 +8,13 @@
         </trust-anchors>
     </base-config>
     
+    <!-- Allow cleartext for local network (192.168.x.x, 10.x.x.x) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.0.0</domain>
+        <domain includeSubdomains="true">10.0.0.0</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+    
     <!-- Specific domains we connect to -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api.deepseek.com</domain>

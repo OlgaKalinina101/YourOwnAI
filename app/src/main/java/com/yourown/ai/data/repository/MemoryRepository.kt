@@ -560,15 +560,91 @@ class MemoryRepository @Inject constructor(
     
     /**
      * Upsert memory (for cloud sync)
+     * Preserves existing embedding if present, generates only if missing
      */
     suspend fun upsertMemory(memory: MemoryEntity): Unit = withContext(Dispatchers.IO) {
-        memoryDao.insertMemory(memory)
+        // Check if this memory already exists in DB
+        val existingMemory = memoryDao.getMemoryById(memory.id)
+        
+        // Determine final embedding:
+        // 1. If new memory has embedding -> use it (shouldn't happen with cloud sync, but just in case)
+        // 2. If existing memory has embedding AND fact hasn't changed -> preserve it
+        // 3. If existing memory has embedding BUT fact changed -> regenerate
+        // 4. If neither has embedding -> generate new one
+        val factChanged = existingMemory != null && existingMemory.fact != memory.fact
+        
+        val embeddingString = when {
+            !memory.embedding.isNullOrBlank() -> {
+                // New memory already has embedding
+                android.util.Log.d("MemoryRepository", "Using provided embedding for memory ${memory.id}")
+                memory.embedding
+            }
+            existingMemory != null && !existingMemory.embedding.isNullOrBlank() && !factChanged -> {
+                // Preserve existing embedding (fact unchanged - DON'T regenerate!)
+                android.util.Log.d("MemoryRepository", "Preserving existing embedding for memory ${memory.id}")
+                existingMemory.embedding
+            }
+            else -> {
+                // Generate new embedding (truly missing or fact changed)
+                val reason = when {
+                    existingMemory == null -> "new memory"
+                    factChanged -> "fact changed"
+                    else -> "embedding missing"
+                }
+                android.util.Log.d("MemoryRepository", "Generating embedding for memory ${memory.id} (reason: $reason)")
+                val embeddingResult = embeddingService.generateEmbedding(memory.fact)
+                if (embeddingResult.isSuccess) {
+                    embeddingResult.getOrNull()?.joinToString(",")
+                } else {
+                    android.util.Log.w("MemoryRepository", "Failed to generate embedding for memory ${memory.id}")
+                    null
+                }
+            }
+        }
+        
+        memoryDao.insertMemory(memory.copy(embedding = embeddingString))
     }
     
     /**
      * Upsert multiple memories (for cloud sync)
+     * Preserves existing embeddings if present, generates only if missing
      */
     suspend fun upsertMemories(memories: List<MemoryEntity>): Unit = withContext(Dispatchers.IO) {
-        memories.forEach { memoryDao.insertMemory(it) }
+        memories.forEach { memory ->
+            // Check if this memory already exists in DB
+            val existingMemory = memoryDao.getMemoryById(memory.id)
+            
+            // Determine final embedding (same logic as upsertMemory)
+            val factChanged = existingMemory != null && existingMemory.fact != memory.fact
+            
+            val embeddingString = when {
+                !memory.embedding.isNullOrBlank() -> {
+                    memory.embedding
+                }
+                existingMemory != null && !existingMemory.embedding.isNullOrBlank() && !factChanged -> {
+                    // Preserve existing embedding (fact unchanged)
+                    android.util.Log.d("MemoryRepository", "Preserving existing embedding for memory ${memory.id}")
+                    existingMemory.embedding
+                }
+                else -> {
+                    // Generate new embedding (truly missing or fact changed)
+                    val reason = when {
+                        existingMemory == null -> "new memory"
+                        factChanged -> "fact changed"
+                        else -> "embedding missing"
+                    }
+                    android.util.Log.d("MemoryRepository", "Generating embedding for memory ${memory.id} (reason: $reason)")
+                    val embeddingResult = embeddingService.generateEmbedding(memory.fact)
+                    if (embeddingResult.isSuccess) {
+                        embeddingResult.getOrNull()?.joinToString(",")
+                    } else {
+                        android.util.Log.w("MemoryRepository", "Failed to generate embedding for memory ${memory.id}")
+                        null
+                    }
+                }
+            }
+            
+            memoryDao.insertMemory(memory.copy(embedding = embeddingString))
+        }
     }
 }

@@ -11,6 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,6 +26,7 @@ class AutoSyncManager @Inject constructor(
 ) : DefaultLifecycleObserver {
     
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val syncMutex = Mutex()
     
     companion object {
         private const val TAG = "AutoSyncManager"
@@ -55,10 +58,17 @@ class AutoSyncManager @Inject constructor(
     }
     
     /**
-     * Perform sync if conditions are met
+     * Perform sync if conditions are met.
+     * Uses Mutex to prevent concurrent sync operations.
      */
     private fun performAutoSync(trigger: String) {
         scope.launch {
+            // Prevent concurrent syncs - if already running, skip this one
+            if (!syncMutex.tryLock()) {
+                Log.d(TAG, "Sync already in progress, skipping ($trigger)")
+                return@launch
+            }
+            
             try {
                 // Check if sync is configured and enabled
                 val settings = cloudSyncPreferences.cloudSyncSettings.first()
@@ -106,6 +116,8 @@ class AutoSyncManager @Inject constructor(
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Auto-sync failed", e)
+            } finally {
+                syncMutex.unlock()
             }
         }
     }

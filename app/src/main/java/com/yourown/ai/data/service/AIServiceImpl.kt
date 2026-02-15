@@ -174,7 +174,7 @@ class AIServiceImpl @Inject constructor(
             // Use regular Chat Completions API
             if (hasImages || hasFiles) {
                 // Use multimodal API
-                val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+                val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config, provider.modelId)
                 openAIClient.chatCompletionStreamMultimodal(
                     apiKey = apiKey,
                     model = provider.modelId,
@@ -248,7 +248,7 @@ class AIServiceImpl @Inject constructor(
         } else {
             // Use regular Chat Completions API (no tools)
             if (hasImages || hasFiles) {
-                val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+                val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config, provider.modelId)
                 xaiClient.chatCompletionStreamMultimodal(
                     apiKey = apiKey,
                     model = provider.modelId,
@@ -301,7 +301,8 @@ class AIServiceImpl @Inject constructor(
         
         if (hasImages || hasFiles) {
             // Use multimodal API (OpenRouter supports OpenAI-compatible format)
-            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config)
+            // Pass the original modelId (without :online suffix) for capabilities check
+            val multimodalMessages = buildMultimodalMessages(messages, systemPrompt, userContext, config, provider.modelId)
             openRouterClient.chatCompletionStreamMultimodal(
                 apiKey = apiKey,
                 model = modelId,
@@ -405,9 +406,14 @@ class AIServiceImpl @Inject constructor(
         messages: List<Message>,
         systemPrompt: String,
         userContext: String?,
-        config: AIConfig
+        config: AIConfig,
+        modelId: String // Add modelId to check capabilities
     ): List<com.yourown.ai.data.remote.openai.MultimodalChatMessage> {
         val result = mutableListOf<com.yourown.ai.data.remote.openai.MultimodalChatMessage>()
+        
+        // Get model capabilities to check if 'detail' is supported
+        val capabilities = com.yourown.ai.domain.model.ModelCapabilities.forModel(modelId)
+        val supportsDetail = capabilities.imageSupport?.supportsDetail ?: true
         
         // Add system prompt
         var systemContent = systemPrompt
@@ -503,7 +509,8 @@ class AIServiceImpl @Inject constructor(
                         text = message.content,
                         imageBase64List = imageBase64List,
                         fileData = fileDataList,
-                        imageDetail = "auto"
+                        imageDetail = "auto",
+                        supportsDetail = supportsDetail // Pass model's detail support
                     )
                 )
             } else {

@@ -44,19 +44,35 @@ class MemoryClusteringService @Inject constructor(
         similarityThreshold: Float = 0.60f // Slightly lower due to hybrid approach
     ): Result<ClusteringResult> = withContext(Dispatchers.Default) {
         try {
-            _clusteringStatus.value = ClusteringStatus.Processing(10, "Loading memories...")
+            android.util.Log.d("MemoryClustering", "=== Starting clustering ===")
+            _clusteringStatus.value = ClusteringStatus.Processing(5, "Loading memories...")
             
             // 1. Load all memories with embeddings
             val memoryEntities = memoryRepository.getAllMemoryEntities()
+            android.util.Log.d("MemoryClustering", "Loaded ${memoryEntities.size} memory entities")
             if (memoryEntities.isEmpty()) {
                 return@withContext Result.failure(Exception("No memories found"))
+            }
+            
+            // Check if any memories are missing embeddings
+            val memoriesWithoutEmbeddings = memoryEntities.filter { it.embedding.isNullOrBlank() }
+            if (memoriesWithoutEmbeddings.isNotEmpty()) {
+                android.util.Log.w("MemoryClustering", "${memoriesWithoutEmbeddings.size} memories missing embeddings - need to recalculate first!")
+                _clusteringStatus.value = ClusteringStatus.Failed(
+                    "Missing embeddings for ${memoriesWithoutEmbeddings.size} memories. Please regenerate embeddings in Settings → Memory Management."
+                )
+                return@withContext Result.failure(Exception("Missing embeddings. Please recalculate embeddings first."))
             }
             
             _clusteringStatus.value = ClusteringStatus.Processing(20, "Processing ${memoryEntities.size} memories...")
             
             // 2. Convert to MemoryWithAge and filter out those without embeddings
             val memoriesWithData = memoryEntities.mapNotNull { entity ->
-                val embedding = parseEmbedding(entity.embedding) ?: return@mapNotNull null
+                val embedding = parseEmbedding(entity.embedding) ?: run {
+                    android.util.Log.w("MemoryClustering", "Memory ${entity.id} has no embedding")
+                    return@mapNotNull null
+                }
+                android.util.Log.d("MemoryClustering", "Memory ${entity.id} embedding size: ${embedding.size}")
                 val ageDays = calculateAgeDays(entity.createdAt)
                 
                 MemoryWithAge(
@@ -66,6 +82,7 @@ class MemoryClusteringService @Inject constructor(
                 )
             }
             
+            android.util.Log.d("MemoryClustering", "Memories with embeddings: ${memoriesWithData.size}")
             if (memoriesWithData.isEmpty()) {
                 return@withContext Result.failure(Exception("No memories with embeddings found"))
             }
@@ -73,16 +90,20 @@ class MemoryClusteringService @Inject constructor(
             _clusteringStatus.value = ClusteringStatus.Processing(30, "Stage 1: Finding main themes...")
             
             // 3. Stage 1: Coarse clustering - find main themes
+            android.util.Log.d("MemoryClustering", "Starting coarse clustering...")
             val coarseLabels = performCoarseClustering(memoriesWithData, similarityThreshold)
+            android.util.Log.d("MemoryClustering", "Coarse clustering complete. Labels: ${coarseLabels.toList()}")
             
             _clusteringStatus.value = ClusteringStatus.Processing(60, "Stage 2: Refining clusters...")
             
             // 4. Stage 2: Refine clusters to target size
+            android.util.Log.d("MemoryClustering", "Refining clusters...")
             val (finalClusters, outliers) = refineClusters(
                 memoriesWithData,
                 coarseLabels,
                 targetClusterSize
             )
+            android.util.Log.d("MemoryClustering", "Refinement complete. Clusters: ${finalClusters.size}, Outliers: ${outliers?.size ?: 0}")
             
             _clusteringStatus.value = ClusteringStatus.Processing(90, "Calculating metrics...")
             
@@ -93,6 +114,7 @@ class MemoryClusteringService @Inject constructor(
                 totalMemories = memoriesWithData.size
             )
             
+            android.util.Log.d("MemoryClustering", "=== Clustering complete! ===")
             _clusteringStatus.value = ClusteringStatus.Completed(result)
             
             // Don't auto-reset - let ViewModel handle it when dialog closes
@@ -118,12 +140,16 @@ class MemoryClusteringService @Inject constructor(
         val labels = IntArray(n) { -1 } // -1 means not assigned
         var currentCluster = 0
         
+        android.util.Log.d("MemoryClustering", "performCoarseClustering: ${n} memories, threshold=${threshold}")
+        
         for (i in 0 until n) {
             if (labels[i] != -1) continue // Already assigned
             
             // Start new cluster
             labels[i] = currentCluster
             val clusterMembers = mutableListOf(i)
+            
+            android.util.Log.d("MemoryClustering", "  Starting cluster $currentCluster with memory $i")
             
             // Find all similar memories for this cluster
             for (j in (i + 1) until n) {
@@ -140,12 +166,15 @@ class MemoryClusteringService @Inject constructor(
                 if (similarity >= threshold) {
                     labels[j] = currentCluster
                     clusterMembers.add(j)
+                    android.util.Log.d("MemoryClustering", "    Added memory $j (similarity=${similarity})")
                 }
             }
             
+            android.util.Log.d("MemoryClustering", "  Cluster $currentCluster complete with ${clusterMembers.size} members")
             currentCluster++
         }
         
+        android.util.Log.d("MemoryClustering", "performCoarseClustering complete: ${currentCluster} clusters")
         return labels
     }
     
@@ -342,21 +371,25 @@ class MemoryClusteringService @Inject constructor(
      * Create cluster object with calculated metrics
      */
     private fun createCluster(id: Int, memories: List<MemoryWithAge>): MemoryCluster {
+        android.util.Log.d("MemoryClustering", "createCluster: id=$id, size=${memories.size}")
         val embeddings = memories.map { it.embedding }
         
         // Calculate centroid (average embedding)
         val centroid = calculateCentroid(embeddings)
+        android.util.Log.d("MemoryClustering", "  Calculated centroid")
         
         // Density: average similarity to centroid
         val similarities = embeddings.map { emb ->
             SemanticSearchUtil.cosineSimilarity(emb, centroid)
         }
         val density = similarities.average().toFloat()
+        android.util.Log.d("MemoryClustering", "  Calculated density: $density")
         
         // Age metrics
         val avgAgeDays = memories.map { it.ageDays }.average().toInt()
         
         // Diversity: 1 - average pairwise similarity
+        android.util.Log.d("MemoryClustering", "  Calculating diversity (${embeddings.size} embeddings)...")
         val diversity = if (memories.size > 1) {
             val pairwiseSimilarities = mutableListOf<Float>()
             for (i in embeddings.indices) {
@@ -365,14 +398,17 @@ class MemoryClusteringService @Inject constructor(
                     pairwiseSimilarities.add(sim)
                 }
             }
+            android.util.Log.d("MemoryClustering", "  Calculated ${pairwiseSimilarities.size} pairwise similarities")
             1.0f - pairwiseSimilarities.average().toFloat()
         } else {
             0f
         }
+        android.util.Log.d("MemoryClustering", "  Diversity: $diversity")
         
         // Priority score calculation
         val priorityScore = calculatePriority(density, avgAgeDays, diversity)
         
+        android.util.Log.d("MemoryClustering", "createCluster complete: id=$id")
         return MemoryCluster(
             id = id,
             memories = memories,

@@ -225,15 +225,41 @@ class ConversationRepository @Inject constructor(
     
     /**
      * Upsert conversation (for cloud sync)
+     * Uses UPDATE for existing records to avoid REPLACE which triggers CASCADE DELETE
+     * on messages and memories (ForeignKey onDelete = CASCADE)
      */
     suspend fun upsertConversation(conversation: ConversationEntity): Unit = withContext(Dispatchers.IO) {
-        conversationDao.insertConversation(conversation)
+        val existing = conversationDao.getConversationById(conversation.id)
+        if (existing != null) {
+            // UPDATE existing: preserve local-only fields not synced to cloud
+            conversationDao.updateConversation(
+                conversation.copy(
+                    isPinned = existing.isPinned,
+                    systemPrompt = existing.systemPrompt,
+                    systemPromptId = existing.systemPromptId,
+                    webSearchEnabled = existing.webSearchEnabled,
+                    xSearchEnabled = existing.xSearchEnabled
+                )
+            )
+        } else {
+            // INSERT new record (no CASCADE risk since it's a new row)
+            conversationDao.insertConversation(conversation)
+        }
     }
     
     /**
      * Upsert multiple conversations (for cloud sync)
      */
     suspend fun upsertConversations(conversations: List<ConversationEntity>): Unit = withContext(Dispatchers.IO) {
-        conversations.forEach { conversationDao.insertConversation(it) }
+        conversations.forEach { upsertConversation(it) }
+    }
+    
+    /**
+     * Get conversation by ID synchronously (for local sync server)
+     */
+    suspend fun getConversationByIdSync(id: String): Conversation? = withContext(Dispatchers.IO) {
+        val entity = conversationDao.getConversationById(id)
+        val messages = messageDao.getMessagesByConversationSync(id).map { it.toDomain() }
+        entity?.toDomain(messages)
     }
 }

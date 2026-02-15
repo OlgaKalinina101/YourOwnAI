@@ -87,7 +87,9 @@ data class SettingsUiState(
     val showSqlSchemaDialog: Boolean = false,
     val showCloudSyncInstructionsDialog: Boolean = false,
     val isSyncing: Boolean = false,
-    val syncableDataSizeMB: Float = 0f // Current size of data that would be synced
+    val syncableDataSizeMB: Float = 0f, // Current size of data that would be synced
+    // Local Network Sync
+    val localSyncServerStatus: com.yourown.ai.data.sync.local.models.ServerStatus? = null
 )
 
 @HiltViewModel
@@ -106,6 +108,8 @@ class SettingsViewModel @Inject constructor(
     // Cloud Sync
     private val cloudSyncPreferences: com.yourown.ai.data.local.preferences.CloudSyncPreferences,
     private val cloudSyncRepository: CloudSyncRepository,
+    // Local Network Sync
+    private val localSyncRepository: com.yourown.ai.data.sync.local.LocalSyncRepository,
     // Memory Clustering
     private val memoryClusteringService: MemoryClusteringService,
     // Biography
@@ -144,6 +148,7 @@ class SettingsViewModel @Inject constructor(
         observeBiography()
         observeBiographyGeneration()
         observeMemoryCleaning()
+        observeLocalSyncStatus()
     }
     
     private fun initializeDefaultPrompts() {
@@ -1432,5 +1437,35 @@ class SettingsViewModel @Inject constructor(
                 android.util.Log.e("SettingsViewModel", "Connection test failed", e)
             }
         }
+    }
+    
+    // ===== Local Network Sync =====
+    
+    private fun observeLocalSyncStatus() {
+        viewModelScope.launch {
+            localSyncRepository.serverStatus.collect { status ->
+                _uiState.update { it.copy(localSyncServerStatus = status) }
+            }
+        }
+    }
+    
+    fun startLocalSyncServer() {
+        viewModelScope.launch {
+            val deviceId = "device_${android.os.Build.MODEL}_${System.currentTimeMillis()}"
+            val started = localSyncRepository.startServer(deviceId)
+            if (started) {
+                updateLocalSyncStatus()
+            }
+        }
+    }
+    
+    fun stopLocalSyncServer() {
+        localSyncRepository.stopServer()
+        _uiState.update { it.copy(localSyncServerStatus = null) }
+    }
+    
+    private suspend fun updateLocalSyncStatus() {
+        val status = localSyncRepository.getServerStatus()
+        _uiState.update { it.copy(localSyncServerStatus = status) }
     }
 }

@@ -176,15 +176,37 @@ class MessageRepository @Inject constructor(
     
     /**
      * Upsert message (for cloud sync)
+     * Uses UPDATE for existing records to avoid REPLACE which triggers CASCADE DELETE
+     * on memories (ForeignKey onDelete = CASCADE on message_id)
      */
     suspend fun upsertMessage(message: MessageEntity): Unit = withContext(Dispatchers.IO) {
-        messageDao.insertMessage(message)
+        val existing = messageDao.getMessageById(message.id)
+        if (existing != null) {
+            // UPDATE existing: preserve local-only fields not synced to cloud
+            messageDao.updateMessage(
+                message.copy(
+                    tokenCount = existing.tokenCount,
+                    isError = existing.isError,
+                    errorMessage = existing.errorMessage,
+                    temperature = existing.temperature,
+                    topP = existing.topP,
+                    deepEmpathy = existing.deepEmpathy,
+                    memoryEnabled = existing.memoryEnabled,
+                    messageHistoryLimit = existing.messageHistoryLimit,
+                    systemPrompt = existing.systemPrompt,
+                    requestLogs = existing.requestLogs
+                )
+            )
+        } else {
+            // INSERT new record (no CASCADE risk since it's a new row)
+            messageDao.insertMessage(message)
+        }
     }
     
     /**
      * Upsert multiple messages (for cloud sync)
      */
     suspend fun upsertMessages(messages: List<MessageEntity>): Unit = withContext(Dispatchers.IO) {
-        messageDao.insertMessages(messages)
+        messages.forEach { upsertMessage(it) }
     }
 }
