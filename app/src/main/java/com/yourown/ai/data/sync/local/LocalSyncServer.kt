@@ -1527,9 +1527,15 @@ class LocalSyncServer(
                                     },
 
                                     escapeHtml(text) {
-                                        const div = document.createElement('div');
-                                        div.textContent = text == null ? '' : String(text);
-                                        return div.innerHTML;
+                                        // Lightweight HTML escaping without touching the DOM,
+                                        // so it cannot break layout or depend on browser quirks.
+                                        const str = text == null ? '' : String(text);
+                                        return str
+                                            .replace(/&/g, '&amp;')
+                                            .replace(/</g, '&lt;')
+                                            .replace(/>/g, '&gt;')
+                                            .replace(/"/g, '&quot;')
+                                            .replace(/'/g, '&#39;');
                                     },
 
                                     parseInlineMarkdown(text, isUser) {

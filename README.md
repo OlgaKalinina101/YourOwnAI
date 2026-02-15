@@ -56,6 +56,16 @@ YourOwnAI is a privacy-first Android application that gives you complete control
   </tr>
 </table>
 
+
+
+### 💻 Desktop local version
+<table>
+  <tr>
+    <td><img src="examples/desktop1.png" width="300" style="max-width: 100%; height: auto;"/></td>
+    <td><img src="examples/desktop2.png" width="300" style="max-width: 100%; height: auto;"/></td>  
+  </tr>
+</table>
+
 </div>
 
 ---
