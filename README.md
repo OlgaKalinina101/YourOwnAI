@@ -48,23 +48,21 @@ YourOwnAI is a privacy-first Android application that gives you complete control
 </table>
 
 ### ✨ Onboarding & Customization
-<table>
-  <tr>
-    <td><img src="examples/onboarding.gif" width="300" style="max-width: 100%; height: auto;"/></td>
-    <td><img src="examples/settings.gif" width="300" style="max-width: 100%; height: auto;"/></td>
-    <td><img src="examples/chat.gif" width="300" style="max-width: 100%; height: auto;"/></td>  
-  </tr>
-</table>
+
+<p align="center">
+  <img src="examples/onboarding.gif" width="260" />
+  <img src="examples/settings.gif" width="260" />
+  <img src="examples/chat.gif" width="260" />
+</p>
 
 
 
 ### 💻 Desktop local version
-<table>
-  <tr>
-    <td><img src="examples/desktop1.png" width="300" style="max-width: 100%; height: auto;"/></td>
-    <td><img src="examples/desktop2.png" width="300" style="max-width: 100%; height: auto;"/></td>  
-  </tr>
-</table>
+
+<p align="center">
+  <img src="examples/desktop1.png" width="320" />
+  <img src="examples/desktop2.png" width="320" />
+</p>
 
 </div>
 
